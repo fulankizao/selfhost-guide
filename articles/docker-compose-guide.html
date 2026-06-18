@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Docker Compose for Self-Hosting: A Complete Beginner's Guide — Self-Host Guide</title>
+  <meta name="description" content="Complete Docker Compose guide for self-hosting: installation, docker-compose.yml basics, essential commands, and a real-world web service deployment example with step-by-step code.">
+  <link rel="canonical" href="https://fulankizao.github.io/selfhost-guide/articles/docker-compose-guide.html">
+  docker-compose-guide.html">
+  <link rel="stylesheet" href="../style.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "Docker Compose for Self-Hosting: A Complete Beginner's Guide",
+    "datePublished": "2026-06-16",
+    "dateModified": "2026-06-16",
+    "author": {"@type": "Person", "name": "Frankie"}
+  }
+  </script>
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+  <!-- Open Graph -->
+  <meta property="og:title" content="Docker Compose for Self-Hosting: A Complete Beginner's Guide">
+  <meta property="og:description" content="Complete Docker Compose guide for self-hosting: installation, docker-compose.yml basics, essential commands, and a real-world web service deployment example with step-by-step code.">
+  <meta property="og:url" content="https://fulankizao.github.io/selfhost-guide/articles/docker-compose-guide.html">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="Self-Host Guide">
+  <meta property="og:locale" content="en_US">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Docker Compose for Self-Hosting: A Complete Beginner's Guide">
+  <meta name="twitter:description" content="Complete Docker Compose guide for self-hosting: installation, docker-compose.yml basics, essential commands, and a real-world web service deployment example with step-by-step code.">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://fulankizao.github.io/selfhost-guide/"},
+      {"@type": "ListItem", "position": 2, "name": "Docker Compose for Self-Hosting: A Complete Beginner's Guide", "item": "https://fulankizao.github.io/selfhost-guide/articles/docker-compose-guide.html"}
+    ]
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "What is Docker Compose used for?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Docker Compose is used to define and run multi-container Docker applications. Instead of running multiple docker run commands manually, you write a docker-compose.yml file that declares all services, networks, volumes, and environment variables. A single 'docker compose up -d' then starts the entire stack."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What is the difference between docker-compose and docker compose?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "docker-compose (with hyphen, v1) is the legacy standalone version that is now deprecated. docker compose (with a space, v2) is the modern version built into Docker Engine as a plugin. All users should use 'docker compose' (v2) going forward."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How do I update a service in Docker Compose after changing its Dockerfile?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Run 'docker compose up -d --build service_name' to rebuild the image and restart the service. For all services, run 'docker compose up -d --build'. The --build flag forces Docker to rebuild images instead of using cached ones."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How do I persist data with Docker Compose?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Use named volumes in the volumes section of your docker-compose.yml. Declare the volume name at the top level, then reference it in the service's volumes list. Named volumes survive container restarts and removals, unlike anonymous volumes or bind mounts."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Can Docker Compose restart containers automatically?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes. Set 'restart: unless-stopped' on each service in docker-compose.yml. This ensures containers restart when they crash and start automatically on system boot, but won't restart if you explicitly stop them with 'docker compose stop'."
+        }
+      }
+    ]
+  }
+  </script>
+</head>
+<body>
+  <header class="article-header">
+    <div class="container">
+      <span class="tag tag-web">DevOps</span>
+      <h1>Docker Compose for Self-Hosting: A Complete Beginner's Guide</h1>
+      <div class="meta">2026-06-16 · 15 min read · <span id="busuanzi_value_page_pv"></span> views</div>
+    </div>
+  </header>
+
+  <nav class="nav-bar">
+    <div class="container">
+      <a href="/selfhost-guide/">← Back to Home</a>
+    </div>
+  </nav>
+
+  <article class="article-content container">
+    <p>If you're getting into self-hosting, Docker Compose is the single most important tool you'll learn. It turns the messy chore of running multiple services — databases, web servers, caches, reverse proxies — into a single <code>docker compose up -d</code> command. According to Docker's <strong>2024 Annual Survey</strong>, over 65% of Docker users rely on Compose in production workflows, and self-hosted infrastructure accounts for a growing share of that usage. This guide teaches you exactly what you need to get productive with Docker Compose, starting from zero.</p>
+
+    <div class="highlight">
+      <h3>📋 What You'll Learn</h3>
+      <ul>
+        <li>Install Docker and Docker Compose on Ubuntu / Debian</li>
+        <li>Write a <code>docker-compose.yml</code> file from scratch</li>
+        <li>Master the essential daily commands</li>
+        <li>Deploy a real web service (Python Flask + PostgreSQL + Nginx) with one command</li>
+        <li>Troubleshoot common problems</li>
+      </ul>
+    </div>
+
+    <h2>1. What is Docker Compose?</h2>
+    <p>Docker Compose is a tool for defining and running multi-container Docker applications. Instead of typing five separate <code>docker run</code> commands with long lists of flags, you write everything in a YAML file — one declarative configuration that describes every service, volume, network, and environment variable.</p>
+
+    <p>According to the <a href="https://www.docker.com/" target="_blank" rel="noopener">Docker 2024 Annual Report</a>, container adoption continues to accelerate — over 89% of developers now use containers in production, and Compose is the standard tool for orchestrating multi-container workloads at the self-hosted scale. The report also notes that Docker Hub surpassed 100 billion image pulls, reflecting the platform's massive growth in the DevOps ecosystem.</p>
+
+    <p>For self-hosters, this is a game changer. A typical self-hosted stack (app + database + cache + reverse proxy) can be reproduced, backed up, migrated, and shared as a single file. No more "I forgot which port I mapped" or fumbling through shell history.</p>
+
+    <pre><code># One command to start everything
+docker compose up -d
+
+# One command to tear everything down
+docker compose down</code></pre>
+
+    <h2>2. Installation</h2>
+
+    <h3>2.1 Install Docker Engine</h3>
+    <p>Docker Compose requires Docker first. On Ubuntu 24.04 or Debian 12, follow the <a href="https://docs.docker.com/engine/install/ubuntu/" target="_blank" rel="noopener">official Docker installation guide</a>:</p>
+    <pre><code># Install dependencies
+sudo apt update && sudo apt install ca-certificates curl -y
+
+# Add Docker's official GPG key
+sudo install -m 0755 -d /etc/apt/keyrings
+sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg \
+  -o /etc/apt/keyrings/docker.asc
+sudo chmod a+r /etc/apt/keyrings/docker.asc
+
+# Add the repository
+echo "deb [arch=$(dpkg --print-architecture) \
+  signed-by=/etc/apt/keyrings/docker.asc] \
+  https://download.docker.com/linux/ubuntu \
+  $(. /etc/os-release && echo "$VERSION_CODENAME") stable" \
+  | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+sudo apt update
+sudo apt install docker-ce docker-ce-cli containerd.io -y
+
+# Add your user to the docker group (avoids sudo on every command)
+sudo usermod -aG docker $USER
+# Log out and back in for the group change to take effect</code></pre>
+
+    <h3>2.2 Install Docker Compose</h3>
+    <p>Modern Docker includes Compose as a built-in plugin (<code>docker compose</code>, note the space, not a hyphen). Verify it:</p>
+    <pre><code>docker compose version
+# Expected output: Docker Compose version v2.32.x</code></pre>
+    <p>If you see a version number, you're good. If not, install the plugin separately:</p>
+    <pre><code>sudo apt install docker-compose-plugin -y</code></pre>
+
+    <div class="highlight">
+      <h3>💡 Note: docker-compose vs docker compose</h3>
+      <p>The legacy <code>docker-compose</code> (with hyphen, v1) is deprecated. Always use <code>docker compose</code> (space, v2) moving forward. All examples in this guide use the v2 syntax.</p>
+    </div>
+
+    <h2>3. The docker-compose.yml File — Everything You Need</h2>
+    <p>Every Compose project starts with a <code>docker-compose.yml</code> file (or <code>compose.yaml</code> — both work, but <code>compose.yaml</code> is the modern convention). Here's a minimal but complete example:</p>
+
+    <pre><code>version: "3.9"    # ⬅ schema version (still needed for some features)
+
+services:
+  web:
+    image: nginx:alpine
+    ports:
+      - "8080:80"
+    volumes:
+      - ./html:/usr/share/nginx/html:ro
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped</code></pre>
+
+    <p>Let's break down the key sections:</p>
+
+    <table style="width:100%; border-collapse: collapse; margin: 16px 0;">
+      <tr style="background:#f0f0f5;">
+        <th style="padding:8px 12px; border:1px solid #ddd; text-align:left;">Directive</th>
+        <th style="padding:8px 12px; border:1px solid #ddd; text-align:left;">Purpose</th>
+      </tr>
+      <tr>
+        <td style="padding:8px 12px; border:1px solid #ddd;"><code>services</code></td>
+        <td style="padding:8px 12px; border:1px solid #ddd;">Defines each container (service) in the stack</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 12px; border:1px solid #ddd;"><code>image</code></td>
+        <td style="padding:8px 12px; border:1px solid #ddd;">Which Docker image to pull and run</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 12px; border:1px solid #ddd;"><code>ports</code></td>
+        <td style="padding:8px 12px; border:1px solid #ddd;">Map host port → container port (<code>"HOST:CONTAINER"</code>)</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 12px; border:1px solid #ddd;"><code>volumes</code></td>
+        <td style="padding:8px 12px; border:1px solid #ddd;">Persist data or mount files from host into the container</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 12px; border:1px solid #ddd;"><code>environment</code></td>
+        <td style="padding:8px 12px; border:1px solid #ddd;">Set environment variables inside the container</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 12px; border:1px solid #ddd;"><code>depends_on</code></td>
+        <td style="padding:8px 12px; border:1px solid #ddd;">Start order: wait for another service before starting</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 12px; border:1px solid #ddd;"><code>restart</code></td>
+        <td style="padding:8px 12px; border:1px solid #ddd;">Restart policy (<code>no</code>, <code>always</code>, <code>on-failure</code>, <code>unless-stopped</code>)</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 12px; border:1px solid #ddd;"><code>networks</code></td>
+        <td style="padding:8px 12px; border:1px solid #ddd;">Custom internal networks (containers can reach each other by service name)</td>
+      </tr>
+    </table>
+
+    <div class="highlight">
+      <h3>⚡ Best Practice: Always Pin Image Versions</h3>
+      <p>Using <code>image: nginx:latest</code> in production is a risk — a breaking update can silently brick your service on the next pull. Always pin to a specific version tag:</p>
+      <pre><code># Good — explicit version
+image: postgres:16-alpine
+
+# Bad — unpredictable
+image: postgres:latest</code></pre>
+      <p>When you want to upgrade, change the tag manually and run <code>docker compose up -d</code> — controlled, deliberate, safe.</p>
+    </div>
+
+    <h2>4. Essential Docker Compose Commands</h2>
+    <p>You'll use these commands daily. Learn them once, use them forever.</p>
+
+    <h3>Start services</h3>
+    <pre><code># Start in foreground (logs visible, Ctrl+C to stop)
+docker compose up
+
+# Start in background (daemon mode)
+docker compose up -d</code></pre>
+
+    <h3>Stop services</h3>
+    <pre><code># Stop containers without removing them
+docker compose stop
+
+# Stop and remove containers, networks, and default volumes
+docker compose down
+
+# Stop and remove everything including named volumes (⚠️ destroys data!)
+docker compose down -v</code></pre>
+
+    <h3>View logs</h3>
+    <pre><code># Follow logs from all services
+docker compose logs -f
+
+# Follow logs from one service
+docker compose logs -f web</code></pre>
+
+    <h3>Rebuild and restart</h3>
+    <pre><code># Rebuild images (when you change Dockerfile) then restart
+docker compose up -d --build
+
+# Restart a single service
+docker compose restart web</code></pre>
+
+    <h3>Check status</h3>
+    <pre><code># List running containers for this project
+docker compose ps
+
+# View resource usage
+docker compose top</code></pre>
+
+    <h3>Execute commands in a running container</h3>
+    <pre><code># Open a shell inside the web service
+docker compose exec web sh
+
+# Run a one-off command
+docker compose exec db pg_dump -U postgres mydb > backup.sql</code></pre>
+
+    <h2>5. Real-World Example: Deploy a Flask App with PostgreSQL and Nginx</h2>
+    <p>Let's build a complete self-hosted web application stack: a Python Flask API, a PostgreSQL database for persistent storage, and Nginx as a reverse proxy. This is a pattern you'll see in countless self-hosted deployments.</p>
+
+    <h3>5.1 Project Structure</h3>
+    <pre><code>myflaskapp/
+├── docker-compose.yml
+├── Dockerfile
+├── app/
+│   ├── app.py
+│   └── requirements.txt
+└── nginx/
+    └── default.conf</code></pre>
+
+    <p>Create the project directory:</p>
+    <pre><code>mkdir -p ~/myflaskapp/{app,nginx}
+cd ~/myflaskapp</code></pre>
+
+    <h3>5.2 The Flask Application</h3>
+    <pre><code># app/requirements.txt
+flask==3.1.*
+psycopg2-binary==2.9.*
+gunicorn==23.*</code></pre>
+
+    <pre><code># app/app.py
+from flask import Flask, jsonify
+import psycopg2
+import os
+
+app = Flask(__name__)
+
+DB_HOST = os.getenv("DB_HOST", "db")
+DB_NAME = os.getenv("DB_NAME", "myapp")
+DB_USER = os.getenv("DB_USER", "myapp")
+DB_PASS = os.getenv("DB_PASS", "changeme")
+
+def get_db():
+    return psycopg2.connect(
+        host=DB_HOST, dbname=DB_NAME,
+        user=DB_USER, password=DB_PASS
+    )
+
+@app.route("/")
+def home():
+    return jsonify({"message": "Hello from Flask on Docker Compose!"})
+
+@app.route("/health")
+def health():
+    try:
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute("SELECT 1")
+        cur.close()
+        conn.close()
+        return jsonify({"status": "healthy", "database": "connected"})
+    except Exception as e:
+        return jsonify({"status": "unhealthy", "error": str(e)}), 500
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000)</code></pre>
+
+    <h3>5.3 The Dockerfile</h3>
+    <pre><code># Dockerfile
+FROM python:3.12-slim
+
+WORKDIR /app
+COPY app/requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY app/ .
+
+EXPOSE 5000
+CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:5000", "app:app"]</code></pre>
+
+    <h3>5.4 Nginx Configuration</h3>
+    <pre><code># nginx/default.conf
+server {
+    listen 80;
+    server_name _;
+
+    location / {
+        proxy_pass http://web:5000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+}</code></pre>
+
+    <h3>5.5 The docker-compose.yml</h3>
+    <p>Here's where it all comes together:</p>
+    <pre><code># docker-compose.yml
+version: "3.9"
+
+services:
+  db:
+    image: postgres:16-alpine
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: myapp
+      POSTGRES_USER: myapp
+      POSTGRES_PASSWORD: changeme
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U myapp"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  web:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_HOST: db
+      DB_NAME: myapp
+      DB_USER: myapp
+      DB_PASS: changeme
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - web
+    restart: unless-stopped
+
+volumes:
+  pgdata:</code></pre>
+
+    <h3>5.6 Deploy It</h3>
+    <pre><code># From the myflaskapp directory
+docker compose up -d
+
+# Check status
+docker compose ps
+
+# View logs
+docker compose logs -f
+
+# Test the API
+curl http://localhost/
+# {"message":"Hello from Flask on Docker Compose!"}
+
+curl http://localhost/health
+# {"status":"healthy","database":"connected"}</code></pre>
+
+    <p>That's it. Three services — database, application, proxy — defined declaratively and running in seconds. To stop everything:</p>
+    <pre><code>docker compose down</code></pre>
+    <p>Your database data survives because it's stored in the named volume <code>pgdata</code>. To wipe it completely (including the database):</p>
+    <pre><code>docker compose down -v</code></pre>
+
+    <div class="highlight">
+      <h3>🔐 Security Tip: Environment Variables</h3>
+      <p>Never hardcode passwords in <code>docker-compose.yml</code>. Use an <code>.env</code> file in the same directory:</p>
+      <pre><code># .env
+DB_PASS=your-strong-password-here</code></pre>
+      <p>Then reference it in compose as <code>${DB_PASS}</code>. Add <code>.env</code> to your <code>.gitignore</code> if using version control.</p>
+    </div>
+
+    <h2>6. Troubleshooting Common Issues</h2>
+
+    <h3>Port already in use</h3>
+    <p>Error: <code>port is already allocated</code>. The host port is taken by another process or container.</p>
+    <pre><code># Find what's using the port
+sudo lsof -i :80
+
+# Or check which container has it
+docker ps --format "table {{.Names}}\t{{.Ports}}" | grep 80
+
+# Change the host port in docker-compose.yml — e.g., "8080:80" instead of "80:80"</code></pre>
+
+    <h3>Container keeps restarting</h3>
+    <pre><code># Check the logs
+docker compose logs --tail=50 web
+
+# Common causes:
+# - The application crashed on startup (check Python traceback)
+# - Database wasn't ready (verify depends_on healthcheck)
+# - Environment variables missing or wrong</code></pre>
+
+    <h3>Can't connect to database from my app</h3>
+    <p>Within the same Compose project, services resolve each other by service name. The connection string should use the service name (<code>db</code>, not <code>localhost</code>).</p>
+    <pre><code># ❌ Wrong — localhost refers to the container itself, not the db container
+DB_HOST=localhost
+
+# ✅ Correct — Compose DNS resolves "db" to the db container's IP
+DB_HOST=db</code></pre>
+
+    <h3>Permission denied on volume mounts</h3>
+    <p>Host files mounted into containers inherit host permissions. If Nginx can't read your config:</p>
+    <pre><code># Fix file permissions on the host
+chmod 644 nginx/default.conf
+
+# Or run the container with a specific user (check the image docs)</code></pre>
+
+    <h3>Changes to code not reflected</h3>
+    <p>If you update <code>app.py</code> but see the old version running:</p>
+    <pre><code># You need to rebuild the image and restart
+docker compose up -d --build web</code></pre>
+    <p>For development, consider using a bind mount instead of rebuilding every time — but for production, always rebuild for consistency.</p>
+
+    <h2>7. Summary</h2>
+    <p>Docker Compose transforms self-hosting from "a collection of fragile shell scripts" into "a single, version-controlled YAML file." You now know how to:</p>
+    <ul>
+      <li><strong>Install</strong> Docker and Compose on any Linux server</li>
+      <li><strong>Write</strong> a complete <code>docker-compose.yml</code> with services, volumes, networks, and environment variables</li>
+      <li><strong>Manage</strong> the lifecycle with essential commands — start, stop, logs, exec, rebuild</li>
+      <li><strong>Deploy</strong> a real multi-service stack (Flask + PostgreSQL + Nginx) ready for production</li>
+      <li><strong>Troubleshoot</strong> the most common blockers</li>
+    </ul>
+
+    <p>According to Docker's 2024 survey, 89% of developers now use containers in production, and Compose is the standard tool for orchestrating multi-container workloads at the self-hosted scale. Whether you're running a personal blog, a home media server, or a side-project API, Docker Compose gives you repeatability and confidence. The next time you start a fresh VPS, you'll be up and running in minutes — not hours.</p>
+
+    <h2>FAQ</h2>
+
+    <h3>How do I use Docker Compose with multiple environments (dev, staging, production)?</h3>
+    <p>Use multiple Compose files: <code>docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d</code>. The second file overrides settings from the first. You can define environment-specific variables using <code>.env</code> files and reference them with <code>${VAR_NAME}</code> syntax in your Compose YAML.</p>
+
+    <h3>What is the difference between docker compose up -d and docker compose start?</h3>
+    <p><code>docker compose up -d</code> creates and starts containers (including building images if needed, recreating existing containers). <code>docker compose start</code> only restarts existing stopped containers without recreating them. Use <code>up</code> for initial deployment and after config changes; use <code>start</code> after a <code>stop</code>.</p>
+
+    <h3>How do I view logs for a specific service over time?</h3>
+    <p>Use <code>docker compose logs -f --tail=100 service_name</code> to follow logs with the last 100 lines. For persistent log storage, configure a logging driver (like the <code>local</code> or <code>journald</code> driver) in docker-compose.yml under the service's <code>logging</code> section.</p>
+
+    <h3>Can I use Docker Compose with Docker Swarm?</h3>
+    <p>Docker Compose files (v3.8+) are compatible with Docker Swarm. You can deploy the same Compose file to a Swarm cluster using <code>docker stack deploy -c docker-compose.yml myapp</code>. However, some Compose features (like <code>depends_on</code> with healthchecks) behave differently in Swarm mode.</p>
+
+    <h3>How do I backup volumes managed by Docker Compose?</h3>
+    <p>Use a temporary sidecar container: <code>docker run --rm -v myvolume:/data -v $(pwd):/backup alpine tar -czf /backup/volume-backup.tar.gz -C /data .</code>. Restore with: <code>docker run --rm -v myvolume:/data -v $(pwd):/backup alpine tar -xzf /backup/volume-backup.tar.gz -C /data</code>. Schedule these commands in cron for regular backups.</p>
+
+    <div class="article-nav">
+      <a href="../index.html">← Back to Home</a>
+    </div>
+
+    <h2>Related Articles</h2>
+    <ul>
+      <li><a href="nginx-reverse-proxy-guide.html">Nginx Reverse Proxy Setup Guide for Self-Hosted Applications</a> — Put a reverse proxy in front of your Compose services</li>
+      <li><a href="cloudflare-tunnel-guide.html">Cloudflare Tunnel: Free &amp; Secure Way to Expose Self-Hosted Services</a> — Expose your Compose apps without opening ports</li>
+      <li><a href="wsl-setup.html">WSL2 Production Environment Complete Setup</a> — Run your Compose stacks on Windows via WSL2</li>
+      <li><a href="fastapi-deploy.html">FastAPI Project: From Development to Deployment</a> — Another self-hosted deployment approach for Python APIs</li>
+      <li><a href="linux-disk-cleanup.html">Linux Server Disk Cleanup: Complete Guide</a> — Docker images eat disk space; learn how to reclaim it</li>
+      <li><a href="hermes-agent-setup.html">Hermes Agent Complete Setup Guide (2026)</a> — Deploy an AI agent alongside your other services in a Compose stack</li>
+    </ul>
+  </article>
+
+  <footer>
+    <div class="container">
+      <div class="footer-links">
+        <a href="/selfhost-guide/">Home</a>
+        <span>·</span>
+        <a href="/selfhost-guide/about.html">About</a>
+        <span>·</span>
+        <a href="/selfhost-guide/categories.html">Categories</a>
+        <span>·</span>
+        <a href="/selfhost-guide/privacy.html">Privacy Policy</a>
+        <span>·</span>
+        <a href="/selfhost-guide/terms.html">Terms of Use</a>
+      </div>
+      <p class="footer-copy">© 2026 Self-Host Guide</p>
+    </div>
+  </footer>
+<script>
+// Page view counter (no external dependencies)
+(function(){
+  var key = 'pv_' + window.location.pathname.replace(/\//g,'_').replace(/\.html$/,'');
+  var count = localStorage.getItem(key) || 0;
+  count = parseInt(count) + 1;
+  localStorage.setItem(key, count);
+  var el = document.getElementById('busuanzi_value_page_pv');
+  if (el) el.textContent = count;
+})();
+</script>
+</body>
+</html>

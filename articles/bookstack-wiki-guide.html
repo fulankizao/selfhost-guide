@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>How to Set Up a Personal Wiki with BookStack — Self-Host Guide</title>
+  <meta name="description" content="Step-by-step guide to self-hosting BookStack: Docker deployment, Nginx reverse proxy, LDAP integration, backup automation, and maintenance tips.">
+  <link rel="canonical" href="https://fulankizao.github.io/selfhost-guide/articles/bookstack-wiki-guide.html">
+  <link rel="stylesheet" href="../style.css">
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+  <meta property="og:title" content="How to Set Up a Personal Wiki with BookStack">
+  <meta property="og:description" content="Step-by-step guide to self-hosting BookStack: Docker deployment, Nginx reverse proxy, LDAP integration, backup automation, and maintenance tips.">
+  <meta property="og:url" content="https://fulankizao.github.io/selfhost-guide/articles/bookstack-wiki-guide.html">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="Self-Host Guide">
+  <meta property="og:locale" content="en_US">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="How to Set Up a Personal Wiki with BookStack">
+  <meta name="twitter:description" content="Step-by-step BookStack deployment guide for self-hosters.">
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"Article","headline":"How to Set Up a Personal Wiki with BookStack","datePublished":"2026-06-16","author":{"@type":"Person","name":"Frankie"}}
+  </script>
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[
+    {"@type":"ListItem","position":1,"name":"Home","item":"https://fulankizao.github.io/selfhost-guide/"},
+    {"@type":"ListItem","position":2,"name":"BookStack Wiki Guide"}
+  ]}
+  </script>
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
+    {"@type":"Question","name":"Can I use SQLite instead of MySQL?","acceptedAnswer":{"@type":"Answer","text":"Yes, BookStack supports SQLite for small single-user setups, but MySQL/MariaDB is recommended for production."}},
+    {"@type":"Question","name":"How do I update BookStack?","acceptedAnswer":{"@type":"Answer","text":"Pull the latest Docker image: docker compose pull && docker compose up -d, then run the migration script."}},
+    {"@type":"Question","name":"Can BookStack integrate with existing auth systems?","acceptedAnswer":{"@type":"Answer","text":"Yes. BookStack supports LDAP, SAML2, OAuth (Google, GitHub, Slack) and social login out of the box."}},
+    {"@type":"Question","name":"Is BookStack suitable for team use?","acceptedAnswer":{"@type":"Answer","text":"Absolutely. It has role-based permissions, shelves, books, chapters, and full-text search — built for teams."}},
+    {"@type":"Question","name":"How do I back up BookStack?","acceptedAnswer":{"@type":"Answer","text":"Back up the MySQL database (mysqldump), the uploads directory, and the .env file. See our backup strategies guide for details."}}
+  ]}
+  </script>
+</head>
+<body>
+  <header class="article-header">
+    <div class="container">
+      <span class="tag tag-web">Wiki</span>
+      <h1>How to Set Up a Personal Wiki with BookStack</h1>
+      <div class="meta">2026-06-16 · 12 min read · <span id="busuanzi_value_page_pv"></span> views</div>
+    </div>
+  </header>
+  <nav class="nav-bar">
+    <div class="container">
+      <a href="/selfhost-guide/">← Back to Home</a>
+    </div>
+  </nav>
+  <article class="article-content container">
+    <p>BookStack is a free, open-source wiki platform that organizes information into shelves, books, chapters, and pages. It's Docker-friendly, supports Markdown and WYSIWYG editing, and integrates with LDAP, SAML, and OAuth. As of 2026, BookStack has over 15,000 GitHub stars and is used by teams and individuals worldwide for documentation, knowledge bases, and personal wikis.</p>
+
+    <h2>Prerequisites</h2>
+    <ul>
+      <li>A Linux server with Docker and Docker Compose installed</li>
+      <li>A domain pointing to your server (optional but recommended)</li>
+      <li>Nginx or another reverse proxy (see our <a href="nginx-reverse-proxy-guide.html">Nginx guide</a>)</li>
+      <li>5 GB free disk space minimum</li>
+    </ul>
+
+    <h2>Docker Compose Deployment</h2>
+    <pre><code># docker-compose.yml
+version: '3.8'
+services:
+  bookstack:
+    image: lscr.io/linuxserver/bookstack:latest
+    container_name: bookstack
+    depends_on:
+      - bookstack_db
+    environment:
+      - APP_URL=https://wiki.yourdomain.com
+      - DB_HOST=bookstack_db
+      - DB_USER=bookstack
+      - DB_PASS=your_secure_password
+      - DB_DATABASE=bookstack
+    volumes:
+      - ./data:/config
+    ports:
+      - "8080:80"
+    restart: unless-stopped
+
+  bookstack_db:
+    image: mysql:8.0
+    container_name: bookstack_db
+    environment:
+      - MYSQL_ROOT_PASSWORD=root_password
+      - MYSQL_DATABASE=bookstack
+      - MYSQL_USER=bookstack
+      - MYSQL_PASSWORD=your_secure_password
+    volumes:
+      - ./db:/var/lib/mysql
+    restart: unless-stopped</code></pre>
+    <pre><code>docker compose up -d
+# BookStack will be available at http://localhost:8080
+# Default login: admin@admin.com / password</code></pre>
+
+    <h2>Nginx Reverse Proxy</h2>
+    <p>Following our <a href="nginx-reverse-proxy-guide.html">Nginx reverse proxy guide</a>, create a config for BookStack:</p>
+    <pre><code>server {
+    listen 80;
+    server_name wiki.yourdomain.com;
+    return 301 https://$server_name$request_uri;
+}
+
+server {
+    listen 443 ssl;
+    server_name wiki.yourdomain.com;
+
+    ssl_certificate /etc/letsencrypt/live/wiki.yourdomain.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/wiki.yourdomain.com/privkey.pem;
+
+    location / {
+        proxy_pass http://127.0.0.1:8080;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        client_max_body_size 100M;
+    }
+}</code></pre>
+    <pre><code>sudo ln -s /etc/nginx/sites-available/bookstack /etc/nginx/sites-enabled/
+sudo certbot --nginx -d wiki.yourdomain.com
+sudo nginx -t && sudo systemctl reload nginx</code></pre>
+
+    <h2>Content Organization</h2>
+    <p>BookStack uses a simple hierarchy: <strong>Shelf → Book → Chapter → Page</strong>. Log in as admin and visit the Settings page to configure your instance name, registration policy, and authentication.</p>
+
+    <h2>Authentication Integration</h2>
+    <p>BookStack supports multiple auth backends. For LDAP (useful for team setups):</p>
+    <pre><code># Settings → Authentication → LDAP
+LDAP_SERVER=ldap://your-ldap-server:389
+LDAP_BASE_DN=dc=example,dc=com
+LDAP_DN=cn=admin,dc=example,dc=com
+LDAP_PASS=your_ldap_password
+LDAP_USER_FILTER=(&amp;(objectClass=inetOrgPerson)(uid=${user}))</code></pre>
+
+    <h2>Backup Automation</h2>
+    <p>Back up three things: the database, the uploads directory, and the .env file. See our <a href="backup-strategies-guide.html">backup strategies guide</a> for a complete pipeline. A simple cron job:</p>
+    <pre><code>#!/bin/bash
+# /root/scripts/backup-bookstack.sh
+docker exec bookstack_db mysqldump -u bookstack -p'password' bookstack > /backup/bookstack-$(date +%Y%m%d).sql
+cp -r /path/to/bookstack/data/uploads /backup/uploads-$(date +%Y%m%d)
+find /backup -name "*.sql" -mtime +30 -delete</code></pre>
+
+    <h2>Performance Optimization</h2>
+    <ul>
+      <li><strong>Cache</strong>: Enable Redis caching for faster page loads</li>
+      <li><strong>Uploads</strong>: Store uploads on a dedicated volume or S3-compatible storage</li>
+      <li><strong>App Debug</strong>: Set <code>APP_DEBUG=false</code> in production</li>
+      <li><strong>Cron</strong>: Set up a cron job for BookStack's scheduled tasks</li>
+    </ul>
+
+    <h2>FAQ</h2>
+    <ul>
+      <li><strong>Can I use SQLite instead of MySQL?</strong> Yes, but MySQL/MariaDB is recommended for production.</li>
+      <li><strong>How do I update BookStack?</strong> Pull the latest Docker image and run the migration script.</li>
+      <li><strong>Can BookStack integrate with existing auth systems?</strong> Yes — LDAP, SAML2, OAuth, and social login.</li>
+      <li><strong>Is BookStack suitable for team use?</strong> Yes, with role-based permissions and full-text search.</li>
+      <li><strong>How do I back up BookStack?</strong> Back up MySQL database + uploads directory + .env file.</li>
+    </ul>
+
+    <h2>Related Articles</h2>
+    <ul>
+      <li><a href="docker-compose-guide.html">Docker Compose for Self-Hosting</a></li>
+      <li><a href="nginx-reverse-proxy-guide.html">Nginx Reverse Proxy Setup Guide</a></li>
+      <li><a href="backup-strategies-guide.html">Backup Strategies for Self-Hosted Services</a></li>
+      <li><a href="cloudflare-tunnel-guide.html">Cloudflare Tunnel Guide</a></li>
+    </ul>
+
+    <h2>Summary</h2>
+    <p>BookStack gives you a powerful, self-hosted wiki with Docker in under 10 minutes. Pair it with a reverse proxy and automated backups for a production-ready documentation platform.</p>
+
+    <div class="article-nav">
+      <a href="../index.html">← Back to Home</a>
+    </div>
+  </article>
+  <footer>
+    <div class="container">
+      <div class="footer-links">
+        <a href="/selfhost-guide/">Home</a>
+        <span>·</span>
+        <a href="/selfhost-guide/about.html">About</a>
+        <span>·</span>
+        <a href="/selfhost-guide/categories.html">Articles</a>
+        <span>·</span>
+        <a href="/selfhost-guide/privacy.html">Privacy Policy</a>
+        <span>·</span>
+        <a href="/selfhost-guide/terms.html">Terms of Use</a>
+      </div>
+      <p class="footer-copy">© 2026 Self-Host Guide</p>
+    </div>
+  </footer>
+  <script>
+  (function(){var key='pv_'+window.location.pathname.replace(/\//g,'_').replace(/\.html$/,'');var count=localStorage.getItem(key)||0;count=parseInt(count)+1;localStorage.setItem(key,count);var el=document.getElementById('busuanzi_value_page_pv');if(el)el.textContent=count;})();
+  </script>
+</body>
+</html>

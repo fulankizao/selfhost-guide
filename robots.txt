@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://fulankizao.github.io/selfhost-guide/sitemap.xml

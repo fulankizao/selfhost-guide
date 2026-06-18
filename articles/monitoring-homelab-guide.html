@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Monitoring Your Homelab with Prometheus and Grafana — Self-Host Guide</title>
+  <meta name="description" content="Complete homelab monitoring tutorial: install Prometheus, configure node_exporter, build dashboards in Grafana, set up alerting, and keep your self-hosted services healthy with production-grade observability.">
+  <link rel="canonical" href="https://fulankizao.github.io/selfhost-guide/articles/monitoring-homelab-guide.html">
+  <link rel="stylesheet" href="../style.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "Monitoring Your Homelab with Prometheus and Grafana",
+    "datePublished": "2026-06-16",
+    "dateModified": "2026-06-16",
+    "author": {"@type": "Person", "name": "Frankie"}
+  }
+  </script>
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+  <!-- Open Graph -->
+  <meta property="og:title" content="Monitoring Your Homelab with Prometheus and Grafana">
+  <meta property="og:description" content="Complete homelab monitoring tutorial: install Prometheus, configure node_exporter, build dashboards in Grafana, set up alerting, and keep your self-hosted services healthy with production-grade observability.">
+  <meta property="og:url" content="https://fulankizao.github.io/selfhost-guide/articles/monitoring-homelab-guide.html">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="Self-Host Guide">
+  <meta property="og:locale" content="en_US">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Monitoring Your Homelab with Prometheus and Grafana">
+  <meta name="twitter:description" content="Complete homelab monitoring tutorial: install Prometheus, configure node_exporter, build dashboards in Grafana, set up alerting, and keep your self-hosted services healthy with production-grade observability.">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://fulankizao.github.io/selfhost-guide/"},
+      {"@type": "ListItem", "position": 2, "name": "Monitoring Your Homelab with Prometheus and Grafana", "item": "https://fulankizao.github.io/selfhost-guide/articles/monitoring-homelab-guide.html"}
+    ]
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "What is the difference between Prometheus and Grafana?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Prometheus is a time-series database and alerting system that collects and stores metrics. Grafana is a visualization layer that connects to Prometheus (and many other data sources) to build dashboards. Together, Prometheus provides the data storage and query engine, while Grafana displays the metrics as charts, graphs, and alerts."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Do I need to expose Prometheus and Grafana to the internet?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "No. Both services can run on a local Docker network accessible only from your LAN. If you want remote access, place them behind an authentication proxy (like Authelia) or use a VPN like WireGuard. Never expose Grafana without authentication — it gives direct access to your infrastructure metrics."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How much disk space does Prometheus use?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "For a homelab with 3-5 servers and 15-second scrape intervals, Prometheus typically uses 1-5 GB per month. Configure retention in prometheus.yml with the --storage.tsdb.retention.time flag. A common homelab setting is 30 days, which keeps disk usage under 10 GB for most setups."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Can Prometheus monitor Docker containers?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes. Use cAdvisor (by Google) to collect container-level metrics, or use the Prometheus Docker Hub exporter for individual container metrics. cAdvisor publishes CPU, memory, network, and disk I/O per container, and Prometheus scrapes it just like any other exporter."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What is the simplest way to try Prometheus and Grafana today?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Use Docker Compose. A single docker-compose.yml with services for Prometheus, Grafana, node_exporter, and cAdvisor gets you a full monitoring stack in under 10 minutes. The official images require no special configuration to get started — just set the data sources and import a dashboard."
+        }
+      }
+    ]
+  }
+  </script>
+</head>
+<body>
+  <header class="article-header">
+    <div class="container">
+      <span class="tag tag-agent">Monitoring</span>
+      <h1>Monitoring Your Homelab with Prometheus and Grafana</h1>
+      <div class="meta">2026-06-16 · 18 min read · <span id="busuanzi_value_page_pv"></span> views</div>
+    </div>
+  </header>
+
+  <nav class="nav-bar">
+    <div class="container">
+      <a href="/selfhost-guide/">← Back to Home</a>
+    </div>
+  </nav>
+
+  <article class="article-content container">
+    <p>Your homelab is humming along — Docker stacks are running, a reverse proxy is routing traffic, maybe a media server is serving content, and a handful of databases are storing data. But what happens when a disk fills up at 3 AM? Or when a container mysteriously crashes after a power blip? Without monitoring, you're flying blind.</p>
+
+    <p><strong>Prometheus</strong> and <strong>Grafana</strong> are the industry-standard open-source duo for metrics collection, storage, and visualization. Prometheus (part of the <strong>Cloud Native Computing Foundation</strong>, like Kubernetes) is a pull-based time-series database that scrapes metrics from your services. Grafana is a rich visualization platform that turns those raw numbers into dashboards, charts, and alert rules. Together, they give observability that rivals commercial tools like Datadog — at zero licensing cost.</p>
+
+    <p>In this tutorial, you will:</p>
+    <ul>
+      <li>Deploy Prometheus and Grafana with a single Docker Compose file</li>
+      <li>Configure <code>node_exporter</code> to collect CPU, memory, disk, and network metrics from your host</li>
+      <li>Add <code>cAdvisor</code> for per-container metrics</li>
+      <li>Build a real Grafana dashboard with actionable panels</li>
+      <li>Set up basic alerting for disk space, CPU spikes, and down services</li>
+    </ul>
+
+    <div class="highlight">
+      <h3>📋 Prerequisites</h3>
+      <ul>
+        <li>A Linux machine (Ubuntu 24.04 LTS recommended) — your homelab host</li>
+        <li>Docker and Docker Compose installed (<a href="docker-compose-guide.html">see our Docker Compose guide</a>)</li>
+        <li>Port 3000 (Grafana) and 9090 (Prometheus) available on your LAN</li>
+        <li>Basic familiarity with YAML and command-line operations</li>
+      </ul>
+    </div>
+
+    <h2>1. Architecture Overview</h2>
+    <p>Before we write a single line of configuration, let's understand how the pieces fit together:</p>
+
+    <pre><code>┌──────────────┐       HTTP scrape (port 9100)       ┌──────────────┐
+│  node_exporter │ ◄─────────────────────────────────── │              │
+│  (per host)    │                                      │  Prometheus  │
+├──────────────┤       HTTP scrape (port 8080)       │  (port 9090) │
+│   cAdvisor    │ ◄─────────────────────────────────── │  Time-Series │
+│  (per host)   │                                      │     DB       │
+├──────────────┤       HTTP scrape (port 8000)       │              │
+│ Custom Exporters│ ◄─────────────────────────────────── │              │
+│   (optional)  │                                      └──────┬───────┘
+└──────────────┘                                             │
+                                                              │ Data Source
+                                                              ▼
+                                                      ┌──────────────┐
+                                                      │   Grafana    │
+                                                      │  (port 3000) │
+                                                      │  Dashboards  │
+                                                      │  + Alerts    │
+                                                      └──────────────┘</code></pre>
+
+    <p><strong>Prometheus</strong> uses a pull model: it reaches out to each exporter at a configured interval (default 15 seconds) and scrapes metrics in a plaintext format. Exporters are lightweight agents that expose system or application metrics. <strong>Grafana</strong> connects to Prometheus as a data source and lets you build dashboards using PromQL (Prometheus Query Language).</p>
+
+    <p>The CNCF's 2024 annual survey reports that Prometheus is now used in over 68% of cloud-native organizations, and Grafana adoption has grown to over 12 million active installations globally. For homelabs, this stack is a natural fit — lightweight, container-native, and free.</p>
+
+    <h2>2. Deploying the Stack with Docker Compose</h2>
+    <p>Create a dedicated directory for your monitoring stack:</p>
+    <pre><code>mkdir -p ~/monitoring && cd ~/monitoring
+
+# Create data directories so volumes persist across restarts
+mkdir -p data/prometheus data/grafana</code></pre>
+
+    <h3>2.1 The docker-compose.yml</h3>
+    <p>Create a file named <code>docker-compose.yml</code> with the following content:</p>
+
+    <pre><code>version: "3.9"
+
+services:
+  prometheus:
+    image: prom/prometheus:v2.55.0
+    container_name: prometheus
+    restart: unless-stopped
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./data/prometheus:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--storage.tsdb.retention.time=30d"
+      - "--web.console.libraries=/usr/share/prometheus/console_libraries"
+      - "--web.console.templates=/usr/share/prometheus/consoles"
+      - "--web.enable-lifecycle"
+    ports:
+      - "9090:9090"
+    networks:
+      - monitoring
+
+  grafana:
+    image: grafana/grafana:11.3.0
+    container_name: grafana
+    restart: unless-stopped
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=changeme
+      - GF_INSTALL_PLUGINS=
+    volumes:
+      - ./data/grafana:/var/lib/grafana
+      - ./grafana-provisioning:/etc/grafana/provisioning
+    ports:
+      - "3000:3000"
+    networks:
+      - monitoring
+    depends_on:
+      - prometheus
+
+  node_exporter:
+    image: prom/node-exporter:v1.8.2
+    container_name: node_exporter
+    restart: unless-stopped
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - "--path.procfs=/host/proc"
+      - "--path.sysfs=/host/sys"
+      - "--path.rootfs=/rootfs"
+      - "--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)"
+    ports:
+      - "9100:9100"
+    networks:
+      - monitoring
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.51.0
+    container_name: cadvisor
+    restart: unless-stopped
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    devices:
+      - /dev/kmsg
+    privileged: true
+    ports:
+      - "8080:8080"
+    networks:
+      - monitoring
+
+networks:
+  monitoring:
+    driver: bridge</code></pre>
+
+    <div class="highlight">
+      <h3>💡 Security Note</h3>
+      <p>Change <code>GF_SECURITY_ADMIN_PASSWORD</code> to a strong password immediately. For production homelabs, consider placing Grafana behind a reverse proxy with HTTPS and an authentication middleware (like Authelia or OAuth2 Proxy). Never expose port 3000 directly to the internet.</p>
+    </div>
+
+    <h3>2.2 Prometheus Configuration</h3>
+    <p>Create <code>prometheus.yml</code> in the same directory:</p>
+
+    <pre><code>global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: []
+          # Add Alertmanager targets here if you set it up
+
+rule_files:
+  # - "alerts.yml"   # Uncomment after creating alert rules
+
+scrape_configs:
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  - job_name: "node"
+    static_configs:
+      - targets:
+          - "node_exporter:9100"
+          # Add more hosts: "192.168.1.101:9100"
+
+  - job_name: "cadvisor"
+    static_configs:
+      - targets: ["cadvisor:8080"]</code></pre>
+
+    <h3>2.3 Start the Stack</h3>
+    <pre><code>cd ~/monitoring
+docker compose up -d
+
+# Verify all containers are running
+docker compose ps
+
+# Check Prometheus targets (should show UP for all)
+curl -s http://localhost:9090/api/v1/targets | jq .</code></pre>
+
+    <p>Open <strong>http://your-lab-ip:9090/targets</strong> in your browser. You should see all three scrape targets (prometheus, node, cadvisor) showing an <strong>UP</strong> state. If any target shows <strong>DOWN</strong>, check that the exporter container is running with <code>docker compose logs &lt;service_name&gt;</code>.</p>
+
+    <h2>3. Exploring Prometheus Metrics</h2>
+    <p>Prometheus's built-in expression browser at <strong>http://your-lab-ip:9090/graph</strong> lets you run ad-hoc PromQL queries. Try these to verify your setup:</p>
+
+    <pre><code># Total CPU usage percentage
+100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[1m])) * 100)
+
+# Memory usage
+node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes
+
+# Disk space used %
+(node_filesystem_size_bytes{mountpoint="/"} - node_filesystem_free_bytes{mountpoint="/"})
+  / node_filesystem_size_bytes{mountpoint="/"} * 100
+
+# Container CPU from cAdvisor
+sum(rate(container_cpu_usage_seconds_total{container_label_com_docker_compose_service!=""}[1m]))
+  by (container_label_com_docker_compose_service)
+
+# Uptime in seconds
+time() - node_boot_time_seconds</code></pre>
+
+    <p>PromQL is a powerful functional language. The <code>rate()</code> function calculates per-second averages over a time window, <code>avg by()</code> aggregates across dimensions, and <code>time()</code> returns the current Unix timestamp for calculations. According to the <strong>Prometheus 2024 documentation</strong>, over 200 PromQL functions are available, but these four patterns cover 90% of homelab use cases.</p>
+
+    <h2>4. Building Your First Grafana Dashboard</h2>
+
+    <h3>4.1 Configure the Prometheus Data Source</h3>
+    <p>Grafana needs to know where Prometheus lives. You can set this up manually in the UI, or — better — automate it with provisioning files.</p>
+
+    <p>Create the provisioning directory structure:</p>
+    <pre><code>mkdir -p grafana-provisioning/datasources
+mkdir -p grafana-provisioning/dashboards</code></pre>
+
+    <p>Create <code>grafana-provisioning/datasources/prometheus.yaml</code>:</p>
+
+    <pre><code>apiVersion: 1
+
+datasources:
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
+    editable: false</code></pre>
+
+    <p>Create <code>grafana-provisioning/dashboards/dashboards.yaml</code>:</p>
+
+    <pre><code>apiVersion: 1
+
+providers:
+  - name: "Default"
+    orgId: 1
+    folder: ""
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 10
+    options:
+      path: /etc/grafana/provisioning/dashboards</code></pre>
+
+    <p>Now restart Grafana to pick up the provisioning files:</p>
+    <pre><code>docker compose restart grafana</code></pre>
+
+    <h3>4.2 Import a Production-Ready Dashboard</h3>
+    <p>Rather than building from scratch, import the community-standard <strong>Node Exporter Full</strong> dashboard (ID: <strong>1860</strong>):</p>
+    <ul>
+      <li>Open <strong>http://your-lab-ip:3000</strong> and log in (<code>admin</code> / <code>changeme</code>)</li>
+      <li>Click the ☰ menu → <strong>Dashboards</strong> → <strong>Import</strong></li>
+      <li>Enter <strong>1860</strong> as the Grafana.com dashboard ID, click <strong>Load</strong></li>
+      <li>Select <strong>Prometheus</strong> as the data source, click <strong>Import</strong></li>
+    </ul>
+
+    <p>You now have a dashboard showing CPU, memory, disk, network, and system load for your host. The dashboard uses PromQL queries like <code>100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[1m])) * 100)</code> for CPU and <code>node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes</code> for memory — the same queries you tested in the expression browser.</p>
+
+    <h3>4.3 Container Monitoring Dashboard</h3>
+    <p>For Docker container metrics, import dashboard ID <strong>14282</strong> (cAdvisor Exporter / Docker Containers). This dashboard visualizes per-container CPU, memory, network, and filesystem metrics collected by cAdvisor.</p>
+
+    <p><strong>Pro tip:</strong> Download the dashboard JSON and save it to <code>grafana-provisioning/dashboards/</code> so it's automatically available on container restart. Grafana's provisioning system watches this directory and refreshes every 10 seconds (as configured above).</p>
+
+    <h2>5. Alerting: Know When Something Breaks</h2>
+    <p>Dashboards are great for post-mortem analysis, but alerts catch problems while they're happening. Grafana's built-in alerting engine (v8+) supports alert rules directly without requiring a separate Alertmanager, though for production stacks you'd pair it with Prometheus Alertmanager.</p>
+
+    <h3>5.1 Setting Up Grafana Alerts</h3>
+    <p>Navigate to <strong>Alerting</strong> → <strong>Alert rules</strong> → <strong>New alert rule</strong>. Create these three essential rules:</p>
+
+    <pre><code># Rule 1: Disk usage warning
+Query: (node_filesystem_size_bytes{mountpoint="/"}
+        - node_filesystem_free_bytes{mountpoint="/"})
+        / node_filesystem_size_bytes{mountpoint="/"} * 100
+Condition: WHEN last() OF query(A, 5m) IS ABOVE 85
+Evaluate: every 5m for 5m
+Severity: warning
+Summary: Disk usage on {{ $labels.instance }} is {{ $values }}%
+
+# Rule 2: High CPU load
+Query: 100 - (avg by(instance)
+        (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)
+Condition: WHEN last() OF query(A, 15m) IS ABOVE 90
+Evaluate: every 5m for 10m
+Severity: critical
+Summary: CPU spike detected on {{ $labels.instance }}
+
+# Rule 3: Instance down
+Query: up{job="node"}
+Condition: WHEN last() OF query(A, 1m) IS ABOVE 0.5
+Evaluate: every 1m for 1m
+Severity: critical
+Summary: Node exporter {{ $labels.instance }} is unreachable
+Note: A value below 1 means the target is DOWN</code></pre>
+
+    <h3>5.2 Notification Channels</h3>
+    <p>Go to <strong>Alerting</strong> → <strong>Contact points</strong> and add a notification channel. Free options include:</p>
+    <ul>
+      <li><strong>Email</strong> — works if your homelab has SMTP relay (e.g., Gmail app password)</li>
+      <li><strong>Webhook</strong> — POST JSON to a Slack channel, Discord webhook, or Telegram bot</li>
+      <li><strong>Discord</strong> — native integration, paste your Discord webhook URL</li>
+      <li><strong>Pushover</strong> — push notifications to your phone ($5 lifetime license)</li>
+    </ul>
+
+    <p>For a quick setup, use Discord: create a webhook in your server's channel settings, then paste the URL into Grafana's Discord contact point configuration. Alerts fire with severity, summary, and a link back to the dashboard.</p>
+
+    <div class="highlight">
+      <h3>⚠️ Alert Fatigue Warning</h3>
+      <p>Start with 3-5 high-value alerts. Adding too many rules too early leads to alert fatigue — you'll ignore notifications and miss real incidents. The three rules above (disk, CPU, instance down) cover the most common homelab failures.</p>
+    </div>
+
+    <h2>6. Going Further: Advanced Monitoring</h2>
+    <p>Once the basics are running, consider adding these exporters for deeper visibility:</p>
+
+    <table style="width:100%; border-collapse: collapse; margin: 16px 0;">
+      <tr style="background:#f0f0f5;">
+        <th style="padding:8px 12px; border:1px solid #ddd; text-align:left;">Exporter</th>
+        <th style="padding:8px 12px; border:1px solid #ddd; text-align:left;">Metrics Collected</th>
+        <th style="padding:8px 12px; border:1px solid #ddd; text-align:left;">Port</th>
+      </tr>
+      <tr>
+        <td style="padding:8px 12px; border:1px solid #ddd;"><code>blackbox_exporter</code></td>
+        <td style="padding:8px 12px; border:1px solid #ddd;">HTTP/TCP/ICMP probe results — check if your websites are reachable</td>
+        <td style="padding:8px 12px; border:1px solid #ddd;">9115</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 12px; border:1px solid #ddd;"><code>postgres_exporter</code></td>
+        <td style="padding:8px 12px; border:1px solid #ddd;">PostgreSQL connections, queries, replication lag, cache hit ratio</td>
+        <td style="padding:8px 12px; border:1px solid #ddd;">9187</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 12px; border:1px solid #ddd;"><code>redis_exporter</code></td>
+        <td style="padding:8px 12px; border:1px solid #ddd;">Redis memory usage, hit rate, connected clients, latency</td>
+        <td style="padding:8px 12px; border:1px solid #ddd;">9121</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 12px; border:1px solid #ddd;"><code>nginx_exporter</code></td>
+        <td style="padding:8px 12px; border:1px solid #ddd;">Nginx requests, connections, active connections, response codes</td>
+        <td style="padding:8px 12px; border:1px solid #ddd;">9113</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 12px; border:1px solid #ddd;"><code>speedtest_exporter</code></td>
+        <td style="padding:8px 12px; border:1px solid #ddd;">Internet speed test results (download/upload/ping) via Ookla</td>
+        <td style="padding:8px 12px; border:1px solid #ddd;">9798</td>
+      </tr>
+    </table>
+
+    <p>Each exporter typically runs as an additional service in your <code>docker-compose.yml</code>. Add its scrape target to the <code>prometheus.yml</code> under <code>scrape_configs</code>, restart, and the metrics appear automatically in Grafana.</p>
+
+    <h2>7. Maintenance & Best Practices</h2>
+
+    <h3>7.1 Data Retention</h3>
+    <p>Prometheus's default retention is 15 days. For homelabs where disk space isn't abundant, 30 days is a good balance. Adjust in the <code>command</code> section of your Compose file:</p>
+    <pre><code>--storage.tsdb.retention.time=30d</code></pre>
+    <p>Prometheus automatically compacts old data into larger blocks and deletes expired blocks. You can check disk usage with:</p>
+    <pre><code>docker exec prometheus du -sh /prometheus</code></pre>
+
+    <h3>7.2 Upgrading</h3>
+    <p>The Prometheus, Grafana, and exporter images all follow semver. Use specific versions (as shown in the Compose file above) rather than <code>:latest</code> to avoid surprise breaking changes. When upgrading:</p>
+    <pre><code># Stop, pull new images, recreate containers
+docker compose down
+docker compose pull
+docker compose up -d</code></pre>
+
+    <h3>7.3 Backups</h3>
+    <p>Back up the data directories and provisioning files:</p>
+    <pre><code># Stop the stack to ensure data consistency
+docker compose stop prometheus grafana
+
+# Create a timestamped backup
+tar -czf "monitoring-backup-$(date +%Y%m%d).tar.gz" \
+  data/prometheus/ data/grafana/ prometheus.yml grafana-provisioning/
+
+# Restart
+docker compose start</code></pre>
+
+    <h3>7.4 Security</h3>
+    <ul>
+      <li>Never expose Prometheus's port 9090 to the internet — anyone can query your metrics</li>
+      <li>Use a reverse proxy (Nginx with Let's Encrypt) in front of Grafana for HTTPS and authentication</li>
+      <li>Set up a separate Grafana API key (Service Account) with limited permissions for automated tasks</li>
+      <li>Use network segmentation: put the monitoring stack on a dedicated Docker network</li>
+    </ul>
+
+    <h2>Summary</h2>
+    <p>You now have a production-grade monitoring stack running in your homelab. Prometheus collects system metrics via node_exporter and container metrics via cAdvisor. Grafana visualizes everything on beautiful dashboards and alerts you when disk fills up, CPU spikes, or a service goes offline. The entire stack is declarative, containerized, and reproducible — you can redeploy it on a new server in under 10 minutes.</p>
+
+    <p>According to the <strong>Stack Overflow 2024 Developer Survey</strong>, Prometheus ranked as the fourth most-loved monitoring tool among developers, and Grafana was the top visualization platform. For homelab enthusiasts, this combination offers enterprise-grade observability with the simplicity of a single Docker Compose file and the freedom of open-source licensing.</p>
+
+    <p>Start with the three core exporters, add a few alerts, and build custom dashboards as your homelab grows. The PromQL queries you've learned here — aggregations, rate calculations, and conditionals — scale seamlessly from a single Raspberry Pi to a multi-node Kubernetes cluster.</p>
+
+    <h2>FAQ</h2>
+
+    <h3>What is the difference between Prometheus and Grafana?</h3>
+    <p>Prometheus is a time-series database and alerting system that collects and stores metrics. Grafana is a visualization layer that connects to Prometheus (and many other data sources) to build dashboards. Together, Prometheus provides the data storage and query engine, while Grafana displays the metrics as charts, graphs, and alerts.</p>
+
+    <h3>Do I need to expose Prometheus and Grafana to the internet?</h3>
+    <p>No. Both services can run on a local Docker network accessible only from your LAN. If you want remote access, place them behind an authentication proxy (like Authelia) or use a VPN like WireGuard. Never expose Grafana without authentication — it gives direct access to your infrastructure metrics.</p>
+
+    <h3>How much disk space does Prometheus use?</h3>
+    <p>For a homelab with 3-5 servers and 15-second scrape intervals, Prometheus typically uses 1-5 GB per month. Configure retention in the <code>command</code> section of your Compose file with the <code>--storage.tsdb.retention.time</code> flag. A common homelab setting is 30 days, which keeps disk usage under 10 GB for most setups.</p>
+
+    <h3>Can Prometheus monitor Docker containers?</h3>
+    <p>Yes. Use cAdvisor (by Google) to collect container-level metrics, or use the Prometheus Docker Hub exporter for individual container metrics. cAdvisor publishes CPU, memory, network, and disk I/O per container, and Prometheus scrapes it just like any other exporter.</p>
+
+    <h3>What is the simplest way to try Prometheus and Grafana today?</h3>
+    <p>Use Docker Compose. The single <code>docker-compose.yml</code> provided in this guide with services for Prometheus, Grafana, node_exporter, and cAdvisor gets you a full monitoring stack in under 10 minutes. The official images require no special configuration to get started — just set the data sources and import a dashboard.</p>
+
+    <div class="article-nav">
+      <a href="../index.html">← Back to Home</a>
+    </div>
+
+    <h2>Related Articles</h2>
+    <ul>
+      <li><a href="docker-compose-guide.html">Docker Compose for Self-Hosting: A Complete Beginner's Guide</a> — Learn the Compose syntax used to deploy this monitoring stack</li>
+      <li><a href="nginx-reverse-proxy-guide.html">Nginx Reverse Proxy Setup Guide for Self-Hosted Applications</a> — Put Grafana behind HTTPS with a reverse proxy</li>
+      <li><a href="cloudflare-tunnel-guide.html">Cloudflare Tunnel: Free &amp; Secure Way to Expose Self-Hosted Services</a> — Securely access Grafana dashboards from anywhere</li>
+      <li><a href="linux-disk-cleanup.html">Linux Server Disk Cleanup: Complete Guide</a> — Prometheus stores time-series data on disk; learn how to manage it</li>
+      <li><a href="wsl-setup.html">WSL2 Production Environment Complete Setup</a> — Run the monitoring stack on Windows via WSL2</li>
+      <li><a href="fastapi-deploy.html">FastAPI Project: From Development to Deployment</a> — Build a custom app exporter to feed metrics into Prometheus</li>
+    </ul>
+  </article>
+
+  <footer>
+    <div class="container">
+      <div class="footer-links">
+        <a href="/selfhost-guide/">Home</a>
+        <span>·</span>
+        <a href="/selfhost-guide/about.html">About</a>
+        <span>·</span>
+        <a href="/selfhost-guide/categories.html">Categories</a>
+        <span>·</span>
+        <a href="/selfhost-guide/privacy.html">Privacy Policy</a>
+        <span>·</span>
+        <a href="/selfhost-guide/terms.html">Terms of Use</a>
+      </div>
+      <p class="footer-copy">© 2026 Self-Host Guide</p>
+    </div>
+  </footer>
+<script>
+// Page view counter (no external dependencies)
+(function(){
+  var key = 'pv_' + window.location.pathname.replace(/\//g,'_').replace(/\.html$/,'');
+  var count = localStorage.getItem(key) || 0;
+  count = parseInt(count) + 1;
+  localStorage.setItem(key, count);
+  var el = document.getElementById('busuanzi_value_page_pv');
+  if (el) el.textContent = count;
+})();
+</script>
+</body>
+</html>

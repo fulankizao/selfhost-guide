@@ -1,0 +1,28 @@
+# Self-Host Guide
+> Practical tutorials for building and managing your own homelab. Covers Docker, Linux, web services, networking, security, and automation.
+
+## About
+Self-Host Guide provides hands-on tutorials for developers and IT professionals who want to self-host their own services. All content is based on real experience and tested configurations.
+
+## Articles
+- Hermes Agent Complete Setup Guide (2026): articles/hermes-agent-setup.html
+- WSL2 Ultimate Productivity Environment Setup: articles/wsl-setup.html  
+- Docker Compose for Self-Hosting: articles/docker-compose-guide.html
+- Cloudflare Tunnel: Free & Secure Way to Expose Services: articles/cloudflare-tunnel-guide.html
+- Nginx Reverse Proxy Setup Guide: articles/nginx-reverse-proxy-guide.html
+- How to Set Up Your Own VPN with WireGuard: articles/wireguard-vpn-guide.html
+- Monitoring Your Homelab with Prometheus and Grafana: articles/monitoring-homelab-guide.html
+- Automatic Backup Strategies for Self-Hosted Services: articles/backup-strategies-guide.html
+- Securing Your Self-Hosted Server: A Practical Guide: articles/server-security-guide.html
+- Self-Hosted Password Manager with Vaultwarden: articles/vaultwarden-password-manager.html
+- Docker Networking Explained for Beginners: articles/docker-networking-guide.html
+- Introduction to Ansible for Homelab Automation: articles/ansible-homelab-guide.html
+- How to Set Up a Personal Wiki with BookStack: articles/bookstack-wiki-guide.html
+- Linux Server Disk Cleanup Practical Guide: articles/linux-disk-cleanup.html
+- FastAPI Project: From Development to Deployment: articles/fastapi-deploy.html
+
+## Core Topics
+Docker, Linux, Networking, Security, Backup, Monitoring, Automation, VPN, Web Services, Self-Hosting
+
+## Contact
+- GitHub: https://github.com/fulankizao

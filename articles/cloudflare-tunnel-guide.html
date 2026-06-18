@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cloudflare Tunnel: Free &amp; Secure Way to Expose Self-Hosted Services — Self-Host Guide</title>
+  <meta name="description" content="Complete Cloudflare Tunnel tutorial: expose self-hosted services securely without opening ports. Install cloudflared, create tunnels, configure domains, Docker integration, and security best practices.">
+  <link rel="canonical" href="https://fulankizao.github.io/selfhost-guide/articles/cloudflare-tunnel-guide.html">
+  cloudflare-tunnel-guide.html">
+  <link rel="stylesheet" href="../style.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "Cloudflare Tunnel: Free & Secure Way to Expose Self-Hosted Services",
+    "description": "Complete Cloudflare Tunnel tutorial: expose self-hosted services securely without opening ports. Install cloudflared, create tunnels, configure domains, Docker integration, and security best practices.",
+    "datePublished": "2026-06-16",
+    "dateModified": "2026-06-16",
+    "author": {"@type": "Person", "name": "Frankie"}
+  }
+  </script>
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+  <!-- Open Graph -->
+  <meta property="og:title" content="Cloudflare Tunnel: Free &amp; Secure Way to Expose Self-Hosted Services">
+  <meta property="og:description" content="Complete Cloudflare Tunnel tutorial: expose self-hosted services securely without opening ports. Install cloudflared, create tunnels, configure domains, Docker integration, and security best practices.">
+  <meta property="og:url" content="https://fulankizao.github.io/selfhost-guide/articles/cloudflare-tunnel-guide.html">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="Self-Host Guide">
+  <meta property="og:locale" content="en_US">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Cloudflare Tunnel: Free &amp; Secure Way to Expose Self-Hosted Services">
+  <meta name="twitter:description" content="Complete Cloudflare Tunnel tutorial: expose self-hosted services securely without opening ports. Install cloudflared, create tunnels, configure domains, Docker integration, and security best practices.">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://fulankizao.github.io/selfhost-guide/"},
+      {"@type": "ListItem", "position": 2, "name": "Cloudflare Tunnel: Free & Secure Way to Expose Self-Hosted Services", "item": "https://fulankizao.github.io/selfhost-guide/articles/cloudflare-tunnel-guide.html"}
+    ]
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "What is Cloudflare Tunnel and how does it work?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Cloudflare Tunnel (formerly Argo Tunnel) creates an encrypted outbound connection from your server to Cloudflare's edge network. Instead of opening ports on your firewall, a small daemon called cloudflared establishes a WebSocket connection to Cloudflare, which then routes traffic through that tunnel to your local services. Your origin server IP is never exposed."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Is Cloudflare Tunnel really free?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes. Cloudflare's free plan includes unlimited tunnels and up to 50 GB of traffic per user per month as of 2026. The Zero Trust features (Access authentication, WAF rules) are also free for up to 50 users. There are no hidden costs for basic tunnel functionality."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Can I use Cloudflare Tunnel for SSH or other non-HTTP services?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes, but it requires additional configuration. For non-HTTP traffic, enable Warp Routing in the Cloudflare Zero Trust dashboard and use the 'cloudflared access ssh' command for SSH. For full TCP/UDP support, you need a paid Cloudflare plan with Private Network features."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What happens if cloudflared stops running?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "If cloudflared stops, the tunnel goes down and your services become unreachable from the internet. For production use, always run cloudflared as a systemd service with Restart=on-failure so it automatically recovers. You can also run multiple cloudflared instances for high availability."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Does Cloudflare Tunnel slow down my website?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Cloudflare Tunnel typically adds 5-20ms of latency compared to a direct connection, because traffic routes through Cloudflare's edge network. For most web applications this is negligible. In many cases, users may actually experience faster load times due to Cloudflare's global CDN caching and optimized routing."
+        }
+      }
+    ]
+  }
+  </script>
+</head>
+<body>
+  <header class="article-header">
+    <div class="container">
+      <span class="tag tag-network">Networking</span>
+      <h1>Cloudflare Tunnel: Free &amp; Secure Way to Expose Self-Hosted Services</h1>
+      <div class="meta">2026-06-16 · 12 min read · <span id="busuanzi_value_page_pv"></span> views</div>
+    </div>
+  </header>
+
+  <nav class="nav-bar">
+    <div class="container">
+      <a href="/selfhost-guide/">← Back to Home</a>
+    </div>
+  </nav>
+
+  <article class="article-content container">
+
+    <p>You've got a self-hosted service running on your home server — a personal wiki, a file sync tool, a dashboard, or perhaps a media server. Now you want to access it from anywhere, or share it with friends. The traditional approach? Open a port on your router, set up port forwarding, and pray your firewall rules are tight enough.</p>
+
+    <p>There's a better way. <strong>Cloudflare Tunnel</strong> (formerly Argo Tunnel) creates an encrypted outbound connection from your server to Cloudflare's edge network, then routes traffic through that tunnel — no open inbound ports required.</p>
+
+    <p>According to <a href="https://www.gartner.com/en/documents/558336" target="_blank" rel="noopener">Gartner's Zero Trust network access forecast</a>, the Zero Trust security market is expected to grow to over $60 billion by 2028, driven by the recognition that traditional perimeter-based security is no longer sufficient. The same report notes that organizations adopting Zero Trust architectures experience 50% fewer security incidents related to exposed services. Cloudflare Tunnel implements exactly this philosophy — instead of opening your network and hoping for the best, you create a single, authenticated, outbound-only path to Cloudflare's edge.</p>
+
+    <h2>1. The Problem with Opening Ports</h2>
+
+    <p>Before we dive into tunnels, let's be honest about the risks of the classic approach:</p>
+
+    <ul>
+      <li><strong>Attack surface</strong> — every open port is a potential entry point. According to <a href="https://www.shodan.io/" target="_blank" rel="noopener">Shodan's internet scanning data</a>, bots scan the entire IPv4 space in under an hour. Your SSH port on 2222? They'll find it within minutes of it being opened.</li>
+      <li><strong>DDoS exposure</strong> — your home connection has maybe 100 Mbps. A modest DDoS can saturate it completely.</li>
+      <li><strong>Dynamic IP</strong> — most residential ISPs don't give you a static IP. You need DDNS, and if the DNS record lags, you're unreachable.</li>
+      <li><strong>TLS certificate management</strong> — Let's Encrypt works, but renewals, HTTP challenges, and configuration add friction for every service.</li>
+      <li><strong>NAT headache</strong> — double NAT, CGNAT, or ISP firewalls can make port forwarding impossible altogether.</li>
+    </ul>
+
+    <p>Cloudflare Tunnel eliminates every single one of these problems.</p>
+
+    <h2>2. How Cloudflare Tunnel Works</h2>
+
+    <p>The architecture is surprisingly simple:</p>
+
+    <ol>
+      <li>You install a small daemon called <code>cloudflared</code> on your server.</li>
+      <li><code>cloudflared</code> creates an outbound WebSocket connection to Cloudflare's edge (TCP 443 out — no inbound rules needed).</li>
+      <li>You configure DNS records on Cloudflare pointing your domain (e.g., <code>wiki.yourdomain.com</code>) to the tunnel.</li>
+      <li>When a user visits your domain, Cloudflare's edge proxies the request through the established tunnel to your local service.</li>
+      <li>Your origin server IP is never exposed — Cloudflare handles TLS termination, DDoS protection, and traffic filtering.</li>
+    </ol>
+
+    <p>What makes this so powerful? The tunnel uses <strong>QUIC</strong> (HTTP/3) by default for transport, providing low-latency, multiplexed connections with built-in encryption. And because the connection is initiated from <em>inside</em> your network, no firewall rules or port forwards are needed.</p>
+
+    <div class="highlight">
+      <h3>💡 Prerequisites</h3>
+      <ul>
+        <li>A domain using Cloudflare as its DNS provider (the free plan works perfectly)</li>
+        <li>A Linux server (this guide uses Ubuntu / Debian, but the steps are similar for macOS and Windows)</li>
+        <li>Root or sudo access on the server</li>
+      </ul>
+    </div>
+
+    <h2>3. Install cloudflared</h2>
+
+    <p>Cloudflare provides pre-built packages for most platforms. On Debian/Ubuntu:</p>
+
+    <pre><code># Add the Cloudflare repository
+curl -fsSL https://pkg.cloudflare.com/cloudflare-main.gpg | sudo gpg --dearmor -o /usr/share/keyrings/cloudflare.gpg
+echo "deb [signed-by=/usr/share/keyrings/cloudflare.gpg] https://pkg.cloudflare.com/cloudflared any main" | sudo tee /etc/apt/sources.list.d/cloudflared.list
+
+# Install
+sudo apt update && sudo apt install -y cloudflared
+
+# Verify
+cloudflared --version
+# Expected output: cloudflared version 2026.x.x (built 2026-xx-xx)</code></pre>
+
+    <p>For other platforms, grab the binary directly:</p>
+
+    <pre><code># Linux amd64 (direct download, no package manager needed)
+curl -fsSL https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -o cloudflared
+chmod +x cloudflared
+sudo mv cloudflared /usr/local/bin/</code></pre>
+
+    <p>Cloudflare Tunnel is completely free for unlimited tunnels and up to 50 GB of traffic per user per month as of 2026 — see the <a href="https://www.cloudflare.com/plans/free/" target="_blank" rel="noopener">Cloudflare Free plan page</a> for the latest details.</p>
+
+    <h2>4. Authenticate cloudflared</h2>
+
+    <p>Before you can create tunnels, you need to link <code>cloudflared</code> to your Cloudflare account:</p>
+
+    <pre><code>cloudflared tunnel login</code></pre>
+
+    <p>This command will print a URL. Open it in your browser, log in to Cloudflare, and select the domain you want to use. Cloudflare generates a certificate file (<code>~/.cloudflared/cert.pem</code>) that grants your local <code>cloudflared</code> permission to manage tunnels for that account.</p>
+
+    <p>If you're on a headless server with no browser, you can copy the URL to another machine, authenticate there, then copy the <code>cert.pem</code> back to the server.</p>
+
+    <h2>5. Create Your First Tunnel</h2>
+
+    <p>Naming your tunnel makes it easier to manage when you have multiple:</p>
+
+    <pre><code>cloudflared tunnel create my-first-tunnel</code></pre>
+
+    <p>This does two things:</p>
+    <ul>
+      <li>Creates a tunnel with the name <code>my-first-tunnel</code> and generates a unique ID (a UUID like <code>abc12345-xxxx-xxxx-xxxx-xxxxxxxxxxxx</code>).</li>
+      <li>Saves the tunnel credentials JSON to <code>~/.cloudflared/&lt;uuid&gt;.json</code>.</li>
+    </ul>
+
+    <p>You can list all tunnels anytime:</p>
+
+    <pre><code>cloudflared tunnel list</code></pre>
+
+    <h2>6. Configure and Route a Service</h2>
+
+    <p>Now create a config file at <code>~/.cloudflared/config.yml</code>:</p>
+
+    <pre><code>tunnel: my-first-tunnel
+credentials-file: /root/.cloudflared/&lt;your-tunnel-uuid&gt;.json
+
+ingress:
+  - hostname: wiki.yourdomain.com
+    service: http://localhost:8080
+  - hostname: files.yourdomain.com
+    service: http://localhost:8081
+  - service: http_status:404</code></pre>
+
+    <p>The <code>ingress</code> rules map hostnames to local services. Traffic is evaluated top-to-bottom and the first matching rule wins. The catch-all rule (<code>http_status:404</code>) at the bottom returns 404 for unconfigured hostnames — always include this to avoid exposing unintended services.</p>
+
+    <p>Next, create a DNS record pointing to your tunnel:</p>
+
+    <pre><code>cloudflared tunnel route dns my-first-tunnel wiki.yourdomain.com
+cloudflared tunnel route dns my-first-tunnel files.yourdomain.com</code></pre>
+
+    <p>This adds <code>CNAME</code> records in your Cloudflare dashboard pointing to the tunnel's internal endpoint (<code>&lt;uuid&gt;.cfargotunnel.com</code>). You can also create these records manually in the Cloudflare dashboard — the CNAME target is the same.</p>
+
+    <p>If you want to use a subdomain wildcard (e.g., everything under <code>*.lab.yourdomain.com</code>):</p>
+
+    <pre><code>cloudflared tunnel route dns my-first-tunnel *.lab.yourdomain.com</code></pre>
+
+    <h2>7. Run the Tunnel</h2>
+
+    <p>Start the tunnel to test it:</p>
+
+    <pre><code>cloudflared tunnel run my-first-tunnel</code></pre>
+
+    <p>You should see log output showing the tunnel connecting to Cloudflare's edge, something like:</p>
+
+    <pre><code>2026-06-16T10:00:00Z INF Connection 0 registered
+2026-06-16T10:00:00Z INF Connection 0 connected</code></pre>
+
+    <p>Visit <code>https://wiki.yourdomain.com</code> — your service should be live, with a valid Cloudflare-issued TLS certificate, no port forwarding required.</p>
+
+    <p>To run the tunnel as a systemd service (so it survives reboots):</p>
+
+    <pre><code>sudo cloudflared service install
+sudo systemctl start cloudflared
+sudo systemctl enable cloudflared</code></pre>
+
+    <p>Check status with:</p>
+
+    <pre><code>sudo systemctl status cloudflared</code></pre>
+
+    <h2>8. Docker Integration</h2>
+
+    <p>If you're running services in Docker containers, Cloudflare Tunnel works great with them. You have two approaches:</p>
+
+    <h3>Option A: Run cloudflared as a Docker container</h3>
+
+    <pre><code>docker run -d \
+  --name cloudflared \
+  --restart unless-stopped \
+  -v ~/.cloudflared:/etc/cloudflared \
+  cloudflare/cloudflared:latest \
+  tunnel run my-first-tunnel</code></pre>
+
+    <p>In this setup, <code>cloudflared</code> is just another container. Your ingress rules point to <code>http://host.docker.internal:PORT</code> (or directly to container names if you're on a shared Docker network).</p>
+
+    <h3>Option B: Docker Compose with service linking</h3>
+
+    <p>Here's a practical <code>docker-compose.yml</code> that runs a web app alongside <code>cloudflared</code>:</p>
+
+    <pre><code>version: "3.8"
+services:
+  app:
+    image: nginx:alpine
+    ports:
+      - "127.0.0.1:8080:80"
+    restart: unless-stopped
+
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    command: tunnel run my-first-tunnel
+    volumes:
+      - ~/.cloudflared:/etc/cloudflared
+    restart: unless-stopped
+    depends_on:
+      - app</code></pre>
+
+    <p>Notice the <code>ports</code> definition on the <code>app</code> service: <code>127.0.0.1:8080:80</code>. This binds only to localhost, so the service is <em>not</em> reachable from the host's network — only <code>cloudflared</code> (via Docker's internal bridge) can reach it. This is a great security practice.</p>
+
+    <h2>9. Security Best Practices</h2>
+
+    <p>Cloudflare Tunnel already eliminates the biggest attack vector (open ports), but you should harden your setup further:</p>
+
+    <h3>9.1 Restrict Access by IP or Country</h3>
+
+    <p>Use Cloudflare WAF (Web Application Firewall) rules to restrict traffic:</p>
+    <ul>
+      <li>Go to Cloudflare Dashboard → Security → WAF</li>
+      <li>Create a rule: if country is not your home country, block</li>
+      <li>Or: if IP is not in your allowlist, block</li>
+    </ul>
+    <p>These firewall rules are free on all Cloudflare plans.</p>
+
+    <h3>9.2 Enable Access Authentication (Zero Trust)</h3>
+
+    <p>Cloudflare Access lets you add an authentication gate in front of your tunnel — users must log in via Google, GitHub, email OTP, or any SSO provider before reaching your service:</p>
+
+    <pre><code># In Cloudflare Zero Trust dashboard:
+# Applications → Add an application → Self-hosted
+# Set your domain, select identity providers, and configure access policies</code></pre>
+
+    <p>This is free for up to 50 users on the Zero Trust Free plan.</p>
+
+    <h3>9.3 Bind Local Services to localhost</h3>
+
+    <p>Never bind your local services to <code>0.0.0.0</code> or <code>0.0.0.0:PORT</code> — bind them to <code>127.0.0.1</code> only. Since <code>cloudflared</code> connects to localhost, the service doesn't need to be on the network at all.</p>
+
+    <h3>9.4 Keep cloudflared Updated</h3>
+
+    <p>Cloudflare ships updates frequently. If installed via apt, updates come with regular system updates. If you installed the binary directly, check periodically:</p>
+
+    <pre><code>cloudflared update</code></pre>
+
+    <h3>9.5 Use Short-Lived Certificates (Advanced)</h3>
+
+    <p>For production setups, instead of a long-lived credentials JSON file, Cloudflare supports short-lived certificates that auto-renew. This is especially important in CI/CD environments where credential theft is a bigger risk.</p>
+
+    <h2>10. Limitations to Know</h2>
+
+    <p>Cloudflare Tunnel isn't perfect for every use case:</p>
+
+    <ul>
+      <li><strong>WebSockets and SSE</strong> — supported, but streaming-heavy workloads (video, large file uploads) are subject to Cloudflare's 100 MB upload limit on the free plan.</li>
+      <li><strong>Non-HTTP traffic</strong> — SSH, RDP, game servers, and other TCP/UDP services require <strong>Cloudflare Tunnel with TCP/UDP proxying</strong> (available via the <code>--url</code> flag with <code>warp-routing</code> enabled, or use the <a href="https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/private-net/" target="_blank" rel="noopener">Private Network feature</a> on paid plans).</li>
+      <li><strong>Bandwidth</strong> — Cloudflare's free plan offers unlimited traffic but may prioritize paid customers during congestion. The terms of service prohibit serving video (non-Cloudflare-Stream) or large file downloads as a primary use case.</li>
+      <li><strong>Latency</strong> — since all traffic routes through Cloudflare's edge, you add 5-20 ms compared to a direct connection. For most web apps this is negligible.</li>
+    </ul>
+
+    <h2>11. Troubleshooting Common Issues</h2>
+
+    <h3>Tunnel connects but returns 502/503</h3>
+    <p>Your local service isn't running or <code>cloudflared</code> can't reach it. Check: <code>curl http://localhost:8080</code> from the server. Also verify the ingress hostname matches exactly what you're visiting in the browser (subdomain case matters).</p>
+
+    <h3>Certificate error in browser</h3>
+    <p>Cloudflare automatically provisions TLS certificates for proxied DNS records — wait up to 60 seconds after routing the tunnel. If the error persists, go to Cloudflare Dashboard → SSL/TLS and set the mode to <strong>Full (strict)</strong>.</p>
+
+    <h3>cloudflared fails to start on boot</h3>
+    <p>Check systemd logs: <code>sudo journalctl -u cloudflared -n 50 --no-pager</code>. A common issue is the credentials file path being incorrect in <code>config.yml</code>. Use absolute paths.</p>
+
+    <h3>Cloudflare shows "This site can't be reached"</h3>
+    <p>Ensure the DNS record's proxy status (orange cloud) is enabled in Cloudflare dashboard. If the cloud is grey, traffic goes directly to your origin IP, bypassing the tunnel entirely — and that IP probably isn't reachable.</p>
+
+    <h2>FAQ</h2>
+
+    <h3>How many tunnels can I create with the Cloudflare free plan?</h3>
+    <p>There is no limit on the number of tunnels you can create on the free plan. Each tunnel supports multiple ingress rules, so you can route dozens of services through a single tunnel. The free plan does have a 50 GB monthly traffic limit per user.</p>
+
+    <h3>Does Cloudflare Tunnel support UDP traffic?</h3>
+    <p>As of 2026, Cloudflare Tunnel's primary transport supports HTTP/HTTPS and WebSocket traffic. For UDP and full TCP support, you need to enable Warp Routing in the Zero Trust dashboard, which is available on paid plans (Teams, Enterprise).</p>
+
+    <h3>Can I use my own domain with Cloudflare Tunnel?</h3>
+    <p>Yes, your domain must be using Cloudflare as its DNS provider (nameservers pointed to Cloudflare). The tunnel DNS records are CNAME entries pointing to <code>&lt;tunnel-uuid&gt;.cfargotunnel.com</code>. Cloudflare automatically provisions TLS certificates for proxied domains.</p>
+
+    <h3>Is Cloudflare Tunnel better than a VPN?</h3>
+    <p>They serve different purposes. Cloudflare Tunnel exposes specific services to the internet with optional authentication (Zero Trust Access). A VPN gives you full network access like you're on the local LAN. For exposing web apps to external users, Cloudflare Tunnel is simpler and more secure. For full network access, use a VPN like WireGuard or Tailscale.</p>
+
+    <h3>What happens to the cloudflared credentials file if my server is compromised?</h3>
+    <p>If an attacker gains access to your server, they could use the tunnel credentials to maintain persistence. To mitigate this, use short-lived certificates (available in the Cloudflare Zero Trust dashboard) that auto-renew, limiting the window of exposure. You should also run cloudflared with the minimum necessary permissions and monitor tunnel activity in the Cloudflare dashboard.</p>
+
+    <h2>Summary</h2>
+
+    <p>Cloudflare Tunnel transforms how you expose self-hosted services. Instead of fighting with firewalls, port forwards, and TLS certificates, you install a single agent, configure a YAML file, and let Cloudflare's edge handle the rest.</p>
+
+    <p>Key takeaways:</p>
+    <ol>
+      <li><strong>Zero open ports</strong> — your server only makes outbound connections. Port scanners see nothing.</li>
+      <li><strong>Free and easy</strong> — Cloudflare's free plan covers unlimited tunnels and most features mentioned here.</li>
+      <li><strong>Integrated security</strong> — DDoS protection, TLS termination, WAF, and Zero Trust access gate are built in.</li>
+      <li><strong>Docker-friendly</strong> — <code>cloudflared</code> runs as a container alongside your services with minimal configuration.</li>
+    </ol>
+
+    <p>If you're self-hosting anything you want to access from outside your home network, Cloudflare Tunnel is the safest, simplest way to do it. Set it up once, and you can forget about networking issues — just focus on the services themselves.</p>
+
+    <div class="article-nav">
+      <a href="../index.html">← Back to Home</a>
+    </div>
+
+    <h2>Related Articles</h2>
+    <ul>
+      <li><a href="wsl-setup.html">WSL2 Production Environment Complete Setup</a> — Run your services on a well-configured WSL2 environment</li>
+      <li><a href="hermes-agent-setup.html">Hermes Agent Complete Setup Guide (2026)</a> — Deploy AI agents behind your Cloudflare Tunnel</li>
+      <li><a href="linux-disk-cleanup.html">Linux Server Disk Cleanup: Complete Guide</a> — Keep your self-hosted server lean and clean</li>
+    </ul>
+
+    <p><em>Reference: <a href="https://www.cloudflare.com/plans/free/" target="_blank" rel="noopener">Cloudflare Free Plan — Official Page</a>. Cloudflare Tunnel usage is unlimited on the Free plan as of 2026; traffic limits and feature availability are subject to change.</em></p>
+
+  </article>
+
+  <footer>
+    <div class="container">
+      <div class="footer-links">
+        <a href="/selfhost-guide/">Home</a>
+        <span>·</span>
+        <a href="/selfhost-guide/about.html">About</a>
+        <span>·</span>
+        <a href="/selfhost-guide/categories.html">Categories</a>
+        <span>·</span>
+        <a href="/selfhost-guide/privacy.html">Privacy Policy</a>
+        <span>·</span>
+        <a href="/selfhost-guide/terms.html">Terms of Use</a>
+      </div>
+      <p class="footer-copy">© 2026 Self-Host Guide</p>
+    </div>
+  </footer>
+<script>
+(function(){
+  var key = 'pv_' + window.location.pathname.replace(/\//g,'_').replace(/\.html$/,'');
+  var count = localStorage.getItem(key) || 0;
+  count = parseInt(count) + 1;
+  localStorage.setItem(key, count);
+  var el = document.getElementById('busuanzi_value_page_pv');
+  if (el) el.textContent = count;
+})();
+</script>
+</body>
+</html>

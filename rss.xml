@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+  <title>Self-Host Guide</title>
+  <link>https://fulankizao.github.io/selfhost-guide/</link>
+  <description>Practical tutorials for building and managing your own homelab.</description>
+  <language>en</language>
+  <atom:link href="https://fulankizao.github.io/selfhost-guide/rss.xml" rel="self" type="application/rss+xml"/>
+  <lastBuildDate>Mon, 16 Jun 2026 00:00:00 GMT</lastBuildDate>
+
+  <item>
+    <title>How to Set Up a Personal Wiki with BookStack</title>
+    <link>https://fulankizao.github.io/selfhost-guide/articles/bookstack-wiki-guide.html</link>
+    <description>Step-by-step guide to self-hosting BookStack: Docker deployment, Nginx reverse proxy, LDAP integration, backup automation.</description>
+    <pubDate>Mon, 16 Jun 2026 00:00:00 GMT</pubDate>
+  </item>
+  <item>
+    <title>Introduction to Ansible for Homelab Automation</title>
+    <link>https://fulankizao.github.io/selfhost-guide/articles/ansible-homelab-guide.html</link>
+    <description>Learn Ansible for homelab automation: inventory, playbooks, roles, and server hardening automation.</description>
+    <pubDate>Mon, 16 Jun 2026 00:00:00 GMT</pubDate>
+  </item>
+  <item>
+    <title>Docker Networking Explained for Beginners</title>
+    <link>https://fulankizao.github.io/selfhost-guide/articles/docker-networking-guide.html</link>
+    <description>Bridge, host, overlay networks, Docker Compose networking, and troubleshooting explained.</description>
+    <pubDate>Mon, 16 Jun 2026 00:00:00 GMT</pubDate>
+  </item>
+  <item>
+    <title>Self-Hosted Password Manager with Vaultwarden</title>
+    <link>https://fulankizao.github.io/selfhost-guide/articles/vaultwarden-password-manager.html</link>
+    <description>Docker deployment, reverse proxy, backups, and client setup for Vaultwarden.</description>
+    <pubDate>Mon, 16 Jun 2026 00:00:00 GMT</pubDate>
+  </item>
+  <item>
+    <title>Securing Your Self-Hosted Server: A Practical Guide</title>
+    <link>https://fulankizao.github.io/selfhost-guide/articles/server-security-guide.html</link>
+    <description>SSH hardening, firewall, fail2ban, Docker security, and auditing for self-hosted servers.</description>
+    <pubDate>Mon, 16 Jun 2026 00:00:00 GMT</pubDate>
+  </item>
+  <item>
+    <title>Automatic Backup Strategies for Self-Hosted Services</title>
+    <link>https://fulankizao.github.io/selfhost-guide/articles/backup-strategies-guide.html</link>
+    <description>3-2-1 backup rule, database backups, off-site sync, and recovery testing for self-hosted services.</description>
+    <pubDate>Mon, 16 Jun 2026 00:00:00 GMT</pubDate>
+  </item>
+  <item>
+    <title>Monitoring Your Homelab with Prometheus and Grafana</title>
+    <link>https://fulankizao.github.io/selfhost-guide/articles/monitoring-homelab-guide.html</link>
+    <description>Complete monitoring stack with Docker Compose, dashboards, and alerting rules.</description>
+    <pubDate>Mon, 16 Jun 2026 00:00:00 GMT</pubDate>
+  </item>
+  <item>
+    <title>How to Set Up Your Own VPN with WireGuard</title>
+    <link>https://fulankizao.github.io/selfhost-guide/articles/wireguard-vpn-guide.html</link>
+    <description>Server and client configuration, performance optimization, and Docker deployment for WireGuard VPN.</description>
+    <pubDate>Mon, 16 Jun 2026 00:00:00 GMT</pubDate>
+  </item>
+  <item>
+    <title>Nginx Reverse Proxy Setup Guide for Self-Hosted Apps</title>
+    <link>https://fulankizao.github.io/selfhost-guide/articles/nginx-reverse-proxy-guide.html</link>
+    <description>Multi-site configuration, SSL with Certbot, WebSocket proxy, and performance tuning.</description>
+    <pubDate>Mon, 16 Jun 2026 00:00:00 GMT</pubDate>
+  </item>
+  <item>
+    <title>Cloudflare Tunnel: Free &amp; Secure Way to Expose Services</title>
+    <link>https://fulankizao.github.io/selfhost-guide/articles/cloudflare-tunnel-guide.html</link>
+    <description>Expose self-hosted apps without opening ports, with Docker integration and security best practices.</description>
+    <pubDate>Mon, 16 Jun 2026 00:00:00 GMT</pubDate>
+  </item>
+  <item>
+    <title>Docker Compose for Self-Hosting: Beginner's Guide</title>
+    <link>https://fulankizao.github.io/selfhost-guide/articles/docker-compose-guide.html</link>
+    <description>Docker Compose basics, essential commands, and real Flask+PostgreSQL deployment example.</description>
+    <pubDate>Mon, 16 Jun 2026 00:00:00 GMT</pubDate>
+  </item>
+  <item>
+    <title>WSL2 Ultimate Productivity Environment Setup</title>
+    <link>https://fulankizao.github.io/selfhost-guide/articles/wsl-setup.html</link>
+    <description>Proxy configuration, disk compaction, systemd services, and dev toolchain for WSL2.</description>
+    <pubDate>Mon, 16 Jun 2026 00:00:00 GMT</pubDate>
+  </item>
+  <item>
+    <title>Hermes Agent Complete Setup Guide (2026)</title>
+    <link>https://fulankizao.github.io/selfhost-guide/articles/hermes-agent-setup.html</link>
+    <description>WebUI configuration, QQ Bot integration, systemd auto-start for your private AI assistant.</description>
+    <pubDate>Mon, 16 Jun 2026 00:00:00 GMT</pubDate>
+  </item>
+  <item>
+    <title>Linux Server Disk Cleanup Practical Guide</title>
+    <link>https://fulankizao.github.io/selfhost-guide/articles/linux-disk-cleanup.html</link>
+    <description>Log rotation, Docker image cleanup, and locating large files on Linux servers.</description>
+    <pubDate>Mon, 16 Jun 2026 00:00:00 GMT</pubDate>
+  </item>
+  <item>
+    <title>FastAPI Project: From Development to Deployment</title>
+    <link>https://fulankizao.github.io/selfhost-guide/articles/fastapi-deploy.html</link>
+    <description>Project structure, API design, Nginx reverse proxy, and Docker packaging for FastAPI.</description>
+    <pubDate>Mon, 16 Jun 2026 00:00:00 GMT</pubDate>
+  </item>
+</channel>
+</rss>

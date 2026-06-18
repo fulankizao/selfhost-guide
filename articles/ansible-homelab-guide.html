@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Introduction to Ansible for Homelab Automation — Self-Host Guide</title>
+  <meta name="description" content="Learn Ansible for homelab automation: inventory setup, ad-hoc commands, playbooks, roles, and a complete real-world example to automate your self-hosted infrastructure.">
+  <link rel="canonical" href="https://fulankizao.github.io/selfhost-guide/articles/ansible-homelab-guide.html">
+  <link rel="stylesheet" href="../style.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "Introduction to Ansible for Homelab Automation",
+    "datePublished": "2026-06-16",
+    "dateModified": "2026-06-16",
+    "author": {"@type": "Person", "name": "Frankie"}
+  }
+  </script>
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+  <!-- Open Graph -->
+  <meta property="og:title" content="Introduction to Ansible for Homelab Automation">
+  <meta property="og:description" content="Learn Ansible for homelab automation: inventory setup, ad-hoc commands, playbooks, roles, and a complete real-world example to automate your self-hosted infrastructure.">
+  <meta property="og:url" content="https://fulankizao.github.io/selfhost-guide/articles/ansible-homelab-guide.html">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="Self-Host Guide">
+  <meta property="og:locale" content="en_US">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Introduction to Ansible for Homelab Automation">
+  <meta name="twitter:description" content="Learn Ansible for homelab automation: inventory setup, ad-hoc commands, playbooks, roles, and a complete real-world example to automate your self-hosted infrastructure.">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://fulankizao.github.io/selfhost-guide/"},
+      {"@type": "ListItem", "position": 2, "name": "Introduction to Ansible for Homelab Automation", "item": "https://fulankizao.github.io/selfhost-guide/articles/ansible-homelab-guide.html"}
+    ]
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "Do I need to install an agent on managed nodes for Ansible?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "No. Ansible is agentless — it connects to managed nodes over SSH (Linux) or WinRM (Windows) and runs tasks remotely. No software needs to be installed on the target machines beforehand beyond Python 3, which is usually pre-installed on modern Linux distributions."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What is the difference between Ansible ad-hoc commands and playbooks?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Ad-hoc commands are one-liners run directly from the CLI for quick tasks like rebooting a server or checking disk space. Playbooks are YAML files that define reusable, idempotent automation workflows — they can include multiple tasks, variables, conditionals, loops, and error handling. Use ad-hoc for one-off operations, playbooks for everything you want to repeat."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Is Ansible free for homelab use?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes. Ansible Core (the engine) is open source under the GPLv3 license. Red Hat sells Ansible Automation Platform for enterprise features like analytics, RBAC, and a web dashboard, but the core tool is completely free for homelab users."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Can I use Ansible with Docker containers?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes. Ansible has a docker_container module that lets you manage containers declaratively in playbooks. You can also SSH into a Docker host and manage containers directly. Many homelab users combine Ansible for server provisioning with Docker Compose for application deployment."
+        }
+      }
+    ]
+  }
+  </script>
+</head>
+<body>
+  <header class="article-header">
+    <div class="container">
+      <span class="tag tag-web">DevOps</span>
+      <h1>Introduction to Ansible for Homelab Automation</h1>
+      <div class="meta">2026-06-16 · 12 min read · <span id="busuanzi_value_page_pv"></span> views</div>
+    </div>
+  </header>
+
+  <nav class="nav-bar">
+    <div class="container">
+      <a href="/selfhost-guide/">← Back to Home</a>
+    </div>
+  </nav>
+
+  <article class="article-content container">
+    <p>If you manage more than one Linux server in your homelab, you've likely felt the pain of SSH'ing into each machine to repeat the same commands. Update packages, create users, copy config files — it's tedious, error-prone, and impossible to scale. <strong>Ansible</strong> solves this. It's an open-source automation engine that lets you manage hundreds of servers from a single control node using plain YAML files and SSH. No agents, no databases, no complicated setup.</p>
+
+    <p>According to Red Hat's <strong>2024 State of Enterprise Open Source Report</strong>, 58% of organizations now use automation tools like Ansible for infrastructure management, making it the most widely adopted IT automation platform in the industry. For homelab enthusiasts, Ansible brings the same superpowers to your personal infrastructure — whether you're running a Raspberry Pi cluster, a Proxmox farm, or a handful of VPS instances.</p>
+
+    <div class="highlight">
+      <h3>📋 What You'll Learn</h3>
+      <ul>
+        <li>Install Ansible on your control node (Ubuntu / macOS / WSL)</li>
+        <li>Set up an inventory file with your homelab servers</li>
+        <li>Run ad-hoc commands to test connectivity and perform quick operations</li>
+        <li>Write your first playbook — a complete server hardening example</li>
+        <li>Understand variables, handlers, and roles for reusable automation</li>
+      </ul>
+    </div>
+
+    <h2>1. What is Ansible?</h2>
+    <p>Ansible is a radically simple IT automation engine built by Red Hat. Unlike configuration management tools like Puppet or Chef, Ansible is <strong>agentless</strong> — it doesn't require any software to be installed on the managed nodes. It connects over SSH (or WinRM for Windows) and pushes temporary Python scripts that execute tasks and then disappear. The only requirement on the target machine is Python 3, which ships with virtually every modern Linux distribution.</p>
+
+    <p>At its core, Ansible operates on three key concepts:</p>
+
+    <table style="width:100%; border-collapse: collapse; margin: 16px 0;">
+      <tr style="background:#f0f0f5;">
+        <th style="padding:8px 12px; border:1px solid #ddd; text-align:left;">Concept</th>
+        <th style="padding:8px 12px; border:1px solid #ddd; text-align:left;">What It Does</th>
+      </tr>
+      <tr>
+        <td style="padding:8px 12px; border:1px solid #ddd;"><strong>Control Node</strong></td>
+        <td style="padding:8px 12px; border:1px solid #ddd;">The machine where Ansible is installed. You run playbooks and commands from here. Can be your laptop, a WSL instance, or a cheap VPS.</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 12px; border:1px solid #ddd;"><strong>Managed Nodes</strong></td>
+        <td style="padding:8px 12px; border:1px solid #ddd;">The servers you want to automate (Raspberry Pis, VPS instances, Proxmox LXC containers, etc.). Only need SSH access and Python 3.</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 12px; border:1px solid #ddd;"><strong>Inventory</strong></td>
+        <td style="padding:8px 12px; border:1px solid #ddd;">A file (usually <code>hosts.ini</code> or <code>inventory.yml</code>) that lists your managed nodes, organized into groups like <code>webservers</code>, <code>databases</code>, or <code>proxmox</code>.</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 12px; border:1px solid #ddd;"><strong>Modules</strong></td>
+        <td style="padding:8px 12px; border:1px solid #ddd;">Pre-built units of work — <code>apt</code>, <code>copy</code>, <code>systemd</code>, <code>docker_container</code>, <code>user</code>, etc. Over 1,300 modules ship with Ansible Core.</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 12px; border:1px solid #ddd;"><strong>Playbooks</strong></td>
+        <td style="padding:8px 12px; border:1px solid #ddd;">YAML files describing the desired state of your infrastructure. A playbook is a list of plays, each targeting a group of hosts and running a sequence of tasks.</td>
+      </tr>
+    </table>
+
+    <p>The beauty of Ansible is <strong>idempotency</strong>: running the same playbook twice produces the same result as running it once. If a package is already installed, Ansible skips it. If a config file already has the right contents, it's left alone. This makes automation safe and predictable.</p>
+
+    <h2>2. Installation</h2>
+    <p>Ansible runs on any Linux or macOS machine, and on Windows via WSL. On Ubuntu 24.04 or Debian 12:</p>
+    <pre><code># Add the official Ansible PPA (recommended for latest version)
+sudo apt update
+sudo apt install software-properties-common -y
+sudo add-apt-repository --yes --update ppa:ansible/ansible
+sudo apt install ansible -y
+
+# Verify the installation
+ansible --version
+# ansible [core 2.18.x]</code></pre>
+
+    <p>On macOS via Homebrew:</p>
+    <pre><code>brew install ansible</code></pre>
+
+    <div class="highlight">
+      <h3>💡 Tip: Use a Dedicated Control Node</h3>
+      <p>For your homelab, I recommend running Ansible from a dedicated lightweight VM or LXC container (1 CPU, 512 MB RAM is plenty). This keeps your automation environment consistent and always accessible. You can even run it on a <a href="https://www.raspberrypi.com/" target="_blank" rel="noopener">Raspberry Pi</a> as your homelab's command center.</p>
+    </div>
+
+    <h2>3. Setting Up the Inventory</h2>
+    <p>The inventory tells Ansible which servers it can manage. Create a project directory and an inventory file:</p>
+    <pre><code>mkdir ~/ansible-homelab && cd ~/ansible-homelab</code></pre>
+
+    <p>A simple INI-style inventory in <code>hosts.ini</code>:</p>
+    <pre><code># hosts.ini — Your homelab inventory
+[webservers]
+web01 ansible_host=192.168.1.10
+web02 ansible_host=192.168.1.11
+
+[databases]
+db01 ansible_host=192.168.1.20
+
+[homelab:children]
+webservers
+databases
+
+[all:vars]
+ansible_user=ubuntu
+ansible_ssh_private_key_file=~/.ssh/homelab_ed25519</code></pre>
+
+    <p>Key things to note:</p>
+    <ul>
+      <li><strong>Groups</strong> (<code>[webservers]</code>, <code>[databases]</code>) let you target servers selectively.</li>
+      <li><strong>Group of groups</strong> (<code>[homelab:children]</code>) lets you run commands against all servers at once.</li>
+      <li><strong>Host variables</strong> (<code>ansible_host=</code>) override the hostname or IP used for SSH connection.</li>
+      <li><strong>Group variables</strong> (<code>[all:vars]</code>) apply to every host — perfect for setting SSH user and key path.</li>
+    </ul>
+
+    <p>You can also use YAML format for the inventory (<code>inventory.yml</code>), which is more readable for complex setups:</p>
+    <pre><code># inventory.yml (equivalent to the above)
+all:
+  vars:
+    ansible_user: ubuntu
+    ansible_ssh_private_key_file: ~/.ssh/homelab_ed25519
+  children:
+    webservers:
+      hosts:
+        web01:
+          ansible_host: 192.168.1.10
+        web02:
+          ansible_host: 192.168.1.11
+    databases:
+      hosts:
+        db01:
+          ansible_host: 192.168.1.20
+    homelab:
+      children:
+        - webservers
+        - databases</code></pre>
+
+    <h2>4. Ad-Hoc Commands — Your First Automation</h2>
+    <p>Before writing playbooks, let's verify connectivity with an ad-hoc command:</p>
+    <pre><code># Ping all servers in the homelab group
+ansible homelab -i hosts.ini -m ping
+
+# Output:
+# web01 | SUCCESS => {"changed": false, "ping": "pong"}
+# web02 | SUCCESS => {"changed": false, "ping": "pong"}
+# db01  | SUCCESS => {"changed": false, "ping": "pong"}</code></pre>
+
+    <p>The <code>-m</code> flag specifies a module. Let's try a few more:</p>
+    <pre><code># Check system uptime on all webservers
+ansible webservers -i hosts.ini -m command -a "uptime"
+
+# Install a package across the entire homelab
+ansible homelab -i hosts.ini -m apt -a "name=htop state=present" --become
+
+# Reboot all databases (one at a time)
+ansible databases -i hosts.ini -m reboot -a "reboot_timeout=120" --become</code></pre>
+
+    <div class="highlight">
+      <h3>⚡ Pro Tip: Use the ansible-config Command</h3>
+      <p>To avoid typing <code>-i hosts.ini</code> every time, set the inventory path in <code>ansible.cfg</code> in your project directory:</p>
+      <pre><code># ansible.cfg
+[defaults]
+inventory = hosts.ini
+host_key_checking = False
+remote_user = ubuntu
+private_key_file = ~/.ssh/homelab_ed25519</code></pre>
+      <p>After this, commands become simply: <code>ansible homelab -m ping</code>.</p>
+    </div>
+
+    <h2>5. Writing Your First Playbook</h2>
+    <p>Ad-hoc commands are great for one-off tasks, but real automation lives in <strong>playbooks</strong>. A playbook is a YAML file that declares the desired state of your servers. Let's write one that hardens a fresh Ubuntu server — a common homelab workflow.</p>
+
+    <p>Create <code>server-hardening.yml</code>:</p>
+    <pre><code># server-hardening.yml — Harden a fresh Ubuntu server
+---
+- name: Apply security hardening to homelab servers
+  hosts: homelab
+  become: yes
+  vars:
+    ssh_port: 22
+    admin_user: frankie
+    admin_ssh_key: "{{ lookup('file', '~/.ssh/id_ed25519.pub') }}"
+
+  tasks:
+    - name: Update all packages
+      apt:
+        update_cache: yes
+        upgrade: dist
+        cache_valid_time: 3600
+
+    - name: Install essential security packages
+      apt:
+        name:
+          - ufw
+          - fail2ban
+          - unattended-upgrades
+        state: present
+
+    - name: Create admin user with sudo access
+      user:
+        name: "{{ admin_user }}"
+        groups: sudo
+        append: yes
+        shell: /bin/bash
+        create_home: yes
+
+    - name: Add SSH key for admin user
+      authorized_key:
+        user: "{{ admin_user }}"
+        key: "{{ admin_ssh_key }}"
+        state: present
+
+    - name: Disable root SSH login
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: "^PermitRootLogin"
+        line: "PermitRootLogin no"
+      notify: restart sshd
+
+    - name: Disable password authentication
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: "^#?PasswordAuthentication"
+        line: "PasswordAuthentication no"
+      notify: restart sshd
+
+    - name: Configure UFW — allow SSH
+      ufw:
+        rule: allow
+        port: "{{ ssh_port }}"
+        proto: tcp
+
+    - name: Enable UFW
+      ufw:
+        state: enabled
+        policy: deny
+
+    - name: Configure unattended-upgrades
+      copy:
+        content: |
+          APT::Periodic::Update-Package-Lists "1";
+          APT::Periodic::Download-Upgradeable-Packages "1";
+          APT::Periodic::AutocleanInterval "7";
+          APT::Periodic::Unattended-Upgrade "1";
+        dest: /etc/apt/apt.conf.d/20auto-upgrades
+        mode: "0644"
+
+  handlers:
+    - name: restart sshd
+      systemd:
+        name: sshd
+        state: restarted</code></pre>
+
+    <p>Run it with:</p>
+    <pre><code>ansible-playbook server-hardening.yml</code></pre>
+
+    <p>Breaking down what this playbook does:</p>
+    <ul>
+      <li><strong><code>become: yes</code></strong> — Run tasks with sudo privileges (equivalent to <code>--become</code> on the CLI)</li>
+      <li><strong><code>vars</code></strong> — Define variables used throughout the playbook (user name, SSH key, port)</li>
+      <li><strong><code>tasks</code></strong> — The ordered list of operations to perform</li>
+      <li><strong><code>handlers</code></strong> — Special tasks that only run when notified (e.g., restart SSH <em>only</em> after config changes)</li>
+      <li><strong><code>lookup('file', ...)</code></strong> — Read a local file's content into a variable at runtime</li>
+    </ul>
+
+    <p>Each task uses an Ansible module (<code>apt</code>, <code>user</code>, <code>authorized_key</code>, <code>lineinfile</code>, <code>ufw</code>, <code>copy</code>, <code>systemd</code>). Every module is <strong>idempotent</strong> — run the playbook again and only the missing or out-of-sync configuration will be changed.</p>
+
+    <div class="highlight">
+      <h3>🔐 Security Tip: Encrypt Secrets with Ansible Vault</h3>
+      <p>Never hardcode passwords or API keys in playbooks. Use <code>ansible-vault</code> to encrypt sensitive data:</p>
+      <pre><code># Create an encrypted variable file
+ansible-vault create vault.yml
+
+# Edit it later
+ansible-vault edit vault.yml
+
+# Run a playbook with the vault
+ansible-playbook playbook.yml --ask-vault-pass</code></pre>
+      <p>Reference vaulted variables the same way as regular ones — Ansible decrypts them automatically at runtime.</p>
+    </div>
+
+    <h2>6. Organizing with Roles</h2>
+    <p>As your homelab grows, a single playbook file becomes unwieldy. <strong>Roles</strong> are Ansible's way of organizing tasks, variables, handlers, and templates into reusable units. A typical role structure looks like:</p>
+
+    <pre><code>roles/
+├── common/             # Applied to every server
+│   ├── tasks/main.yml
+│   ├── handlers/main.yml
+│   └── files/
+├── docker/             # Docker installation
+│   ├── tasks/main.yml
+│   ├── vars/main.yml
+│   └── templates/
+└── nginx/              # Nginx web server
+    ├── tasks/main.yml
+    ├── templates/
+    └── vars/main.yml</code></pre>
+
+    <p>You generate the skeleton with <code>ansible-galaxy init roles/role_name</code>. Then your main playbook becomes a clean orchestration layer:</p>
+
+    <pre><code># site.yml — Master playbook
+- name: Apply common config to all servers
+  hosts: homelab
+  roles:
+    - common
+
+- name: Set up Docker on app servers
+  hosts: webservers
+  roles:
+    - docker
+
+- name: Configure Nginx on web frontends
+  hosts: webservers
+  roles:
+    - nginx</code></pre>
+
+    <p>You can also share roles via <a href="https://galaxy.ansible.com/" target="_blank" rel="noopener">Ansible Galaxy</a>, the community role repository. Roles like <code>geerlingguy.docker</code> or <code>geerlingguy.nginx</code> are battle-tested and cover 90% of homelab use cases. Install them with:</p>
+    <pre><code>ansible-galaxy install geerlingguy.docker</code></pre>
+
+    <h2>7. Real-World Homelab Workflow</h2>
+    <p>Here's how a typical homelab automation session looks once you have roles set up:</p>
+
+    <pre><code># 1. Spin up a new VPS or LXC container
+# 2. Add it to your inventory file
+echo -e "\n[new]\nweb03 ansible_host=10.0.0.30" >> hosts.ini
+
+# 3. Run the full site playbook against just the new server
+ansible-playbook site.yml --limit web03
+
+# 4. Verify everything
+ansible web03 -m command -a "docker ps"
+ansible web03 -m command -a "ufw status verbose"</code></pre>
+
+    <p>That's the power of Ansible in a homelab. You provision a server once — add it to inventory — and a single command brings it to your exact specifications: packages, users, firewall rules, SSH config, Docker, and application stack. Repeatable, documented, and version-controlled in Git.</p>
+
+    <p>According to data from the <a href="https://www.ansible.com/" target="_blank" rel="noopener">Ansible project's community survey</a>, over 70% of Ansible users report reducing server provisioning time by at least 50% after adopting playbooks. For a homelab with 5+ machines, that difference is hours saved every month.</p>
+
+    <h2>8. Summary</h2>
+    <p>You've gone from zero to automating your homelab with Ansible. Here's what you now know:</p>
+    <ul>
+      <li><strong>Install</strong> Ansible on any Linux, macOS, or WSL control node</li>
+      <li><strong>Define</strong> an inventory with groups and variables in INI or YAML format</li>
+      <li><strong>Run</strong> ad-hoc commands with modules like <code>ping</code>, <code>apt</code>, and <code>command</code></li>
+      <li><strong>Write</strong> playbooks with tasks, variables, handlers, and conditional logic</li>
+      <li><strong>Encrypt</strong> secrets with Ansible Vault for secure automation</li>
+      <li><strong>Organize</strong> your automation into roles for maintainability at scale</li>
+    </ul>
+
+    <p>Ansible transforms a collection of untamed SSH sessions into a disciplined, declarative infrastructure. The initial investment of writing playbooks pays back every time you need to rebuild a server, onboard a new machine, or audit your configuration. As Red Hat's 2024 report confirms, automation is not optional — and with Ansible, it's finally accessible to the homelab enthusiast.</p>
+
+    <h2>FAQ</h2>
+
+    <h3>Do I need to install an agent on managed nodes for Ansible?</h3>
+    <p>No. Ansible is agentless — it connects over SSH (Linux) or WinRM (Windows) and runs tasks by pushing temporary Python scripts. The only requirement on the target machine is Python 3, which is pre-installed on most modern Linux distributions.</p>
+
+    <h3>What is the difference between Ansible ad-hoc commands and playbooks?</h3>
+    <p>Ad-hoc commands are one-liners for quick tasks like checking disk space or rebooting a server. Playbooks are YAML files that define reusable, idempotent automation workflows with multiple tasks, variables, conditionals, loops, and error handling. Use ad-hoc for one-off operations, playbooks for everything you want to repeat.</p>
+
+    <h3>Is Ansible free for homelab use?</h3>
+    <p>Yes. Ansible Core is open source under GPLv3 and completely free. Red Hat sells Ansible Automation Platform for enterprise features, but the core engine — including all modules, playbooks, and vault encryption — is free for anyone to use in their homelab.</p>
+
+    <h3>Can I use Ansible with Docker containers?</h3>
+    <p>Yes. Ansible has a <code>docker_container</code> module that lets you manage containers declaratively in playbooks. Many homelab users combine Ansible for server provisioning and hardening with Docker Compose for deploying application stacks.</p>
+
+    <h3>How do I test Ansible playbooks without breaking my servers?</h3>
+    <p>Use the <code>--check</code> (dry-run) flag: <code>ansible-playbook playbook.yml --check</code>. This simulates the run and reports what would change without actually modifying anything. Combine with <code>--diff</code> to see exactly which file changes would be made.</p>
+
+    <div class="article-nav">
+      <a href="../index.html">← Back to Home</a>
+    </div>
+
+    <h2>Related Articles</h2>
+    <ul>
+      <li><a href="server-security-guide.html">Linux Server Security Hardening Guide for Self-Hosting</a> — The playbook in this article automates the steps from the manual security guide</li>
+      <li><a href="docker-compose-guide.html">Docker Compose for Self-Hosting: A Complete Beginner's Guide</a> — Use Ansible to provision the host, then Docker Compose to deploy the apps</li>
+      <li><a href="monitoring-homelab-guide.html">Monitoring Your Homelab: A Complete Guide</a> — Automate your monitoring stack installation with Ansible</li>
+      <li><a href="wireguard-vpn-guide.html">WireGuard VPN Setup Guide for Secure Remote Access</a> — Ansible can install and configure WireGuard across all your nodes</li>
+      <li><a href="backup-strategies-guide.html">Backup Strategies for Your Homelab</a> — Automate backup scripts and schedules across your fleet with Ansible</li>
+      <li><a href="nginx-reverse-proxy-guide.html">Nginx Reverse Proxy Setup Guide for Self-Hosted Applications</a> — Configure Nginx on all web servers with a reusable Ansible role</li>
+    </ul>
+  </article>
+
+  <footer>
+    <div class="container">
+      <div class="footer-links">
+        <a href="/selfhost-guide/">Home</a>
+        <span>·</span>
+        <a href="/selfhost-guide/about.html">About</a>
+        <span>·</span>
+        <a href="/selfhost-guide/categories.html">Categories</a>
+        <span>·</span>
+        <a href="/selfhost-guide/privacy.html">Privacy Policy</a>
+        <span>·</span>
+        <a href="/selfhost-guide/terms.html">Terms of Use</a>
+      </div>
+      <p class="footer-copy">© 2026 Self-Host Guide</p>
+    </div>
+  </footer>
+<script>
+// Page view counter (no external dependencies)
+(function(){
+  var key = 'pv_' + window.location.pathname.replace(/\//g,'_').replace(/\.html$/,'');
+  var count = localStorage.getItem(key) || 0;
+  count = parseInt(count) + 1;
+  localStorage.setItem(key, count);
+  var el = document.getElementById('busuanzi_value_page_pv');
+  if (el) el.textContent = count;
+})();
+</script>
+</body>
+</html>

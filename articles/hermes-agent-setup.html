@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hermes Agent Complete Setup Guide (2026) — Self-Host Guide</title>
+  <meta name="description" content="2026 latest Hermes Agent setup tutorial: from zero installation to production deployment, supporting multi-model/QQ Bot/WebUI/Dashboard configuration and maintenance.">
+  <link rel="canonical" href="https://fulankizao.github.io/selfhost-guide/articles/hermes-agent-setup.html">
+  hermes-agent-setup.html">
+  <link rel="stylesheet" href="../style.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "Hermes Agent Complete Setup Guide (2026)",
+    "datePublished": "2026-06-14",
+    "dateModified": "2026-06-15",
+    "author": {"@type": "Person", "name": "Frankie"}
+  }
+  </script>
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+  <!-- Open Graph -->
+  <meta property="og:title" content="Hermes Agent Complete Setup Guide (2026)">
+  <meta property="og:description" content="2026 latest Hermes Agent setup tutorial: from zero installation to production deployment, supporting multi-model/QQ Bot/WebUI/Dashboard configuration and maintenance.">
+  <meta property="og:url" content="https://fulankizao.github.io/selfhost-guide/articles/hermes-agent-setup.html">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="Self-Host Guide">
+  <meta property="og:locale" content="en_US">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Hermes Agent Complete Setup Guide (2026)">
+  <meta name="twitter:description" content="2026 latest Hermes Agent setup tutorial: from zero installation to production deployment, supporting multi-model/QQ Bot/WebUI/Dashboard configuration and maintenance.">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://fulankizao.github.io/selfhost-guide/"},
+      {"@type": "ListItem", "position": 2, "name": "Hermes Agent Complete Setup Guide (2026)", "item": "https://fulankizao.github.io/selfhost-guide/articles/hermes-agent-setup.html"}
+    ]
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "What hardware do I need to run Hermes Agent?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Hermes Agent is lightweight and runs on as little as 1 CPU core, 2GB RAM, and 10GB disk space. It works on Linux, VPS, and WSL2 environments."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How do I configure multiple AI models in Hermes?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Hermes supports 30+ model providers. You configure them in ~/.hermes/config.yaml and can set up fallback models so if one provider hits a rate limit, Hermes automatically degrades to a backup model."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Can Hermes Agent run as a QQ Bot?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes. Hermes integrates with the QQ Open Platform message gateway. After registering a bot on q.qq.com and configuring QQ_APP_ID and QQ_CLIENT_SECRET in the .env file, you can start the gateway with 'hermes gateway run'."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How do I make Hermes Dashboard start automatically on boot?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Create a systemd service file at /etc/systemd/system/hermes-dashboard.service with Restart=on-failure, then run 'sudo systemctl enable --now hermes-dashboard'. This ensures the Dashboard starts on boot and auto-recovers from crashes."
+        }
+      }
+    ]
+  }
+  </script>
+</head>
+<body>
+  <header class="article-header">
+    <div class="container">
+      <span class="tag tag-agent">AI Agent</span>
+      <h1>Hermes Agent Complete Setup Guide (2026)</h1>
+      <div class="meta">2026-06-15 · 20 min read · <span id="busuanzi_value_page_pv"></span> views</div>
+    </div>
+  </header>
+
+  <nav class="nav-bar">
+    <div class="container">
+      <a href="/selfhost-guide/">← Back to Home</a>
+    </div>
+  </nav>
+
+  <article class="article-content container">
+    <p>Hermes Agent is an open-source AI agent framework (developed by Nous Research) that supports multi-model switching, Web Dashboard management, QQ/Telegram/Discord message gateway integration, and a skill plugin system. This guide walks you through the entire process from zero to installation, configuration, and deployment.</p>
+
+    <p>According to <a href="https://www.gartner.com/en/articles/what-s-new-in-artificial-intelligence-from-the-2024-gartner-hype-cycle" target="_blank" rel="noopener">Gartner's 2024 Hype Cycle for AI</a>, AI agents are projected to be adopted by over 40% of enterprises by 2027, up from less than 5% in 2024. The open-source AI agent ecosystem — led by frameworks like Hermes Agent — is driving this shift by making agentic workflows accessible to individual developers and self-hosters alike.</p>
+
+    <div class="highlight">
+      <h3>📋 What You'll Get From This Guide</h3>
+      <ul>
+        <li>An AI assistant running on Linux/VPS/WSL</li>
+        <li>Web Dashboard remote management interface</li>
+        <li>QQ Bot chat integration</li>
+        <li>systemd auto-start on boot + crash auto-recovery</li>
+      </ul>
+    </div>
+
+    <h2>1. Environment Preparation</h2>
+    <p>Recommended specs: 1 CPU core, 2GB RAM, 10GB disk. Ubuntu 24.04 LTS or Debian 12.</p>
+    <pre><code># Base dependencies
+sudo apt update && sudo apt upgrade -y
+sudo apt install python3 python3-pip python3-venv git curl -y
+
+# Verify versions
+python3 --version   # needs >= 3.10
+curl --version</code></pre>
+
+    <h2>2. Installing Hermes</h2>
+
+    <h3>Method 1: pip Install (Recommended)</h3>
+    <pre><code>pip install hermes-agent
+
+# Verify installation
+hermes --version
+# Should output something like: Hermes Agent 0.16.0</code></pre>
+
+    <h3>Method 2: Install from Source (Development/Bleeding Edge)</h3>
+    <pre><code>git clone https://github.com/fulankizao/hermes-agent-src.git
+cd hermes-agent-src
+pip install -e .
+hermes --version</code></pre>
+
+    <p>After installation, running <code>hermes</code> for the first time will automatically create the <code>~/.hermes/</code> directory and default configuration file.</p>
+
+    <h2>3. Configuring Models (Most Critical Step)</h2>
+    <p>Hermes supports 30+ model providers. According to <a href="https://www.semianalysis.com/p/google-is-a-monopoly-not-openai" target="_blank" rel="noopener">industry analysis</a>, the AI model API market surpassed $7B in 2025, with open-weight and API-accessible models growing at over 60% year-over-year. Here are the three most common configuration methods:</p>
+
+    <h3>Option A: SenseNova (DeepSeek V4 Flash, Best Value)</h3>
+    <pre><code># ~/.hermes/.env
+SENSENOVA_API_KEY=YourKey</code></pre>
+    <pre><code># ~/.hermes/config.yaml
+model:
+  default: deepseek-v4-flash
+  provider: custom
+
+providers:
+  custom:
+    base_url: https://api.sensenova.cn/v1
+    api_key: ${SENSENOVA_API_KEY}
+    models:
+      deepseek-v4-flash:
+        name: deepseek-v4-flash</code></pre>
+
+    <h3>Option B: Zhipu GLM (Direct Connection in China, No Proxy Needed)</h3>
+    <pre><code># ~/.hermes/.env
+GLM_API_KEY=YourZhipuKey
+ZAI_API_KEY=YourZhipuKey</code></pre>
+    <pre><code># ~/.hermes/config.yaml
+model:
+  default: zai/glm-4-flash
+  provider: zai</code></pre>
+
+    <h3>Option C: OpenRouter (Multi-Model Aggregation, for Overseas Use)</h3>
+    <pre><code># ~/.hermes/.env
+OPENROUTER_API_KEY=YourKey</code></pre>
+    <pre><code># ~/.hermes/config.yaml
+model:
+  default: openrouter/deepseek/deepseek-chat
+  provider: openrouter</code></pre>
+
+    <div class="highlight">
+      <h3>💡 Pro Tip: Model Fallback (No Fear of API Rate Limits)</h3>
+      <p>Popular models often return HTTP 429 errors. Configure fallback to automatically degrade to backup models:</p>
+      <pre><code># Add at the top level of config.yaml
+fallback_model:
+  - provider: zai
+    model: glm-4-flash
+  - provider: openrouter
+    model: openrouter/deepseek/deepseek-chat</code></pre>
+      <p>When the primary model is unavailable, Hermes tries backup models in list order. You can configure up to 5 fallbacks.</p>
+    </div>
+
+    <h2>4. Verifying Model Availability</h2>
+    <pre><code># Test if the model works properly
+hermes chat -q "Introduce yourself in one sentence"
+
+# If it errors, check:
+# 1. Whether the API Key in .env is correct
+# 2. Whether the network can reach the API endpoint
+# 3. Whether the model name is correct</code></pre>
+
+    <h2>5. Starting the Web Dashboard</h2>
+    <p>The Dashboard provides a Web interface for managing configuration, viewing sessions, and switching models.</p>
+
+    <h3>Manual Start</h3>
+    <pre><code># Run in foreground (for testing)
+hermes dashboard --port 9119 --host 127.0.0.1
+
+# Run in background (for production)
+nohup hermes dashboard --port 9119 --host 127.0.0.1 --no-open --skip-build \
+  > ~/.hermes/dashboard.log 2>&1 &</code></pre>
+    <p>Visit <code>http://localhost:9119</code> to see the Dashboard.</p>
+
+    <h3>systemd Auto-Start</h3>
+    <p>Make the Dashboard start with the system and auto-recover on crash:</p>
+    <pre><code>sudo tee /etc/systemd/system/hermes-dashboard.service > /dev/null << 'EOF'
+[Unit]
+Description=Hermes Agent Dashboard
+After=network.target
+
+[Service]
+Type=simple
+User=root
+ExecStart=/usr/local/bin/hermes dashboard --port 9119 --host 127.0.0.1 --no-open --skip-build
+Restart=on-failure
+RestartSec=15
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+sudo systemctl daemon-reload
+sudo systemctl enable --now hermes-dashboard
+
+# Verify
+curl -s -o /dev/null -w "HTTP %{http_code}" http://127.0.0.1:9119/
+# Should output: HTTP 200</code></pre>
+
+    <div class="highlight">
+      <h3>⚡ How Much Does --skip-build Save?</h3>
+      <p>The Dashboard by default spawns a Node.js child process to build the Web UI. Adding <code>--skip-build</code> makes it use pre-built static files directly, skipping the npm build step and <strong>saving approximately 800MB of memory</strong>. If the Web UI hasn't changed after updating Hermes, just run a startup without <code>--skip-build</code> once to rebuild.</p>
+    </div>
+
+    <h2>6. Connecting QQ Bot</h2>
+    <p>Connect via the QQ Open Platform so Hermes can chat with you on QQ.</p>
+
+    <h3>6.1 Register a Bot</h3>
+    <ol>
+      <li>Visit <a href="https://q.qq.com" target="_blank">QQ Open Platform</a>, register and create a bot</li>
+      <li>Get <code>AppID</code> and <code>Client Secret</code></li>
+      <li>Set basic info like callback URL (if required, enter anything — Gateway doesn't rely on callbacks)</li>
+    </ol>
+
+    <h3>6.2 Configure Environment Variables</h3>
+    <pre><code># Add to ~/.hermes/.env
+QQ_APP_ID=YourAppID
+QQ_CLIENT_SECRET=YourClientSecret
+QQ_ALLOW_ALL_USERS=true</code></pre>
+
+    <h3>6.3 Start the Gateway</h3>
+    <pre><code># Start the message gateway
+hermes gateway run</code></pre>
+    <p>Seeing <code>✓ qqbot connected</code> in the logs means the connection is successful. Go to QQ and send the Bot a message to test.</p>
+
+    <h3>6.4 Gateway Auto-Start</h3>
+    <pre><code>sudo tee /etc/systemd/system/hermes-gateway.service > /dev/null << 'EOF'
+[Unit]
+Description=Hermes Agent Gateway
+After=network.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+ExecStart=/usr/local/bin/hermes gateway run
+Restart=on-failure
+RestartSec=10
+Environment=HOME=/root
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+sudo systemctl daemon-reload
+sudo systemctl enable --now hermes-gateway</code></pre>
+
+    <h2>7. Optimization Tips</h2>
+    <table style="width:100%; border-collapse: collapse; margin: 16px 0;">
+      <tr style="background:#f0f0f5;">
+        <th style="padding:8px 12px; border:1px solid #ddd; text-align:left;">Optimization</th>
+        <th style="padding:8px 12px; border:1px solid #ddd; text-align:left;">Action</th>
+        <th style="padding:8px 12px; border:1px solid #ddd; text-align:left;">Effect</th>
+      </tr>
+      <tr>
+        <td style="padding:8px 12px; border:1px solid #ddd;">Disk Cleanup</td>
+        <td style="padding:8px 12px; border:1px solid #ddd;"><code>apt autoremove && apt clean</code></td>
+        <td style="padding:8px 12px; border:1px solid #ddd;">Free 200-500MB</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 12px; border:1px solid #ddd;">Memory Optimization</td>
+        <td style="padding:8px 12px; border:1px solid #ddd;">Add <code>--skip-build</code> to Dashboard</td>
+        <td style="padding:8px 12px; border:1px solid #ddd;">Save 800MB+ RAM</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 12px; border:1px solid #ddd;">Config Backup</td>
+        <td style="padding:8px 12px; border:1px solid #ddd;">Backup <code>~/.hermes/</code></td>
+        <td style="padding:8px 12px; border:1px solid #ddd;">Prevent data loss</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 12px; border:1px solid #ddd;">Routine Maintenance</td>
+        <td style="padding:8px 12px; border:1px solid #ddd;">Monthly <code>hermes update</code></td>
+        <td style="padding:8px 12px; border:1px solid #ddd;">Get latest features</td>
+      </tr>
+    </table>
+
+    <h2>8. Frequently Asked Questions</h2>
+
+    <h3>Q: hermes --version produces no output</h3>
+    <p>The entry script may be corrupted. Check the file pointed to by <code>which hermes</code> and confirm it contains the <code>main()</code> call. Fix method:</p>
+    <pre><code># Create a fix script
+mkdir -p ~/.local/bin
+cat > ~/.local/bin/hermes << 'SCRIPT'
+#!/bin/bash
+exec python3 -c "
+import sys
+from hermes_cli.main import main
+sys.exit(main())
+" "$@"
+SCRIPT
+chmod +x ~/.local/bin/hermes</code></pre>
+
+    <h3>Q: Error "ModuleNotFoundError: no module named 'hermes_cli'"</h3>
+    <p>Hermes is not installed in the current Python environment. Check if you're using the correct Python: <code>which python3 && pip list | grep hermes</code>. If not installed, run <code>pip install hermes-agent</code> in the correct Python environment.</p>
+
+    <h3>Q: QQ Bot shows "Connected" but can't receive messages</h3>
+    <p>The transport layer is fine (WebSocket connected), but the user authorization layer is blocking messages. Check:</p>
+    <ul>
+      <li>Whether <code>QQ_ALLOW_ALL_USERS=true</code> is set in <code>.env</code></li>
+      <li>Whether the Gateway logs show <code>Unauthorized user</code> hints</li>
+      <li>Restart the Gateway after modifications: <code>sudo systemctl restart hermes-gateway</code></li>
+    </ul>
+
+    <h3>Q: Gateway keeps restarting ("already running")</h3>
+    <p>An old manual <code>hermes gateway run &</code> process is occupying the port. Find and kill the old process first, then start the systemd version:</p>
+    <pre><code>kill $(pgrep -f "gateway run")
+sudo systemctl restart hermes-gateway</code></pre>
+
+    <h2>FAQ</h2>
+
+    <h3>Can I run Hermes Agent on a Raspberry Pi?</h3>
+    <p>Yes, Hermes Agent itself is lightweight and runs on ARM64 devices like Raspberry Pi 4/5 with 4GB+ RAM. However, you will need to use an API-based model provider (e.g., SenseNova or OpenRouter) — local LLM inference on a Pi is not practical for most use cases.</p>
+
+    <h3>Does Hermes support Telegram and Discord bots too?</h3>
+    <p>Yes. In addition to QQ Bot, Hermes Gateway supports Telegram and Discord message channels. The configuration process is similar — you register a bot on each platform and set the corresponding environment variables (<code>TELEGRAM_BOT_TOKEN</code> or <code>DISCORD_BOT_TOKEN</code>).</p>
+
+    <h3>How do I update Hermes Agent to the latest version?</h3>
+    <p>If installed via pip, run <code>pip install --upgrade hermes-agent</code>. If installed from source, pull the latest code with <code>git pull</code> inside the source directory. After updating, restart the Dashboard and Gateway services with <code>sudo systemctl restart hermes-dashboard hermes-gateway</code>.</p>
+
+    <h3>What is a "skill" in Hermes Agent?</h3>
+    <p>Skills are plugin modules that extend Hermes's capabilities — similar to plugins in ChatGPT. Skills can browse the web, run shell commands, query databases, or perform scheduled tasks via cron. You can write custom skills in Python and place them in <code>~/.hermes/skills/</code>. For more details, refer to the <a href="https://hermes-agent.nousresearch.com/docs" target="_blank" rel="noopener">official Hermes Agent documentation</a>.</p>
+
+    <h3>Can I use Hermes Agent without a Web Dashboard?</h3>
+    <p>Absolutely. The CLI command <code>hermes chat</code> is fully functional without the Dashboard. You only need the Dashboard for the web interface and remote management. For a minimal setup, just install Hermes, configure a model, and use the terminal directly.</p>
+
+    <h2>Next Steps</h2>
+    <p>Once configured, you can:</p>
+    <ul>
+      <li>Explore the Hermes Skills system — add custom skills to extend functionality</li>
+      <li>Connect more messaging platforms (Telegram, Discord)</li>
+      <li>Write your own Agent workflows</li>
+      <li>Configure cron scheduled tasks — let the Agent perform operations periodically</li>
+    </ul>
+
+    <div class="article-nav">
+      <a href="../index.html">← Back to Home</a>
+    </div>
+
+    <h2>Related Articles</h2>
+    <ul>
+      <li><a href="wsl-setup.html">WSL2 Production Environment Complete Setup</a> — Useful if you're deploying Hermes on WSL</li>
+      <li><a href="linux-disk-cleanup.html">Linux Server Disk Cleanup: Complete Guide</a> — Remember to clean logs if Hermes runs for a long time</li>
+      <li><a href="fastapi-deploy.html">FastAPI Project: From Development to Deployment</a> — Another self-hosted service deployment approach</li>
+    </ul>
+  </article>
+
+  <footer>
+    <div class="container">
+      <div class="footer-links">
+        <a href="/selfhost-guide/">Home</a>
+        <span>·</span>
+        <a href="/selfhost-guide/about.html">About</a>
+        <span>·</span>
+        <a href="/selfhost-guide/categories.html">Categories</a>
+        <span>·</span>
+        <a href="/selfhost-guide/privacy.html">Privacy Policy</a>
+        <span>·</span>
+        <a href="/selfhost-guide/terms.html">Terms of Use</a>
+      </div>
+      <p class="footer-copy">© 2026 Self-Host Guide</p>
+    </div>
+  </footer>
+<script>
+// Page view counter (no external dependencies)
+(function(){
+  var key = 'pv_' + window.location.pathname.replace(/\//g,'_').replace(/\.html$/,'');
+  var count = localStorage.getItem(key) || 0;
+  count = parseInt(count) + 1;
+  localStorage.setItem(key, count);
+  var el = document.getElementById('busuanzi_value_page_pv');
+  if (el) el.textContent = count;
+})();
+</script>
+</body>
+</html>
