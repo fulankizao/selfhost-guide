@@ -104,6 +104,23 @@
   </nav>
 
   <article class="article-content container">
+<nav class="toc">
+<h3>Table of Contents</h3>
+<ul>
+  <li><a href="#section-1">1. The 3-2-1 Backup Rule — Why It Exists</a></li>
+  <li><a href="#section-2">2. Designing Your Backup Pipeline</a></li>
+  <li><a href="#section-3">3. Database-Specific Backup Strategies</a></li>
+  <li><a href="#section-4">4. Docker Volume Backups</a></li>
+  <li><a href="#section-5">5. Encryption — Protect Your Off-Site Backups</a></li>
+  <li><a href="#section-6">6. Off-Site Sync with Rclone</a></li>
+  <li><a href="#section-7">7. Retention Policy and Rotation</a></li>
+  <li><a href="#section-8">8. Recovery Testing — The Most Important Step</a></li>
+  <li><a href="#section-9">9. Full Automated Pipeline Example</a></li>
+  <li><a href="#section-10">10. Common Mistakes and How to Avoid Them</a></li>
+</ul>
+</nav>
+
+
 
     <p>You've spent days configuring your self-hosted services — the reverse proxy, the database, the application stack, the monitoring. Everything is running smoothly. Then one day it isn't. A drive fails. A stray <code>rm -rf</code> destroys a critical directory. A botched upgrade corrupts your database. Without a working backup strategy, that data is gone forever.</p>
 
@@ -124,7 +141,7 @@
       </ul>
     </div>
 
-    <h2>1. The 3-2-1 Backup Rule — Why It Exists</h2>
+    <h2 id="section-1">1. The 3-2-1 Backup Rule — Why It Exists</h2>
 
     <p>The <strong>3-2-1 backup rule</strong> is the industry-standard data protection guideline. It states:</p>
 
@@ -149,7 +166,7 @@
       <p>A 2024 study by <a href="https://www.unitrends.com/blog/smb-backup-statistics" target="_blank" rel="noopener">Unitrends</a> found that 58% of small businesses that suffer data loss without a tested recovery plan never fully recover — and 30% shut down within two years. For personal self-hosters, the loss is measured in irreplaceable family photos, years of notes, personal finance records, and home automation configurations. The cost of a backup strategy is a few dollars per month and an afternoon of setup. The cost of not having one is everything.</p>
     </div>
 
-    <h2>2. Designing Your Backup Pipeline</h2>
+    <h2 id="section-2">2. Designing Your Backup Pipeline</h2>
 
     <p>A backup pipeline is a sequence of automated steps that runs on a schedule. A well-designed pipeline has six stages:</p>
 
@@ -206,7 +223,7 @@ crontab -e
 # Weekly full off-site sync
 0 5 * * 0 /usr/local/bin/backup-offsite-sync.sh</code></pre>
 
-    <h2>3. Database-Specific Backup Strategies</h2>
+    <h2 id="section-3">3. Database-Specific Backup Strategies</h2>
 
     <p>Databases are the heart of most self-hosted services. A flat file copy of the database directory (<code>cp -r /var/lib/postgresql/data</code>) is <strong>not</strong> safe — the database engine may have unflushed writes in-memory, leading to corruption. Always use the database's native dump tool.</p>
 
@@ -240,7 +257,7 @@ sqlite3 /data/app.db ".backup '/backup/app_$(date +%Y%m%d).db'"
 # Restore
 sqlite3 /data/app.db ".restore '/backup/app_20260615.db'"</code></pre>
 
-    <h2>4. Docker Volume Backups</h2>
+    <h2 id="section-4">4. Docker Volume Backups</h2>
 
     <p>Docker named volumes are the standard way to persist data for containerized services. Back them up with a temporary sidecar container — no agent installation inside the container needed:</p>
 
@@ -284,7 +301,7 @@ docker run --rm \
       <p>Then script your backup tool to iterate over volumes with the <code>backup.enabled=true</code> label — no hardcoded volume lists needed.</p>
     </div>
 
-    <h2>5. Encryption — Protect Your Off-Site Backups</h2>
+    <h2 id="section-5">5. Encryption — Protect Your Off-Site Backups</h2>
 
     <p>Off-site backups are stored on infrastructure you do not control. Without encryption, a compromised cloud provider account or a stolen backup drive leaks all of your data. Encrypt <strong>before</strong> the backup leaves your server.</p>
 
@@ -316,7 +333,7 @@ age -d -i /root/.backup-age-key.txt \
       <p>Never store your encryption passphrase or private key on the same storage medium that holds the encrypted backups. If your local drive fails and you stored the key on that same drive, the off-site backup is unrecoverable. Keep the key in a password manager or print it and store it in a physical safe.</p>
     </div>
 
-    <h2>6. Off-Site Sync with Rclone</h2>
+    <h2 id="section-6">6. Off-Site Sync with Rclone</h2>
 
     <p><a href="https://rclone.org/" target="_blank" rel="noopener">Rclone</a> is the Swiss Army knife of cloud storage sync. It supports 40+ providers — Backblaze B2, Wasabi, AWS S3, Google Cloud Storage, S3-compatible MinIO, and more. Set it up once, then encrypt and sync in a single pipeline step:</p>
 
@@ -335,7 +352,7 @@ rclone copy /backup/encrypted/ \
 
     <p>This fulfills the "2 different media" rule: local disk + cloud storage, with the cloud copy satisfying the "1 off-site" requirement.</p>
 
-    <h2>7. Retention Policy and Rotation</h2>
+    <h2 id="section-7">7. Retention Policy and Rotation</h2>
 
     <p>You do not need to keep every backup forever. A reasonable retention policy for self-hosters:</p>
 
@@ -375,7 +392,7 @@ find /backup/daily -name "*.tar.gz*" -mtime +30 -delete
 find /backup/weekly -name "*.tar.gz*" -mtime +90 -delete
 find /backup/monthly -name "*.tar.gz*" -mtime +365 -delete</code></pre>
 
-    <h2>8. Recovery Testing — The Most Important Step</h2>
+    <h2 id="section-8">8. Recovery Testing — The Most Important Step</h2>
 
     <p>A backup that has never been restored is not a backup — it is a placebo. The first time you attempt a restore should not be during an actual disaster. Schedule regular recovery drills:</p>
 
@@ -409,7 +426,7 @@ docker stop test-restore
 
 echo "Restore test completed at $(date)"</code></pre>
 
-    <h2>9. Full Automated Pipeline Example</h2>
+    <h2 id="section-9">9. Full Automated Pipeline Example</h2>
 
     <p>Here is a complete backup script that ties everything together. Save it as <code>/usr/local/bin/backup-pipeline.sh</code> and add it to cron:</p>
 
@@ -465,7 +482,7 @@ echo "✅ Backup pipeline finished at ${DATE}"</code></pre>
       <p>The script above uses <a href="https://ntfy.sh/" target="_blank" rel="noopener">ntfy.sh</a> (a free, open-source push notification service) to alert you on completion. For failure alerts, add a trap: <code>trap 'curl .../selfhost-backups-failed' ERR</code>. You can also pipe through <code>msmtp</code> for email, or use a Slack/Discord webhook.</p>
     </div>
 
-    <h2>10. Common Mistakes and How to Avoid Them</h2>
+    <h2 id="section-10">10. Common Mistakes and How to Avoid Them</h2>
 
     <h3>❌ Mistake 1: Backing Up to the Same Drive</h3>
     <p>If your backup target is the same physical drive as your data, a drive failure destroys both. Always use a separate device: a USB drive, a NAS, or cloud storage.</p>
@@ -529,7 +546,14 @@ echo "✅ Backup pipeline finished at ${DATE}"</code></pre>
     </ul>
   </article>
 
-  <footer>
+  <div class="author-bio">
+  <div class="author-bio-content">
+    <p><strong>About the Author</strong></p>
+    <p>Frankie is a self-hosting enthusiast and DevOps practitioner with over 8 years of experience deploying and maintaining production Linux servers, Docker environments, and homelab infrastructure. He writes practical, hands-on guides to help others take control of their own infrastructure.</p>
+  </div>
+</div>
+
+<footer>
     <div class="container">
       <div class="footer-links">
         <a href="/selfhost-guide/">Home</a>

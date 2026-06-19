@@ -1,394 +1,433 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>WSL2 Production Environment Complete Setup — Self-Host Guide</title>
-  <meta name="description" content="WSL2 from zero to productivity: complete setup tutorial including installation optimization, proxy passthrough, disk slim-down, VHDX compression, systemd auto-start, daily maintenance scripts, and common troubleshooting.">
-  <link rel="canonical" href="https://fulankizao.github.io/selfhost-guide/articles/wsl-setup.html">
-  wsl-setup.html">
-  <link rel="stylesheet" href="../style.css">
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "Article",
-    "headline": "WSL2 Production Environment Complete Setup",
-    "datePublished": "2026-06-10",
-    "dateModified": "2026-06-15",
-    "author": {"@type": "Person", "name": "Frankie"}
-  }
-  </script>
-  <link rel="icon" type="image/svg+xml" href="../favicon.svg">
-  <!-- Open Graph -->
-  <meta property="og:title" content="WSL2 Production Environment Complete Setup">
-  <meta property="og:description" content="WSL2 from zero to productivity: complete setup tutorial including installation optimization, proxy passthrough, disk slim-down, VHDX compression, systemd auto-start, daily maintenance scripts, and common troubleshooting.">
-  <meta property="og:url" content="https://fulankizao.github.io/selfhost-guide/articles/wsl-setup.html">
-  <meta property="og:type" content="article">
-  <meta property="og:site_name" content="Self-Host Guide">
-  <meta property="og:locale" content="en_US">
-  <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="WSL2 Production Environment Complete Setup">
-  <meta name="twitter:description" content="WSL2 from zero to productivity: complete setup tutorial including installation optimization, proxy passthrough, disk slim-down, VHDX compression, systemd auto-start, daily maintenance scripts, and common troubleshooting.">
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    "itemListElement": [
-      {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://fulankizao.github.io/selfhost-guide/"},
-      {"@type": "ListItem", "position": 2, "name": "WSL2 Production Environment Complete Setup", "item": "https://fulankizao.github.io/selfhost-guide/articles/wsl-setup.html"}
-    ]
-  }
-  </script>
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    "mainEntity": [
-      {
-        "@type": "Question",
-        "name": "What is the difference between WSL1 and WSL2?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "WSL1 uses a translation layer that maps Linux syscalls to Windows, offering fast cross-OS file operations but limited compatibility. WSL2 runs a full Linux kernel in a lightweight VM, providing near-complete Linux compatibility at the cost of slower cross-OS file I/O. WSL2 is recommended for most development workflows."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "How do I limit WSL2 memory usage?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Create a .wslconfig file in your Windows user directory (C:\\Users\\your_username\\.wslconfig) and add [wsl2] memory=4GB. Save the file, then run 'wsl --shutdown' in PowerShell and restart WSL for the new limits to take effect."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "Why is WSL2 disk space growing so fast?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "WSL2's ext4.vhdx virtual disk file only grows and never shrinks automatically. Package caches, Docker images, and systemd logs accumulate over time. Regular cleanup (apt autoremove, journalctl --vacuum-size) followed by VHDX compression via diskpart can reclaim significant space."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "How do I enable systemd in WSL2?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Add [boot] systemd=true to /etc/wsl.conf inside your WSL distribution, then run 'wsl --shutdown' from PowerShell and restart WSL. After that, systemctl commands will work normally."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "Can I run Docker inside WSL2?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Yes. With systemd enabled, you can install Docker Engine directly inside WSL2. Alternatively, use Docker Desktop for Windows with WSL2 integration, which lets WSL distributions access the Windows Docker daemon natively for better performance."
-        }
-      }
-    ]
-  }
-  </script>
-</head>
-<body>
-  <header class="article-header">
-    <div class="container">
-      <span class="tag tag-linux">Linux</span>
-      <h1>WSL2 Production Environment Complete Setup</h1>
-      <div class="meta">2026-06-15 · 15 min read · Updated · <span id="busuanzi_value_page_pv"></span> views</div>
-    </div>
-  </header>
+1|<!DOCTYPE html>
+2|<html lang="en">
+3|<head>
+4|  <meta charset="UTF-8">
+5|  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+6|  <title>WSL2 Production Environment Complete Setup — Self-Host Guide</title>
+7|  <meta name="description" content="WSL2 from zero to productivity: complete setup tutorial including installation optimization, proxy passthrough, disk slim-down, VHDX compression, systemd auto-start, daily maintenance scripts, and common troubleshooting.">
+8|  <link rel="canonical" href="https://fulankizao.github.io/selfhost-guide/articles/wsl-setup.html">
+9|  wsl-setup.html">
+10|  <link rel="stylesheet" href="../style.css">
+11|  <script type="application/ld+json">
+12|  {
+13|    "@context": "https://schema.org",
+14|    "@type": "Article",
+15|    "headline": "WSL2 Production Environment Complete Setup",
+16|    "datePublished": "2026-06-10",
+17|    "dateModified": "2026-06-15",
+18|    "author": {"@type": "Person", "name": "Frankie"}
+19|  }
+20|  </script>
+21|  <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+22|  <!-- Open Graph -->
+23|  <meta property="og:title" content="WSL2 Production Environment Complete Setup">
+24|  <meta property="og:description" content="WSL2 from zero to productivity: complete setup tutorial including installation optimization, proxy passthrough, disk slim-down, VHDX compression, systemd auto-start, daily maintenance scripts, and common troubleshooting.">
+25|  <meta property="og:url" content="https://fulankizao.github.io/selfhost-guide/articles/wsl-setup.html">
+26|  <meta property="og:type" content="article">
+27|  <meta property="og:site_name" content="Self-Host Guide">
+28|  <meta property="og:locale" content="en_US">
+29|  <meta name="twitter:card" content="summary">
+30|  <meta name="twitter:title" content="WSL2 Production Environment Complete Setup">
+31|  <meta name="twitter:description" content="WSL2 from zero to productivity: complete setup tutorial including installation optimization, proxy passthrough, disk slim-down, VHDX compression, systemd auto-start, daily maintenance scripts, and common troubleshooting.">
+32|  <script type="application/ld+json">
+33|  {
+34|    "@context": "https://schema.org",
+35|    "@type": "BreadcrumbList",
+36|    "itemListElement": [
+37|      {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://fulankizao.github.io/selfhost-guide/"},
+38|      {"@type": "ListItem", "position": 2, "name": "WSL2 Production Environment Complete Setup", "item": "https://fulankizao.github.io/selfhost-guide/articles/wsl-setup.html"}
+39|    ]
+40|  }
+41|  </script>
+42|  <script type="application/ld+json">
+43|  {
+44|    "@context": "https://schema.org",
+45|    "@type": "FAQPage",
+46|    "mainEntity": [
+47|      {
+48|        "@type": "Question",
+49|        "name": "What is the difference between WSL1 and WSL2?",
+50|        "acceptedAnswer": {
+51|          "@type": "Answer",
+52|          "text": "WSL1 uses a translation layer that maps Linux syscalls to Windows, offering fast cross-OS file operations but limited compatibility. WSL2 runs a full Linux kernel in a lightweight VM, providing near-complete Linux compatibility at the cost of slower cross-OS file I/O. WSL2 is recommended for most development workflows."
+53|        }
+54|      },
+55|      {
+56|        "@type": "Question",
+57|        "name": "How do I limit WSL2 memory usage?",
+58|        "acceptedAnswer": {
+59|          "@type": "Answer",
+60|          "text": "Create a .wslconfig file in your Windows user directory (C:\\Users\\your_username\\.wslconfig) and add [wsl2] memory=4GB. Save the file, then run 'wsl --shutdown' in PowerShell and restart WSL for the new limits to take effect."
+61|        }
+62|      },
+63|      {
+64|        "@type": "Question",
+65|        "name": "Why is WSL2 disk space growing so fast?",
+66|        "acceptedAnswer": {
+67|          "@type": "Answer",
+68|          "text": "WSL2's ext4.vhdx virtual disk file only grows and never shrinks automatically. Package caches, Docker images, and systemd logs accumulate over time. Regular cleanup (apt autoremove, journalctl --vacuum-size) followed by VHDX compression via diskpart can reclaim significant space."
+69|        }
+70|      },
+71|      {
+72|        "@type": "Question",
+73|        "name": "How do I enable systemd in WSL2?",
+74|        "acceptedAnswer": {
+75|          "@type": "Answer",
+76|          "text": "Add [boot] systemd=true to /etc/wsl.conf inside your WSL distribution, then run 'wsl --shutdown' from PowerShell and restart WSL. After that, systemctl commands will work normally."
+77|        }
+78|      },
+79|      {
+80|        "@type": "Question",
+81|        "name": "Can I run Docker inside WSL2?",
+82|        "acceptedAnswer": {
+83|          "@type": "Answer",
+84|          "text": "Yes. With systemd enabled, you can install Docker Engine directly inside WSL2. Alternatively, use Docker Desktop for Windows with WSL2 integration, which lets WSL distributions access the Windows Docker daemon natively for better performance."
+85|        }
+86|      }
+87|    ]
+88|  }
+89|  </script>
+90|  <script type="application/ld+json">
+91|  {
+92|    "@context": "https://schema.org",
+93|    "@type": "HowTo",
+94|    "name": "WSL2 Production Environment Complete Setup",
+95|    "description": "WSL2 from zero to productivity: complete setup tutorial including installation optimization, proxy passthrough, disk slim-down, VHDX compression, systemd auto-start, daily maintenance scripts, and common troubleshooting.",
+96|    "step": [
+97|      {"@type": "HowToStep", "name": "Basic Configuration", "text": "Configure WSL2 settings in .wslconfig (memory limits, processor count, swap) and /etc/wsl.conf (automount options, network generation, interop settings)."},
+98|      {"@type": "HowToStep", "name": "Disk Slim-Down and VHDX Compression", "text": "Clean up package caches, Docker images, and systemd logs, then compress the ext4.vhdx virtual disk file using diskpart to reclaim unused space."},
+99|      {"@type": "HowToStep", "name": "File Interop Configuration", "text": "Set up seamless file sharing between Windows and WSL by configuring /etc/wsl.conf automount options and handling permission mapping across the two filesystems."},
+100|      {"@type": "HowToStep", "name": "Enable systemd Auto-Start", "text": "Add [boot] systemd=true to /etc/wsl.conf, then configure systemd services to auto-start on WSL boot, enabling proper service management with systemctl."},
+101|      {"@type": "HowToStep", "name": "Set Up Development Toolchain", "text": "Install Docker, Node.js, Python, and other development tools inside WSL2, configuring them to leverage Windows proxy settings and environment variables."},
+102|      {"@type": "HowToStep", "name": "Create Daily Maintenance Script", "text": "Build an automated maintenance script that runs apt updates, cleans package caches, prunes Docker resources, vacates journald logs, and provides a system health summary."}
+103|    ]
+104|  }
+105|  </script>
+106|</head>
+107|<body>
+108|  <header class="article-header">
+109|    <div class="container">
+110|      <span class="tag tag-linux">Linux</span>
+111|      <h1>WSL2 Production Environment Complete Setup</h1>
+112|      <div class="meta">2026-06-15 · 15 min read · Updated · <span id="busuanzi_value_page_pv"></span> views</div>
+113|    </div>
+114|  </header>
+115|
+116|  <nav class="nav-bar">
+117|    <div class="container">
+118|      <a href="/selfhost-guide/">← Back to Home</a>
+119|    </div>
+120|  </nav>
+121|
+122|  <article class="article-content container">
+123|    
+<nav class="toc">
+<h3>Table of Contents</h3>
+<ul>
+  <li><a href="#section-1">1. WSL2 vs WSL1</a></li>
+  <li><a href="#section-2">2. Basic Configuration</a></li>
+  <li><a href="#section-3">3. Disk Slim-Down and VHDX Compression</a></li>
+  <li><a href="#section-4">4. File Interop Tips</a></li>
+  <li><a href="#section-5">5. systemd Service Auto-Start</a></li>
+  <li><a href="#section-6">6. Development Toolchain</a></li>
+  <li><a href="#section-7">7. Daily Maintenance Script</a></li>
+  <li><a href="#section-8">8. Frequently Asked Questions</a></li>
+</ul>
+</nav>
 
-  <nav class="nav-bar">
-    <div class="container">
-      <a href="/selfhost-guide/">← Back to Home</a>
-    </div>
-  </nav>
-
-  <article class="article-content container">
-    <p>WSL2 lets Windows users run a full Linux kernel without dual-booting. But the default configuration is far from "production-ready" — this guide takes you from installation through step-by-step optimization to using it as a primary development environment.</p>
-
-    <p>According to Microsoft's <a href="https://learn.microsoft.com/en-us/windows/wsl/" target="_blank" rel="noopener">official WSL documentation</a>, over 60% of Windows developers now use WSL for daily Linux development workflows. A 2025 Stack Overflow survey reinforced this, finding that WSL is the most used Linux environment on Windows — surpassing dual-boot and traditional VM setups. This guide helps you go beyond the defaults and build a truly production-grade WSL2 environment.</p>
-
-    <h2>1. WSL2 vs WSL1</h2>
-    <p>Before we begin, let's clarify the differences between the two versions:</p>
-    <table style="width:100%; border-collapse: collapse; margin: 16px 0;">
-      <tr style="background:#f0f0f5;">
-        <th style="padding:8px 12px; border:1px solid #ddd; text-align:left;">Feature</th>
-        <th style="padding:8px 12px; border:1px solid #ddd; text-align:left;">WSL1</th>
-        <th style="padding:8px 12px; border:1px solid #ddd; text-align:left;">WSL2</th>
-      </tr>
-      <tr>
-        <td style="padding:8px 12px; border:1px solid #ddd;">Kernel</td>
-        <td style="padding:8px 12px; border:1px solid #ddd;">Translation layer (not real Linux)</td>
-        <td style="padding:8px 12px; border:1px solid #ddd;">Full Linux kernel (VM)</td>
-      </tr>
-      <tr>
-        <td style="padding:8px 12px; border:1px solid #ddd;">Performance</td>
-        <td style="padding:8px 12px; border:1px solid #ddd;">Fast file ops (cross-OS)</td>
-        <td style="padding:8px 12px; border:1px solid #ddd;">Fast syscalls, slow file ops (cross-OS)</td>
-      </tr>
-      <tr>
-        <td style="padding:8px 12px; border:1px solid #ddd;">Compatibility</td>
-        <td style="padding:8px 12px; border:1px solid #ddd;">Some Linux apps not supported</td>
-        <td style="padding:8px 12px; border:1px solid #ddd;">Almost all Linux apps supported</td>
-      </tr>
-      <tr>
-        <td style="padding:8px 12px; border:1px solid #ddd;">Network</td>
-        <td style="padding:8px 12px; border:1px solid #ddd;">Shares Windows IP</td>
-        <td style="padding:8px 12px; border:1px solid #ddd;">NAT virtual NIC, needs manual proxy config</td>
-      </tr>
-      <tr>
-        <td style="padding:8px 12px; border:1px solid #ddd;">Disk Files</td>
-        <td style="padding:8px 12px; border:1px solid #ddd;">Direct access to Windows files</td>
-        <td style="padding:8px 12px; border:1px solid #ddd;">ext4.vhdx virtual disk, needs compression</td>
-      </tr>
-    </table>
-    <p><strong>WSL2</strong> is recommended for much better compatibility. If you're still on WSL1, you can upgrade: <code>wsl --set-version &lt;distro_name&gt; 2</code></p>
-
-    <h2>2. Basic Configuration</h2>
-
-    <h3>wsl.conf</h3>
-    <p>Create <code>/etc/wsl.conf</code> (this is a WSL-internal config, not a Windows file):</p>
-    <pre><code>[boot]
-systemd=true
-
-[user]
-default=your_username
-
-[interop]
-appendWindowsPath=true</code></pre>
-    <p>After saving, run <code>wsl --shutdown</code> in PowerShell and re-enter WSL for changes to take effect.</p>
-    <p><strong>Why do you need systemd?</strong> Many Linux services (Docker, sshd, cron) depend on systemd for management. WSL2 doesn't have it by default — adding this line enables it.</p>
-
-    <h3>Memory and Auto-Reclaim</h3>
-    <p>WSL2 by default can eat a lot of memory (up to 80% of the host). Limit it:</p>
-    <pre><code># Create .wslconfig in your Windows user directory
-# Path: C:\Users\your_username\.wslconfig
-
-[wsl2]
-memory=4GB
-processors=4
-localhostForwarding=true</code></pre>
-    <p>After saving, run <code>wsl --shutdown</code> and restart WSL for changes to take effect.</p>
-
-    <h3>Proxy Passthrough</h3>
-    <p>WSL2 uses NAT networking, so proxy software running on Windows is not reachable by default. Add these lines to <code>~/.bashrc</code>:</p>
-    <pre><code>export http_proxy=http://your_proxy_address:7890
-export https_proxy=http://your_proxy_address:7890
-export no_proxy=localhost,127.0.0.1,::1,192.168.0.0/16</code></pre>
-    <p>New terminals will pick it up automatically. If your proxy address changes, you can also write an auto-detection script:</p>
-    <pre><code># Add this to ~/.bashrc to auto-find the Windows proxy
-host_ip=$(ip route show default | awk '{print $3}')
-export http_proxy="http://$host_ip:7890"
-export https_proxy="http://$host_ip:7890"</code></pre>
-
-    <h2>3. Disk Slim-Down and VHDX Compression</h2>
-    <p>WSL2's ext4.vhdx virtual disk only grows and never shrinks automatically. I've seen a 16GB initial WSL balloon to 80GB+ after six months. According to <a href="https://learn.microsoft.com/en-us/windows/wsl/disk-space" target="_blank" rel="noopener">Microsoft's WSL disk space guide</a>, the VHDX can consume significantly more disk than the actual filesystem usage due to the way ext4 sparse files interact with the virtual disk layer. Regular cleanup + compression is essential.</p>
-
-    <h3>Step 1: Clean Up Internal Junk</h3>
-    <p>Run inside WSL:</p>
-    <pre><code># Package manager cache — typically frees 200-500MB
-sudo apt autoremove -y && sudo apt clean
-
-# Docker leftovers (if any)
-docker system prune -af
-
-# pip/npm cache — pip cache can be 100-300MB
-rm -rf ~/.cache/pip/
-npm cache clean --force
-
-# systemd logs — logs can accumulate several GB
-sudo journalctl --vacuum-time=7d
-sudo journalctl --vacuum-size=200M</code></pre>
-
-    <h3>Step 2: Compress VHDX</h3>
-    <p>Run in Windows PowerShell (as Administrator):</p>
-    <pre><code># 1. Shut down WSL first
-wsl --shutdown
-
-# 2. Find the ext4.vhdx path
-# Usually at: C:\Users\your_username\AppData\Local\Packages\distro_name\LocalState\
-# You can find it with:
-dir C:\Users\your_username\AppData\Local\Packages\*\LocalState\ext4.vhdx
-
-# 3. Compress with diskpart (admin PowerShell)
-diskpart
-    select vdisk file="C:\Users\your_username\AppData\Local\Packages\CanonicalGroupLimited.Ubuntu24.04LTS_79rhkp1fndgsc\LocalState\ext4.vhdx"
-    attach vdisk readonly
-    compact vdisk
-    detach vdisk
-    exit</code></pre>
-    <p>In practice this can compress an 80GB VHDX down to 20GB. Recommended to do this monthly.</p>
-
-    <h2>4. File Interop Tips</h2>
-    <p>File access between WSL and Windows:</p>
-    <ul>
-      <li><strong>WSL accessing Windows files</strong>: <code>/mnt/c/</code>, <code>/mnt/d/</code> mount Windows drives</li>
-      <li><strong>Windows accessing WSL files</strong>: Enter <code>\\\\wsl.localhost\\Ubuntu</code> in File Explorer address bar (distro name may differ)</li>
-      <li><strong>Performance advice</strong>: Keep project files inside WSL (<code>~/project</code>), don't run them under <code>/mnt/c/</code> — cross-filesystem IO is slow</li>
-    </ul>
-
-    <h2>5. systemd Service Auto-Start</h2>
-    <p>With systemd enabled, you can write services as .service files that start on boot.</p>
-
-    <h3>Example: Hermes Dashboard</h3>
-    <pre><code>sudo tee /etc/systemd/system/hermes-dashboard.service > /dev/null << 'EOF'
-[Unit]
-Description=Hermes Agent Dashboard
-After=network.target
-
-[Service]
-Type=simple
-User=root
-ExecStart=/usr/local/bin/hermes dashboard --port 9119 --host 127.0.0.1 --no-open --skip-build
-Restart=on-failure
-RestartSec=15
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-sudo systemctl daemon-reload
-sudo systemctl enable --now hermes-dashboard</code></pre>
-
-    <div class="highlight">
-      <h3>💡 Common Service Management Commands</h3>
-      <pre><code># Check status
-systemctl status service_name --no-pager
-
-# View logs
-journalctl -u service_name -n 50 --no-pager
-
-# Restart
-sudo systemctl restart service_name
-
-# Disable auto-start
-sudo systemctl disable service_name</code></pre>
-    </div>
-
-    <h2>6. Development Toolchain</h2>
-
-    <h3>Python Environment</h3>
-    <pre><code># Recommended: use uv, 10-100x faster than pip
-curl -LsSf https://astral.sh/uv/install.sh | sh
-
-# Create virtual environment
-uv venv .venv --python 3.12
-source .venv/bin/activate</code></pre>
-
-    <h3>Node.js Environment</h3>
-    <pre><code># Use nvm to manage versions (don't install node via apt)
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
-
-# After restarting the terminal
-nvm install 20
-nvm use 20</code></pre>
-
-    <h3>Useful CLI Tools</h3>
-    <pre><code>sudo apt install -y bat ripgrep fd-find htop net-tools
-
-# Ubuntu package names differ from command names, add aliases
-echo "alias bat=batcat" >> ~/.bash_aliases
-echo "alias fd=fdfind" >> ~/.bash_aliases</code></pre>
-
-    <h2>7. Daily Maintenance Script</h2>
-    <p>Run all maintenance tasks with one command:</p>
-    <pre><code>#!/bin/bash
-# ~/scripts/cleanup.sh
-set -e
-
-echo "=== (1/4) Cleaning apt cache ==="
-sudo apt autoremove -y
-sudo apt clean
-
-echo "=== (2/4) Cleaning journal logs ==="
-sudo journalctl --vacuum-time=7d
-sudo journalctl --vacuum-size=200M
-
-echo "=== (3/4) Cleaning pip cache ==="
-rm -rf ~/.cache/pip/ 2>/dev/null || true
-uv cache clean 2>/dev/null || true
-
-echo "=== (4/4) Disk usage ==="
-df -h / | tail -1
-echo "   Done ✅"</code></pre>
-    <p>Set it to run weekly via cron: <code>crontab -e</code> and add <code>0 3 * * 0 bash ~/scripts/cleanup.sh &>/dev/null</code></p>
-
-    <h2>8. Frequently Asked Questions</h2>
-
-    <h3>Q: What is the difference between WSL1 and WSL2?</h3>
-    <p>WSL1 uses a translation layer that maps Linux system calls to Windows, offering fast cross-OS file operations at the cost of compatibility. WSL2 runs a full Linux kernel in a lightweight VM, delivering near-complete Linux compatibility. For most development workflows, especially those involving Docker or systemd, WSL2 is the recommended choice.</p>
-
-    <h3>Q: WSL startup gives "The referenced object type does not support the attempted operation"</h3>
-    <p>This is usually a virtual NIC driver conflict with proxy software (Clash, V2Ray). Run in admin PowerShell:</p>
-    <pre><code># Fix WSL network driver
-netsh winsock reset
-netsh int ip reset all
-# Reboot your PC to apply</code></pre>
-
-    <h3>Q: Can ping external network, but curl works</h3>
-    <p>WSL2's ICMP (ping) takes a different path. If your proxy software doesn't support ICMP forwarding, this is normal. Use <code>curl</code> or <code>wget</code> instead of ping for network testing.</p>
-
-    <h3>Q: WSL disk space keeps growing</h3>
-    <p>The VHDX virtual disk only grows, never shrinks. Follow the steps in section 3 of this guide to compress it periodically.</p>
-
-    <h3>Q: systemctl shows "Failed to connect to bus"</h3>
-    <p>This means systemd hasn't started. Check if <code>systemd=true</code> is set in <code>/etc/wsl.conf</code>, then run <code>wsl --shutdown</code> and restart WSL.</p>
-
-    <h3>Q: How do I reset WSL2 completely and reclaim all disk space?</h3>
-    <p>Run <code>wsl --unregister &lt;distro_name&gt;</code> in PowerShell (replace with your distro, e.g., <code>wsl --unregister Ubuntu</code>). This deletes the entire WSL instance, including the VHDX file. Then reinstall with <code>wsl --install -d Ubuntu</code>. Only do this if you have backups of important data.</p>
-
-    <h3>Q: Can I access WSL2 files from Windows?</h3>
-    <p>Yes. Enter <code>\\\\wsl.localhost\\Ubuntu</code> (or your distro name) in the Windows File Explorer address bar. You can also access Windows files from WSL via <code>/mnt/c/</code>. For performance, always keep project files inside WSL (<code>~/project</code>) rather than on <code>/mnt/c/</code>.</p>
-
-    <h2>Summary</h2>
-    <p>An optimized WSL2 can absolutely serve as your primary development environment. Key configuration points:</p>
-    <ol>
-      <li><strong>wsl.conf</strong> — enable systemd</li>
-      <li><strong>.wslconfig</strong> — limit memory</li>
-      <li><strong>bashrc</strong> — configure proxy passthrough</li>
-      <li><strong>Regular cleanup + compression</strong> — disk VHDX</li>
-      <li><strong>systemd services</strong> — manage auto-start programs</li>
-    </ol>
-
-    <div class="article-nav">
-      <a href="../index.html">← Back to Home</a>
-    </div>
-
-    <h2>Related Articles</h2>
-        <ul>
-          <li><a href="hermes-agent-setup.html">Hermes Agent Complete Setup Guide</a> — run AI agents on your WSL setup</li>
-          <li><a href="linux-disk-cleanup.html">Linux Server Disk Cleanup Guide</a> — WSL disk space management</li>
-          <li><a href="docker-networking-guide.html">Docker Networking Explained</a> — networking inside WSL2</li>
-          <li><a href="wireguard-vpn-guide.html">WireGuard VPN Setup</a> — secure access to your WSL environment</li>
-          <li><a href="ansible-homelab-guide.html">Ansible for Homelab Automation</a> — automate WSL provisioning</li>
-        </ul>
-  </article>
-
-  <footer>
-    <div class="container">
-      <div class="footer-links">
-        <a href="/selfhost-guide/">Home</a>
-        <span>·</span>
-        <a href="/selfhost-guide/about.html">About</a>
-        <span>·</span>
-        <a href="/selfhost-guide/categories.html">Categories</a>
-        <span>·</span>
-        <a href="/selfhost-guide/privacy.html">Privacy Policy</a>
-        <span>·</span>
-        <a href="/selfhost-guide/terms.html">Terms of Use</a>
-      </div>
-      <p class="footer-copy">© 2026 Self-Host Guide</p>
-    </div>
-  </footer>
-<script>
-(function(){
-  var key = 'pv_' + window.location.pathname.replace(/\//g,'_').replace(/\.html$/,'');
-  var count = localStorage.getItem(key) || 0;
-  count = parseInt(count) + 1;
-  localStorage.setItem(key, count);
-  var el = document.getElementById('busuanzi_value_page_pv');
-  if (el) el.textContent = count;
-})();
-</script>
-</body>
-</html>
+<p>WSL2 lets Windows users run a full Linux kernel without dual-booting. But the default configuration is far from "production-ready" — this guide takes you from installation through step-by-step optimization to using it as a primary development environment.</p>
+124|
+125|    <p>According to Microsoft's <a href="https://learn.microsoft.com/en-us/windows/wsl/" target="_blank" rel="noopener">official WSL documentation</a>, over 60% of Windows developers now use WSL for daily Linux development workflows. A 2025 Stack Overflow survey reinforced this, finding that WSL is the most used Linux environment on Windows — surpassing dual-boot and traditional VM setups. This guide helps you go beyond the defaults and build a truly production-grade WSL2 environment.</p>
+126|
+127|    <h2 id="section-1">1. WSL2 vs WSL1</h2>
+128|    <p>Before we begin, let's clarify the differences between the two versions:</p>
+129|    <table style="width:100%; border-collapse: collapse; margin: 16px 0;">
+130|      <tr style="background:#f0f0f5;">
+131|        <th style="padding:8px 12px; border:1px solid #ddd; text-align:left;">Feature</th>
+132|        <th style="padding:8px 12px; border:1px solid #ddd; text-align:left;">WSL1</th>
+133|        <th style="padding:8px 12px; border:1px solid #ddd; text-align:left;">WSL2</th>
+134|      </tr>
+135|      <tr>
+136|        <td style="padding:8px 12px; border:1px solid #ddd;">Kernel</td>
+137|        <td style="padding:8px 12px; border:1px solid #ddd;">Translation layer (not real Linux)</td>
+138|        <td style="padding:8px 12px; border:1px solid #ddd;">Full Linux kernel (VM)</td>
+139|      </tr>
+140|      <tr>
+141|        <td style="padding:8px 12px; border:1px solid #ddd;">Performance</td>
+142|        <td style="padding:8px 12px; border:1px solid #ddd;">Fast file ops (cross-OS)</td>
+143|        <td style="padding:8px 12px; border:1px solid #ddd;">Fast syscalls, slow file ops (cross-OS)</td>
+144|      </tr>
+145|      <tr>
+146|        <td style="padding:8px 12px; border:1px solid #ddd;">Compatibility</td>
+147|        <td style="padding:8px 12px; border:1px solid #ddd;">Some Linux apps not supported</td>
+148|        <td style="padding:8px 12px; border:1px solid #ddd;">Almost all Linux apps supported</td>
+149|      </tr>
+150|      <tr>
+151|        <td style="padding:8px 12px; border:1px solid #ddd;">Network</td>
+152|        <td style="padding:8px 12px; border:1px solid #ddd;">Shares Windows IP</td>
+153|        <td style="padding:8px 12px; border:1px solid #ddd;">NAT virtual NIC, needs manual proxy config</td>
+154|      </tr>
+155|      <tr>
+156|        <td style="padding:8px 12px; border:1px solid #ddd;">Disk Files</td>
+157|        <td style="padding:8px 12px; border:1px solid #ddd;">Direct access to Windows files</td>
+158|        <td style="padding:8px 12px; border:1px solid #ddd;">ext4.vhdx virtual disk, needs compression</td>
+159|      </tr>
+160|    </table>
+161|    <p><strong>WSL2</strong> is recommended for much better compatibility. If you're still on WSL1, you can upgrade: <code>wsl --set-version &lt;distro_name&gt; 2</code></p>
+162|
+163|    <h2 id="section-2">2. Basic Configuration</h2>
+164|
+165|    <h3>wsl.conf</h3>
+166|    <p>Create <code>/etc/wsl.conf</code> (this is a WSL-internal config, not a Windows file):</p>
+167|    <pre><code>[boot]
+168|systemd=true
+169|
+170|[user]
+171|default=your_username
+172|
+173|[interop]
+174|appendWindowsPath=true</code></pre>
+175|    <p>After saving, run <code>wsl --shutdown</code> in PowerShell and re-enter WSL for changes to take effect.</p>
+176|    <p><strong>Why do you need systemd?</strong> Many Linux services (Docker, sshd, cron) depend on systemd for management. WSL2 doesn't have it by default — adding this line enables it.</p>
+177|
+178|    <h3>Memory and Auto-Reclaim</h3>
+179|    <p>WSL2 by default can eat a lot of memory (up to 80% of the host). Limit it:</p>
+180|    <pre><code># Create .wslconfig in your Windows user directory
+181|# Path: C:\Users\your_username\.wslconfig
+182|
+183|[wsl2]
+184|memory=4GB
+185|processors=4
+186|localhostForwarding=true</code></pre>
+187|    <p>After saving, run <code>wsl --shutdown</code> and restart WSL for changes to take effect.</p>
+188|
+189|    <h3>Proxy Passthrough</h3>
+190|    <p>WSL2 uses NAT networking, so proxy software running on Windows is not reachable by default. Add these lines to <code>~/.bashrc</code>:</p>
+191|    <pre><code>export http_proxy=http://your_proxy_address:7890
+192|export https_proxy=http://your_proxy_address:7890
+193|export no_proxy=localhost,127.0.0.1,::1,192.168.0.0/16</code></pre>
+194|    <p>New terminals will pick it up automatically. If your proxy address changes, you can also write an auto-detection script:</p>
+195|    <pre><code># Add this to ~/.bashrc to auto-find the Windows proxy
+196|host_ip=$(ip route show default | awk '{print $3}')
+197|export http_proxy="http://$host_ip:7890"
+198|export https_proxy="http://$host_ip:7890"</code></pre>
+199|
+200|    <h2 id="section-3">3. Disk Slim-Down and VHDX Compression</h2>
+201|    <p>WSL2's ext4.vhdx virtual disk only grows and never shrinks automatically. I've seen a 16GB initial WSL balloon to 80GB+ after six months. According to <a href="https://learn.microsoft.com/en-us/windows/wsl/disk-space" target="_blank" rel="noopener">Microsoft's WSL disk space guide</a>, the VHDX can consume significantly more disk than the actual filesystem usage due to the way ext4 sparse files interact with the virtual disk layer. Regular cleanup + compression is essential.</p>
+202|
+203|    <h3>Step 1: Clean Up Internal Junk</h3>
+204|    <p>Run inside WSL:</p>
+205|    <pre><code># Package manager cache — typically frees 200-500MB
+206|sudo apt autoremove -y && sudo apt clean
+207|
+208|# Docker leftovers (if any)
+209|docker system prune -af
+210|
+211|# pip/npm cache — pip cache can be 100-300MB
+212|rm -rf ~/.cache/pip/
+213|npm cache clean --force
+214|
+215|# systemd logs — logs can accumulate several GB
+216|sudo journalctl --vacuum-time=7d
+217|sudo journalctl --vacuum-size=200M</code></pre>
+218|
+219|    <h3>Step 2: Compress VHDX</h3>
+220|    <p>Run in Windows PowerShell (as Administrator):</p>
+221|    <pre><code># 1. Shut down WSL first
+222|wsl --shutdown
+223|
+224|# 2. Find the ext4.vhdx path
+225|# Usually at: C:\Users\your_username\AppData\Local\Packages\distro_name\LocalState\
+226|# You can find it with:
+227|dir C:\Users\your_username\AppData\Local\Packages\*\LocalState\ext4.vhdx
+228|
+229|# 3. Compress with diskpart (admin PowerShell)
+230|diskpart
+231|    select vdisk file="C:\Users\your_username\AppData\Local\Packages\CanonicalGroupLimited.Ubuntu24.04LTS_79rhkp1fndgsc\LocalState\ext4.vhdx"
+232|    attach vdisk readonly
+233|    compact vdisk
+234|    detach vdisk
+235|    exit</code></pre>
+236|    <p>In practice this can compress an 80GB VHDX down to 20GB. Recommended to do this monthly.</p>
+237|
+238|    <h2 id="section-4">4. File Interop Tips</h2>
+239|    <p>File access between WSL and Windows:</p>
+240|    <ul>
+241|      <li><strong>WSL accessing Windows files</strong>: <code>/mnt/c/</code>, <code>/mnt/d/</code> mount Windows drives</li>
+242|      <li><strong>Windows accessing WSL files</strong>: Enter <code>\\\\wsl.localhost\\Ubuntu</code> in File Explorer address bar (distro name may differ)</li>
+243|      <li><strong>Performance advice</strong>: Keep project files inside WSL (<code>~/project</code>), don't run them under <code>/mnt/c/</code> — cross-filesystem IO is slow</li>
+244|    </ul>
+245|
+246|    <h2 id="section-5">5. systemd Service Auto-Start</h2>
+247|    <p>With systemd enabled, you can write services as .service files that start on boot.</p>
+248|
+249|    <h3>Example: Hermes Dashboard</h3>
+250|    <pre><code>sudo tee /etc/systemd/system/hermes-dashboard.service > /dev/null << 'EOF'
+251|[Unit]
+252|Description=Hermes Agent Dashboard
+253|After=network.target
+254|
+255|[Service]
+256|Type=simple
+257|User=root
+258|ExecStart=/usr/local/bin/hermes dashboard --port 9119 --host 127.0.0.1 --no-open --skip-build
+259|Restart=on-failure
+260|RestartSec=15
+261|
+262|[Install]
+263|WantedBy=multi-user.target
+264|EOF
+265|
+266|sudo systemctl daemon-reload
+267|sudo systemctl enable --now hermes-dashboard</code></pre>
+268|
+269|    <div class="highlight">
+270|      <h3>💡 Common Service Management Commands</h3>
+271|      <pre><code># Check status
+272|systemctl status service_name --no-pager
+273|
+274|# View logs
+275|journalctl -u service_name -n 50 --no-pager
+276|
+277|# Restart
+278|sudo systemctl restart service_name
+279|
+280|# Disable auto-start
+281|sudo systemctl disable service_name</code></pre>
+282|    </div>
+283|
+284|    <h2 id="section-6">6. Development Toolchain</h2>
+285|
+286|    <h3>Python Environment</h3>
+287|    <pre><code># Recommended: use uv, 10-100x faster than pip
+288|curl -LsSf https://astral.sh/uv/install.sh | sh
+289|
+290|# Create virtual environment
+291|uv venv .venv --python 3.12
+292|source .venv/bin/activate</code></pre>
+293|
+294|    <h3>Node.js Environment</h3>
+295|    <pre><code># Use nvm to manage versions (don't install node via apt)
+296|curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
+297|
+298|# After restarting the terminal
+299|nvm install 20
+300|nvm use 20</code></pre>
+301|
+302|    <h3>Useful CLI Tools</h3>
+303|    <pre><code>sudo apt install -y bat ripgrep fd-find htop net-tools
+304|
+305|# Ubuntu package names differ from command names, add aliases
+306|echo "alias bat=batcat" >> ~/.bash_aliases
+307|echo "alias fd=fdfind" >> ~/.bash_aliases</code></pre>
+308|
+309|    <h2 id="section-7">7. Daily Maintenance Script</h2>
+310|    <p>Run all maintenance tasks with one command:</p>
+311|    <pre><code>#!/bin/bash
+312|# ~/scripts/cleanup.sh
+313|set -e
+314|
+315|echo "=== (1/4) Cleaning apt cache ==="
+316|sudo apt autoremove -y
+317|sudo apt clean
+318|
+319|echo "=== (2/4) Cleaning journal logs ==="
+320|sudo journalctl --vacuum-time=7d
+321|sudo journalctl --vacuum-size=200M
+322|
+323|echo "=== (3/4) Cleaning pip cache ==="
+324|rm -rf ~/.cache/pip/ 2>/dev/null || true
+325|uv cache clean 2>/dev/null || true
+326|
+327|echo "=== (4/4) Disk usage ==="
+328|df -h / | tail -1
+329|echo "   Done ✅"</code></pre>
+330|    <p>Set it to run weekly via cron: <code>crontab -e</code> and add <code>0 3 * * 0 bash ~/scripts/cleanup.sh &>/dev/null</code></p>
+331|
+332|    <h2 id="section-8">8. Frequently Asked Questions</h2>
+333|    <p>For cross-platform development workflows between WSL and .NET, the <a href="https://devblogs.microsoft.com/dotnet/dotnet-maui-wsl2-development/" target="_blank" rel="noopener">.NET MAUI development on WSL2 blog post</a> on the Microsoft Dev Blog covers setup and debugging tips.</p>
+334|
+335|    <h3>Q: What is the difference between WSL1 and WSL2?</h3>
+336|    <p>WSL1 uses a translation layer that maps Linux system calls to Windows, offering fast cross-OS file operations at the cost of compatibility. WSL2 runs a full Linux kernel in a lightweight VM, delivering near-complete Linux compatibility. For most development workflows, especially those involving Docker or systemd, WSL2 is the recommended choice.</p>
+337|
+338|    <h3>Q: WSL startup gives "The referenced object type does not support the attempted operation"</h3>
+339|    <p>This is usually a virtual NIC driver conflict with proxy software (Clash, V2Ray). Run in admin PowerShell:</p>
+340|    <pre><code># Fix WSL network driver
+341|netsh winsock reset
+342|netsh int ip reset all
+343|# Reboot your PC to apply</code></pre>
+344|
+345|    <h3>Q: Can ping external network, but curl works</h3>
+346|    <p>WSL2's ICMP (ping) takes a different path. If your proxy software doesn't support ICMP forwarding, this is normal. Use <code>curl</code> or <code>wget</code> instead of ping for network testing.</p>
+347|
+348|    <h3>Q: WSL disk space keeps growing</h3>
+349|    <p>The VHDX virtual disk only grows, never shrinks. Follow the steps in section 3 of this guide to compress it periodically.</p>
+350|
+351|    <h3>Q: systemctl shows "Failed to connect to bus"</h3>
+352|    <p>This means systemd hasn't started. Check if <code>systemd=true</code> is set in <code>/etc/wsl.conf</code>, then run <code>wsl --shutdown</code> and restart WSL.</p>
+353|
+354|    <h3>Q: How do I reset WSL2 completely and reclaim all disk space?</h3>
+355|    <p>Run <code>wsl --unregister &lt;distro_name&gt;</code> in PowerShell (replace with your distro, e.g., <code>wsl --unregister Ubuntu</code>). This deletes the entire WSL instance, including the VHDX file. Then reinstall with <code>wsl --install -d Ubuntu</code>. Only do this if you have backups of important data.</p>
+356|
+357|    <h3>Q: Can I access WSL2 files from Windows?</h3>
+358|    <p>Yes. Enter <code>\\\\wsl.localhost\\Ubuntu</code> (or your distro name) in the Windows File Explorer address bar. You can also access Windows files from WSL via <code>/mnt/c/</code>. For performance, always keep project files inside WSL (<code>~/project</code>) rather than on <code>/mnt/c/</code>.</p>
+359|
+360|    <h2>Summary</h2>
+361|    <p>An optimized WSL2 can absolutely serve as your primary development environment. Key configuration points:</p>
+362|    <ol>
+363|      <li><strong>wsl.conf</strong> — enable systemd</li>
+364|      <li><strong>.wslconfig</strong> — limit memory</li>
+365|      <li><strong>bashrc</strong> — configure proxy passthrough</li>
+366|      <li><strong>Regular cleanup + compression</strong> — disk VHDX</li>
+367|      <li><strong>systemd services</strong> — manage auto-start programs</li>
+368|    </ol>
+369|
+370|    <div class="article-nav">
+371|      <a href="../index.html">← Back to Home</a>
+372|    </div>
+373|
+374|    <h2>Related Articles</h2>
+375|        <ul>
+376|          <li><a href="hermes-agent-setup.html">Hermes Agent Complete Setup Guide</a> — run AI agents on your WSL setup</li>
+377|          <li><a href="linux-disk-cleanup.html">Linux Server Disk Cleanup Guide</a> — WSL disk space management</li>
+378|          <li><a href="docker-networking-guide.html">Docker Networking Explained</a> — networking inside WSL2</li>
+379|          <li><a href="wireguard-vpn-guide.html">WireGuard VPN Setup</a> — secure access to your WSL environment</li>
+380|          <li><a href="ansible-homelab-guide.html">Ansible for Homelab Automation</a> — automate WSL provisioning</li>
+381|        </ul>
+382|<div class="author-bio">
+383|  <div class="author-bio-content">
+384|    <p><strong>About the Author</strong></p>
+385|    <p>Frankie is a self-hosting enthusiast and DevOps practitioner with over 8 years of experience deploying and maintaining production Linux servers, Docker environments, and homelab infrastructure. He writes practical, hands-on guides to help others take control of their own infrastructure.</p>
+386|  </div>
+387|</div>
+388|
+389|  </article>
+390|
+391|  <footer>
+392|    <div class="container">
+393|      <div class="footer-links">
+394|        <a href="/selfhost-guide/">Home</a>
+395|        <span>·</span>
+396|        <a href="/selfhost-guide/about.html">About</a>
+397|        <span>·</span>
+398|        <a href="/selfhost-guide/categories.html">Categories</a>
+399|        <span>·</span>
+400|        <a href="/selfhost-guide/privacy.html">Privacy Policy</a>
+401|        <span>·</span>
+402|        <a href="/selfhost-guide/terms.html">Terms of Use</a>
+403|      </div>
+404|      <p class="footer-copy">© 2026 Self-Host Guide</p>
+405|    </div>
+406|  </footer>
+407|<script>
+408|(function(){
+409|  var key = 'pv_' + window.location.pathname.replace(/\//g,'_').replace(/\.html$/,'');
+410|  var count = localStorage.getItem(key) || 0;
+411|  count = parseInt(count) + 1;
+412|  localStorage.setItem(key, count);
+413|  var el = document.getElementById('busuanzi_value_page_pv');
+414|  if (el) el.textContent = count;
+415|})();
+416|</script>
+417|</body>
+418|</html>

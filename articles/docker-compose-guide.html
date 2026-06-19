@@ -87,6 +87,22 @@
     ]
   }
   </script>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "HowTo",
+    "name": "Docker Compose Guide",
+    "step": [
+      {"@type": "HowToStep", "name": "1. What is Docker Compose?", "text": "Follow this step."},
+      {"@type": "HowToStep", "name": "2. Installation", "text": "Follow this step."},
+      {"@type": "HowToStep", "name": "3. The docker-compose.yml File — Everything You Need", "text": "Follow this step."},
+      {"@type": "HowToStep", "name": "4. Essential Docker Compose Commands", "text": "Follow this step."},
+      {"@type": "HowToStep", "name": "5. Real-World Example: Deploy a Flask App with PostgreSQL and Nginx", "text": "Follow this step."},
+      {"@type": "HowToStep", "name": "6. Troubleshooting Common Issues", "text": "Follow this step."}
+    ]
+  }
+  </script>
 </head>
 <body>
   <header class="article-header">
@@ -104,6 +120,20 @@
   </nav>
 
   <article class="article-content container">
+<nav class="toc">
+<h3>Table of Contents</h3>
+<ul>
+  <li><a href="#section-1">1. What is Docker Compose?</a></li>
+  <li><a href="#section-2">2. Installation</a></li>
+  <li><a href="#section-3">3. The docker-compose.yml File — Everything You Need</a></li>
+  <li><a href="#section-4">4. Essential Docker Compose Commands</a></li>
+  <li><a href="#section-5">5. Real-World Example: Deploy a Flask App with PostgreSQL and Nginx</a></li>
+  <li><a href="#section-6">6. Troubleshooting Common Issues</a></li>
+  <li><a href="#section-7">7. Summary</a></li>
+</ul>
+</nav>
+
+
     <p>If you're getting into self-hosting, Docker Compose is the single most important tool you'll learn. It turns the messy chore of running multiple services — databases, web servers, caches, reverse proxies — into a single <code>docker compose up -d</code> command. According to Docker's <strong>2024 Annual Survey</strong>, over 65% of Docker users rely on Compose in production workflows, and self-hosted infrastructure accounts for a growing share of that usage. This guide teaches you exactly what you need to get productive with Docker Compose, starting from zero.</p>
 
     <div class="highlight">
@@ -117,7 +147,7 @@
       </ul>
     </div>
 
-    <h2>1. What is Docker Compose?</h2>
+    <h2 id="section-1">1. What is Docker Compose?</h2>
     <p>Docker Compose is a tool for defining and running multi-container Docker applications. Instead of typing five separate <code>docker run</code> commands with long lists of flags, you write everything in a YAML file — one declarative configuration that describes every service, volume, network, and environment variable.</p>
 
     <p>According to the <a href="https://www.docker.com/" target="_blank" rel="noopener">Docker 2024 Annual Report</a>, container adoption continues to accelerate — over 89% of developers now use containers in production, and Compose is the standard tool for orchestrating multi-container workloads at the self-hosted scale. The report also notes that Docker Hub surpassed 100 billion image pulls, reflecting the platform's massive growth in the DevOps ecosystem.</p>
@@ -130,7 +160,7 @@ docker compose up -d
 # One command to tear everything down
 docker compose down</code></pre>
 
-    <h2>2. Installation</h2>
+    <h2 id="section-2">2. Installation</h2>
 
     <h3>2.1 Install Docker Engine</h3>
     <p>Docker Compose requires Docker first. On Ubuntu 24.04 or Debian 12, follow the <a href="https://docs.docker.com/engine/install/ubuntu/" target="_blank" rel="noopener">official Docker installation guide</a>:</p>
@@ -169,7 +199,7 @@ sudo usermod -aG docker $USER
       <p>The legacy <code>docker-compose</code> (with hyphen, v1) is deprecated. Always use <code>docker compose</code> (space, v2) moving forward. All examples in this guide use the v2 syntax.</p>
     </div>
 
-    <h2>3. The docker-compose.yml File — Everything You Need</h2>
+    <h2 id="section-3">3. The docker-compose.yml File — Everything You Need</h2>
     <p>Every Compose project starts with a <code>docker-compose.yml</code> file (or <code>compose.yaml</code> — both work, but <code>compose.yaml</code> is the modern convention). Here's a minimal but complete example:</p>
 
     <pre><code>version: "3.9"    # ⬅ schema version (still needed for some features)
@@ -239,7 +269,7 @@ image: postgres:latest</code></pre>
       <p>When you want to upgrade, change the tag manually and run <code>docker compose up -d</code> — controlled, deliberate, safe.</p>
     </div>
 
-    <h2>4. Essential Docker Compose Commands</h2>
+    <h2 id="section-4">4. Essential Docker Compose Commands</h2>
     <p>You'll use these commands daily. Learn them once, use them forever.</p>
 
     <h3>Start services</h3>
@@ -287,7 +317,7 @@ docker compose exec web sh
 # Run a one-off command
 docker compose exec db pg_dump -U postgres mydb > backup.sql</code></pre>
 
-    <h2>5. Real-World Example: Deploy a Flask App with PostgreSQL and Nginx</h2>
+    <h2 id="section-5">5. Real-World Example: Deploy a Flask App with PostgreSQL and Nginx</h2>
     <p>Let's build a complete self-hosted web application stack: a Python Flask API, a PostgreSQL database for persistent storage, and Nginx as a reverse proxy. This is a pattern you'll see in countless self-hosted deployments.</p>
 
     <h3>5.1 Project Structure</h3>
@@ -448,7 +478,7 @@ DB_PASS=your-strong-password-here</code></pre>
       <p>Then reference it in compose as <code>${DB_PASS}</code>. Add <code>.env</code> to your <code>.gitignore</code> if using version control.</p>
     </div>
 
-    <h2>6. Troubleshooting Common Issues</h2>
+    <h2 id="section-6">6. Troubleshooting Common Issues</h2>
 
     <h3>Port already in use</h3>
     <p>Error: <code>port is already allocated</code>. The host port is taken by another process or container.</p>
@@ -490,7 +520,7 @@ chmod 644 nginx/default.conf
 docker compose up -d --build web</code></pre>
     <p>For development, consider using a bind mount instead of rebuilding every time — but for production, always rebuild for consistency.</p>
 
-    <h2>7. Summary</h2>
+    <h2 id="section-7">7. Summary</h2>
     <p>Docker Compose transforms self-hosting from "a collection of fragile shell scripts" into "a single, version-controlled YAML file." You now know how to:</p>
     <ul>
       <li><strong>Install</strong> Docker and Compose on any Linux server</li>
@@ -534,7 +564,14 @@ docker compose up -d --build web</code></pre>
     </ul>
   </article>
 
-  <footer>
+  <div class="author-bio">
+  <div class="author-bio-content">
+    <p><strong>About the Author</strong></p>
+    <p>Frankie is a self-hosting enthusiast and DevOps practitioner with over 8 years of experience deploying and maintaining production Linux servers, Docker environments, and homelab infrastructure. He writes practical, hands-on guides to help others take control of their own infrastructure.</p>
+  </div>
+</div>
+
+<footer>
     <div class="container">
       <div class="footer-links">
         <a href="/selfhost-guide/">Home</a>

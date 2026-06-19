@@ -103,6 +103,23 @@
   </nav>
 
   <article class="article-content container">
+<nav class="toc">
+<h3>Table of Contents</h3>
+<ul>
+  <li><a href="#section-1">1. Docker Networking Fundamentals</a></li>
+  <li><a href="#section-2">2. The Default Bridge Network</a></li>
+  <li><a href="#section-3">3. User-Defined Bridge Networks (The Right Way)</a></li>
+  <li><a href="#section-4">4. Host Networking</a></li>
+  <li><a href="#section-5">5. Publishing Ports (Exposing Containers Safely)</a></li>
+  <li><a href="#section-6">6. Docker Compose Networking in Practice</a></li>
+  <li><a href="#section-7">7. Inspecting and Debugging Network Issues</a></li>
+  <li><a href="#section-8">8. Overlay Networks (Multi-Host)</a></li>
+  <li><a href="#section-9">9. macvlan Networking</a></li>
+  <li><a href="#section-10">10. Putting It All Together — A Real Self-Hosted Stack</a></li>
+</ul>
+</nav>
+
+
     <p>Docker networking is one of the most confusing topics for beginners — but it's also one of the most essential. Every self-hosted application you run needs to communicate: containers talking to each other, containers talking to the internet, and the outside world reaching your services. Misconfigured networking is the #1 cause of "it works on my machine" failures in production deployments.</p>
 
     <p>According to Docker's <strong>2024 Annual Survey</strong>, over 89% of developers now use containers in production, and network misconfiguration is the second most common deployment issue after resource limits. This guide breaks down exactly how Docker networking works — from the default bridge to custom networks, DNS resolution, and port publishing — with commands you can run right now to see it in action.</p>
@@ -119,7 +136,7 @@
       </ul>
     </div>
 
-    <h2>1. Docker Networking Fundamentals</h2>
+    <h2 id="section-1">1. Docker Networking Fundamentals</h2>
     <p>When you install Docker, it creates three default networks on your host. You can see them immediately:</p>
 
     <pre><code>docker network ls
@@ -165,7 +182,7 @@
 
     <p>For self-hosted setups, you'll use <strong>bridge</strong> networking 95% of the time. Let's dive into each one.</p>
 
-    <h2>2. The Default Bridge Network</h2>
+    <h2 id="section-2">2. The Default Bridge Network</h2>
     <p>When you run <code>docker run</code> without any <code>--network</code> flag, your container connects to the default <code>bridge</code> network. Docker creates a virtual Ethernet bridge (named <code>docker0</code> on the host) that acts like a network switch for containers.</p>
 
     <p>Let's test it:</p>
@@ -198,7 +215,7 @@ docker exec container-a ping container-b
       </ul>
     </div>
 
-    <h2>3. User-Defined Bridge Networks (The Right Way)</h2>
+    <h2 id="section-3">3. User-Defined Bridge Networks (The Right Way)</h2>
     <p>For any real project, create a <strong>user-defined bridge network</strong>. This solves all the limitations of the default bridge and adds critical features you'll rely on daily.</p>
 
     <pre><code># Create a custom bridge network
@@ -239,7 +256,7 @@ docker network connect frontend-net api
 
     <p>Containers on <code>frontend-net</code> cannot directly reach containers on <code>backend-net</code> — only containers attached to both networks (like the app server) can bridge the gap. This defense-in-depth approach limits blast radius if one container is compromised.</p>
 
-    <h2>4. Host Networking</h2>
+    <h2 id="section-4">4. Host Networking</h2>
     <p>The <code>host</code> network driver removes network isolation entirely. The container uses the host's own network stack — same IP address, same port space. There's no NAT, no bridge, no virtual Ethernet pair.</p>
 
     <pre><code># Run a container with host networking
@@ -264,7 +281,7 @@ curl localhost:80
       <li>Legacy applications that hardcode network interfaces</li>
     </ul>
 
-    <h2>5. Publishing Ports (Exposing Containers Safely)</h2>
+    <h2 id="section-5">5. Publishing Ports (Exposing Containers Safely)</h2>
     <p>By default, containers on a bridge network are not reachable from outside the host. To expose a container's port, you <strong>publish</strong> it — mapping a host port to a container port through iptables NAT rules.</p>
 
     <pre><code># Publish container port 80 to host port 8080
@@ -288,7 +305,7 @@ docker port random
       <p>Never expose database ports (PostgreSQL 5432, MySQL 3306, Redis 6379) directly to <code>0.0.0.0</code>. Always bind these to <code>127.0.0.1</code> (<code>-p 127.0.0.1:5432:5432</code>) and let your application connect via the internal Docker network. Better yet, don't publish database ports at all — containers on the same network can connect without port publishing.</p>
     </div>
 
-    <h2>6. Docker Compose Networking in Practice</h2>
+    <h2 id="section-6">6. Docker Compose Networking in Practice</h2>
     <p>Docker Compose automatically creates a default network for all services defined in a <code>docker-compose.yml</code> file. Each service is reachable by its service name — the same DNS-based service discovery we saw with user-defined bridge networks.</p>
 
     <pre><code># docker-compose.yml
@@ -361,7 +378,7 @@ docker network create my-shared-network</code></pre>
 
     <p>Now other containers can reach this service as <code>api</code>, <code>api-gateway</code>, or <code>backend-api</code> — all resolve to the same container.</p>
 
-    <h2>7. Inspecting and Debugging Network Issues</h2>
+    <h2 id="section-7">7. Inspecting and Debugging Network Issues</h2>
     <p>When things go wrong, these commands will save you hours of frustration:</p>
 
     <pre><code># View all networks
@@ -392,7 +409,7 @@ docker exec container-name cat /etc/resolv.conf</code></pre>
 
     <p>If DNS resolution isn't working, the most common cause is that your container is on the <strong>default</strong> bridge network instead of a <strong>user-defined</strong> bridge. Move it to a custom network and DNS-based service discovery will work immediately.</p>
 
-    <h2>8. Overlay Networks (Multi-Host)</h2>
+    <h2 id="section-8">8. Overlay Networks (Multi-Host)</h2>
     <p>Once you run Docker across multiple machines (a cluster), you need the <code>overlay</code> network driver. Overlay networks span multiple Docker hosts using VXLAN encapsulation — containers on different physical machines can communicate as if they were on the same virtual switch.</p>
 
     <p>To use overlay networks, you need a Swarm cluster initialized:</p>
@@ -408,7 +425,7 @@ docker service create --name web --network my-overlay-net --replicas 3 nginx:alp
 
     <p>For self-hosted setups running on a single machine, you won't need overlay networks. They become essential when you scale to a multi-node homelab with a cluster of Raspberry Pis or a handful of VPS nodes orchestrated by Swarm or <a href="https://docs.docker.com/engine/swarm/" target="_blank" rel="noopener">Docker Swarm</a>.</p>
 
-    <h2>9. macvlan Networking</h2>
+    <h2 id="section-9">9. macvlan Networking</h2>
     <p>The <code>macvlan</code> driver assigns a real MAC address to each container, making them appear as physical devices on your local network. Your router assigns them IP addresses via DHCP, just like any other machine on your LAN.</p>
 
     <pre><code># Create a macvlan network attached to your physical interface
@@ -423,7 +440,7 @@ docker run -d --name web --network my-macvlan-net --ip 192.168.1.200 nginx:alpin
 
     <p>Use macvlan when you need containers to be directly accessible on your local network without port mapping — for example, running a media server (like Jellyfin or Plex) that needs to be discoverable by DLNA or UPnP. The main limitation is that the host cannot communicate with macvlan containers directly without additional routing configuration.</p>
 
-    <h2>10. Putting It All Together — A Real Self-Hosted Stack</h2>
+    <h2 id="section-10">10. Putting It All Together — A Real Self-Hosted Stack</h2>
     <p>Let's tie everything together with a practical example. Here's a three-tier self-hosted application: a reverse proxy (Nginx), a web app (Python Flask), and a database (PostgreSQL), with proper network segmentation.</p>
 
     <pre><code># Create isolated networks
@@ -517,7 +534,14 @@ docker run -d \
     </ul>
   </article>
 
-  <footer>
+  <div class="author-bio">
+  <div class="author-bio-content">
+    <p><strong>About the Author</strong></p>
+    <p>Frankie is a self-hosting enthusiast and DevOps practitioner with over 8 years of experience deploying and maintaining production Linux servers, Docker environments, and homelab infrastructure. He writes practical, hands-on guides to help others take control of their own infrastructure.</p>
+  </div>
+</div>
+
+<footer>
     <div class="container">
       <div class="footer-links">
         <a href="/selfhost-guide/">Home</a>

@@ -1,287 +1,311 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>FastAPI Project: From Development to Deployment — Self-Host Guide</title>
-  <meta name="description" content="Complete FastAPI project deployment workflow: project structure best practices, API design, SQLite/PostgreSQL integration, Nginx reverse proxy, Docker containerization, domain binding.">
-  <link rel="canonical" href="https://fulankizao.github.io/selfhost-guide/articles/fastapi-deploy.html">
-  fastapi-deploy.html">
-  <link rel="stylesheet" href="../style.css">
-  <link rel="icon" type="image/svg+xml" href="../favicon.svg">
-  <meta property="og:title" content="FastAPI Project: From Development to Deployment">
-  <meta property="og:description" content="Complete FastAPI project deployment workflow: project structure best practices, API design, SQLite/PostgreSQL integration, Nginx reverse proxy, Docker containerization, domain binding.">
-  <meta property="og:type" content="article">
-  <meta property="og:site_name" content="Self-Host Guide">
-  <meta name="twitter:card" content="summary">
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "Article",
-    "headline": "FastAPI Project: From Development to Deployment",
-    "datePublished": "2026-06-15",
-    "author": {"@type": "Person", "name": "Frankie"}
-  }
-  </script>
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    "itemListElement": [
-      {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://fulankizao.github.io/selfhost-guide/"},
-      {"@type": "ListItem", "position": 2, "name": "FastAPI Project: From Development to Deployment"}
-    ]
-  }
-  </script>
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    "mainEntity": [
-      {
-        "@type": "Question",
-        "name": "What is FastAPI and why should I use it?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "FastAPI is a modern Python web framework that offers automatic OpenAPI documentation, Pydantic-based data validation, and native async support. It is one of the fastest-growing Python frameworks — with over 80,000 GitHub stars — and consistently ranks as one of the most loved and wanted frameworks in the Stack Overflow Developer Survey."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "How do I deploy FastAPI in production?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "The recommended production setup is to run FastAPI with Gunicorn + Uvicorn workers behind an Nginx reverse proxy. FastAPI itself is just the ASGI application; Uvicorn serves as the ASGI server, Gunicorn provides process management, and Nginx handles SSL termination, static files, and load balancing."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "Do I need a database for my FastAPI app?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Not necessarily. FastAPI works with or without a database. For simple projects you can use SQLite for easy setup, or switch to PostgreSQL for production. FastAPI integrates seamlessly with SQLAlchemy for ORM-based database access."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "Can FastAPI handle WebSockets?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Yes. FastAPI has built-in WebSocket support. You can define WebSocket endpoints using @app.websocket and use the same dependency injection system as regular HTTP routes. Combined with Nginx WebSocket proxying, this enables real-time features like live dashboards and chat applications."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "Is FastAPI suitable for large-scale applications?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Yes. FastAPI is used in production by companies like Microsoft, Uber, and Netflix. Its async-first architecture, automatic request validation, and OpenAPI compliance make it suitable for APIs serving millions of requests. With proper deployment practices (load balancing, caching, database optimization), FastAPI scales effectively."
-        }
-      }
-    ]
-  }
-  </script>
-</head>
-<body>
-  <header class="article-header">
-    <div class="container">
-      <span class="tag tag-web">Web Service</span>
-      <h1>FastAPI Project: From Development to Deployment</h1>
-      <div class="meta">2026-06-15 · 15 min read · <span id="busuanzi_value_page_pv"></span> views</div>
-    </div>
-  </header>
+1|<!DOCTYPE html>
+2|<html lang="en">
+3|<head>
+4|  <meta charset="UTF-8">
+5|  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+6|  <title>FastAPI Project: From Development to Deployment — Self-Host Guide</title>
+7|  <meta name="description" content="Complete FastAPI project deployment workflow: project structure best practices, API design, SQLite/PostgreSQL integration, Nginx reverse proxy, Docker containerization, domain binding.">
+8|  <link rel="canonical" href="https://fulankizao.github.io/selfhost-guide/articles/fastapi-deploy.html">
+9|  fastapi-deploy.html">
+10|  <link rel="stylesheet" href="../style.css">
+11|  <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+12|  <meta property="og:title" content="FastAPI Project: From Development to Deployment">
+13|  <meta property="og:description" content="Complete FastAPI project deployment workflow: project structure best practices, API design, SQLite/PostgreSQL integration, Nginx reverse proxy, Docker containerization, domain binding.">
+14|  <meta property="og:type" content="article">
+15|  <meta property="og:site_name" content="Self-Host Guide">
+16|  <meta name="twitter:card" content="summary">
+17|  <script type="application/ld+json">
+18|  {
+19|    "@context": "https://schema.org",
+20|    "@type": "Article",
+21|    "headline": "FastAPI Project: From Development to Deployment",
+22|    "datePublished": "2026-06-15",
+23|    "dateModified": "2026-06-16",
+24|    "author": {"@type": "Person", "name": "Frankie"}
+25|  }
+26|  </script>
+27|  <script type="application/ld+json">
+28|  {
+29|    "@context": "https://schema.org",
+30|    "@type": "BreadcrumbList",
+31|    "itemListElement": [
+32|      {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://fulankizao.github.io/selfhost-guide/"},
+33|      {"@type": "ListItem", "position": 2, "name": "FastAPI Project: From Development to Deployment"}
+34|    ]
+35|  }
+36|  </script>
+37|  <script type="application/ld+json">
+38|  {
+39|    "@context": "https://schema.org",
+40|    "@type": "FAQPage",
+41|    "mainEntity": [
+42|      {
+43|        "@type": "Question",
+44|        "name": "What is FastAPI and why should I use it?",
+45|        "acceptedAnswer": {
+46|          "@type": "Answer",
+47|          "text": "FastAPI is a modern Python web framework that offers automatic OpenAPI documentation, Pydantic-based data validation, and native async support. It is one of the fastest-growing Python frameworks — with over 80,000 GitHub stars — and consistently ranks as one of the most loved and wanted frameworks in the Stack Overflow Developer Survey."
+48|        }
+49|      },
+50|      {
+51|        "@type": "Question",
+52|        "name": "How do I deploy FastAPI in production?",
+53|        "acceptedAnswer": {
+54|          "@type": "Answer",
+55|          "text": "The recommended production setup is to run FastAPI with Gunicorn + Uvicorn workers behind an Nginx reverse proxy. FastAPI itself is just the ASGI application; Uvicorn serves as the ASGI server, Gunicorn provides process management, and Nginx handles SSL termination, static files, and load balancing."
+56|        }
+57|      },
+58|      {
+59|        "@type": "Question",
+60|        "name": "Do I need a database for my FastAPI app?",
+61|        "acceptedAnswer": {
+62|          "@type": "Answer",
+63|          "text": "Not necessarily. FastAPI works with or without a database. For simple projects you can use SQLite for easy setup, or switch to PostgreSQL for production. FastAPI integrates seamlessly with SQLAlchemy for ORM-based database access."
+64|        }
+65|      },
+66|      {
+67|        "@type": "Question",
+68|        "name": "Can FastAPI handle WebSockets?",
+69|        "acceptedAnswer": {
+70|          "@type": "Answer",
+71|          "text": "Yes. FastAPI has built-in WebSocket support. You can define WebSocket endpoints using @app.websocket and use the same dependency injection system as regular HTTP routes. Combined with Nginx WebSocket proxying, this enables real-time features like live dashboards and chat applications."
+72|        }
+73|      },
+74|      {
+75|        "@type": "Question",
+76|        "name": "Is FastAPI suitable for large-scale applications?",
+77|        "acceptedAnswer": {
+78|          "@type": "Answer",
+79|          "text": "Yes. FastAPI is used in production by companies like Microsoft, Uber, and Netflix. Its async-first architecture, automatic request validation, and OpenAPI compliance make it suitable for APIs serving millions of requests. With proper deployment practices (load balancing, caching, database optimization), FastAPI scales effectively."
+80|        }
+81|      }
+82|    ]
+83|  }
+84|  </script>
+85|</head>
+86|<body>
+87|  <header class="article-header">
+88|    <div class="container">
+89|      <span class="tag tag-web">Web Service</span>
+90|      <h1>FastAPI Project: From Development to Deployment</h1>
+91|      <div class="meta">2026-06-15 · 15 min read · <span id="busuanzi_value_page_pv"></span> views</div>
+92|    </div>
+93|  </header>
+94|
+95|  <nav class="nav-bar">
+96|    <div class="container">
+97|      <a href="/selfhost-guide/">← Back to Home</a>
+98|    </div>
+99|  </nav>
+100|
+101|  <article class="article-content container">
+102|    
+<nav class="toc">
+<h3>Table of Contents</h3>
+<ul>
+  <li><a href="#section-1">1. Project Structure</a></li>
+  <li><a href="#section-2">2. Quick Start</a></li>
+  <li><a href="#section-3">3. Database Integration</a></li>
+  <li><a href="#section-4">4. Managing with systemd</a></li>
+  <li><a href="#section-5">5. Nginx Reverse Proxy</a></li>
+  <li><a href="#section-6">6. Docker Deployment</a></li>
+</ul>
+</nav>
 
-  <nav class="nav-bar">
-    <div class="container">
-      <a href="/selfhost-guide/">← Back to Home</a>
-    </div>
-  </nav>
+<p>FastAPI is one of the fastest Web frameworks in the Python ecosystem, featuring auto-generated API docs, Pydantic validation, and async support. This guide walks through the entire process from project scaffolding to production deployment with Nginx reverse proxy + Docker.</p>
+103|
+104|    <p>According to the <a href="https://github.com/fastapi/fastapi" target="_blank" rel="noopener">FastAPI GitHub repository</a>, the framework has surpassed 80,000 stars and is one of the fastest-growing Python projects on the platform. The 2025 Stack Overflow Developer Survey ranked FastAPI as the second most loved web framework overall, and its adoption in production environments has grown by over 50% year-over-year among Python developers — making it a critical skill for modern backend engineering.</p>
+105|
+106|    <h2 id="section-1">1. Project Structure</h2>
+107|    <p>A well-organized FastAPI project structure:</p>
+108|    <pre><code>my-api/
+109|├── app/
+110|│   ├── __init__.py
+111|│   ├── main.py           # Application entry point
+112|│   ├── config.py         # Configuration management
+113|│   ├── database.py       # Database connection
+114|│   ├── models/           # SQLAlchemy models
+115|│   ├── schemas/          # Pydantic validation
+116|│   └── routers/          # API routes
+117|├── requirements.txt
+118|├── Dockerfile
+119|├── docker-compose.yml
+120|└── .env</code></pre>
+121|
+122|    <h2 id="section-2">2. Quick Start</h2>
+123|    <pre><code># Installation
+124|pip install fastapi uvicorn sqlalchemy pydantic
+125|
+126|# Minimal main.py
+127|from fastapi import FastAPI
+128|app = FastAPI(title="My API")
+129|
+130|@app.get("/")
+131|def root():
+132|    return {"message": "Hello World"}
+133|
+134|@app.get("/health")
+135|def health():
+136|    return {"status": "ok"}</code></pre>
+137|    <pre><code># Start dev server
+138|uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+139|# Visit http://localhost:8000/docs to see Swagger docs</code></pre>
+140|    <p>For detailed API development patterns, refer to the <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener">official FastAPI documentation</a>, which includes comprehensive guides on path operations, dependency injection, and security utilities.</p>
+141|
+142|    <h2 id="section-3">3. Database Integration</h2>
+143|    <pre><code># app/database.py
+144|from sqlalchemy import create_engine
+145|from sqlalchemy.orm import sessionmaker, DeclarativeBase
+146|
+147|DATABASE_URL = "sqlite:///./data.db"
+148|engine = create_engine(DATABASE_URL)
+149|SessionLocal = sessionmaker(bind=engine)
+150|
+151|class Base(DeclarativeBase):
+152|    pass
+153|
+154|def get_db():
+155|    db = SessionLocal()
+156|    try:
+157|        yield db
+158|    finally:
+159|        db.close()</code></pre>
+160|
+161|    <h2 id="section-4">4. Managing with systemd</h2>
+162|    <p>Similar to <a href="hermes-agent-setup.html">Hermes Agent's service management approach</a>, set up FastAPI as a systemd service:</p>
+163|    <pre><code>sudo tee /etc/systemd/system/fastapi-app.service > /dev/null << 'EOF'
+164|[Unit]
+165|Description=FastAPI App
+166|After=network.target
+167|
+168|[Service]
+169|Type=simple
+170|User=www-data
+171|WorkingDirectory=/opt/my-api
+172|ExecStart=/opt/my-api/.venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000
+173|Restart=on-failure
+174|RestartSec=5
+175|
+176|[Install]
+177|WantedBy=multi-user.target
+178|EOF
+179|
+180|sudo systemctl enable --now fastapi-app</code></pre>
+181|
+182|    <h2 id="section-5">5. Nginx Reverse Proxy</h2>
+183|    <pre><code># /etc/nginx/sites-available/my-api
+184|server {
+185|    listen 80;
+186|    server_name your-domain.com;
+187|
+188|    location / {
+189|        proxy_pass http://127.0.0.1:8000;
+190|        proxy_set_header Host $host;
+191|        proxy_set_header X-Real-IP $remote_addr;
+192|    }
+193|
+194|    location /static {
+195|        alias /opt/my-api/static;
+196|        expires 7d;
+197|    }
+198|}
+199|
+200|# Enable the site
+201|sudo ln -s /etc/nginx/sites-available/my-api /etc/nginx/sites-enabled/
+202|sudo nginx -t && sudo systemctl reload nginx</code></pre>
+203|
+204|    <div class="highlight">
+205|      <h3>💡 About HTTPS</h3>
+206|      <p>Use Certbot for free SSL certificates with one command: <code>sudo apt install certbot python3-certbot-nginx && sudo certbot --nginx</code></p>
+207|    </div>
+208|
+209|    <h2 id="section-6">6. Docker Deployment</h2>
+210|    <pre><code># Dockerfile
+211|FROM python:3.12-slim
+212|WORKDIR /app
+213|COPY requirements.txt .
+214|RUN pip install --no-cache-dir -r requirements.txt
+215|COPY . .
+216|CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]</code></pre>
+217|    <pre><code># docker-compose.yml
+218|version: '3.8'
+219|services:
+220|  api:
+221|    build: .
+222|    ports:
+223|      - "8000:8000"
+224|    volumes:
+225|      - ./data:/app/data
+226|    environment:
+227|      - DATABASE_URL=sqlite:///data/data.db
+228|    restart: unless-stopped</code></pre>
+229|
+230|    <h2>FAQ</h2>
+231|
+232|    <h3>What is the difference between FastAPI and Flask?</h3>
+233|    <p>Flask is a synchronous micro-framework with manual extension configuration, while FastAPI is ASGI-native with automatic OpenAPI docs, built-in Pydantic validation, and async support out of the box. FastAPI generally offers better performance (on par with Node.js and Go) and a more modern developer experience with automatic request/response validation.</p>
+234|
+235|    <h3>Do I need to use async with FastAPI?</h3>
+236|    <p>No. FastAPI supports both sync and async route handlers. Use async for I/O-bound operations (database queries, HTTP calls, file I/O) to get the performance benefits. For CPU-bound tasks, stick with sync or use background tasks. FastAPI automatically handles the threading correctly for sync endpoints.</p>
+237|
+238|    <h3>How do I add authentication to my FastAPI app?</h3>
+239|    <p>FastAPI provides built-in support for OAuth2, JWT tokens, HTTP Basic auth, and API keys through its dependency injection system. The official FastAPI documentation includes a complete OAuth2 with JWT tutorial. For self-hosted deployments, you can also put authentication behind an Nginx reverse proxy or Cloudflare Access.</p>
+240|
+241|    <h3>What ASGI server should I use for production?</h3>
+242|    <p>For production, use Gunicorn with Uvicorn workers (<code>pip install gunicorn uvicorn</code>): <code>gunicorn -w 4 -k uvicorn.workers.UvicornWorker app.main:app</code>. This combines Gunicorn's process management with Uvicorn's ASGI performance. For simpler deployments, Uvicorn alone with <code>--workers 4</code> is also acceptable. See the <a href="https://www.uvicorn.org/" target="_blank" rel="noopener">Uvicorn documentation</a> for deployment settings and configuration options.</p>
+243|
+244|    <h3>How do I handle CORS in FastAPI?</h3>
+245|    <p>FastAPI has a built-in CORSMiddleware. Simply add <code>from fastapi.middleware.cors import CORSMiddleware</code> and configure allowed origins, methods, and headers. This is essential when your frontend runs on a different domain than your API.</p>
+246|
+247|    <h2>Summary</h2>
+248|    <p>FastAPI's automatic interactive API documentation is powered by the <a href="https://fastapi.tiangolo.com/features/" target="_blank" rel="noopener">official FastAPI feature overview</a>. With the patterns in this guide, you can go from zero to a production-grade API server behind Nginx with Docker in a single afternoon.</p>
+249|
+250|    <h2>Related Articles</h2>
+251|        <ul>
+252|          <li><a href="hermes-agent-setup.html">Hermes Agent Complete Setup Guide</a> — systemd service management example</li>
+253|          <li><a href="nginx-reverse-proxy-guide.html">Nginx Reverse Proxy Setup Guide</a> — how to serve FastAPI behind Nginx</li>
+254|          <li><a href="docker-compose-guide.html">Docker Compose for Self-Hosting</a> — containerize your FastAPI app</li>
+255|          <li><a href="server-security-guide.html">Securing Your Self-Hosted Server</a> — harden the server running your API</li>
+256|          <li><a href="../about.html">About the Author</a> — Frankie's development experience</li>
+257|        </ul>
+258|
+259|    <div class="article-nav">
+260|      <a href="../index.html">← Back to Home</a>
+261|    </div>
+262|  </article>
+263|
+264|  <div class="author-bio">
+  <div class="author-bio-content">
+    <p><strong>About the Author</strong></p>
+    <p>Frankie is a self-hosting enthusiast and DevOps practitioner with over 8 years of experience deploying and maintaining production Linux servers, Docker environments, and homelab infrastructure. He writes practical, hands-on guides to help others take control of their own infrastructure.</p>
+  </div>
+</div>
 
-  <article class="article-content container">
-    <p>FastAPI is one of the fastest Web frameworks in the Python ecosystem, featuring auto-generated API docs, Pydantic validation, and async support. This guide walks through the entire process from project scaffolding to production deployment with Nginx reverse proxy + Docker.</p>
-
-    <p>According to the <a href="https://github.com/fastapi/fastapi" target="_blank" rel="noopener">FastAPI GitHub repository</a>, the framework has surpassed 80,000 stars and is one of the fastest-growing Python projects on the platform. The 2025 Stack Overflow Developer Survey ranked FastAPI as the second most loved web framework overall, and its adoption in production environments has grown by over 50% year-over-year among Python developers — making it a critical skill for modern backend engineering.</p>
-
-    <h2>1. Project Structure</h2>
-    <p>A well-organized FastAPI project structure:</p>
-    <pre><code>my-api/
-├── app/
-│   ├── __init__.py
-│   ├── main.py           # Application entry point
-│   ├── config.py         # Configuration management
-│   ├── database.py       # Database connection
-│   ├── models/           # SQLAlchemy models
-│   ├── schemas/          # Pydantic validation
-│   └── routers/          # API routes
-├── requirements.txt
-├── Dockerfile
-├── docker-compose.yml
-└── .env</code></pre>
-
-    <h2>2. Quick Start</h2>
-    <pre><code># Installation
-pip install fastapi uvicorn sqlalchemy pydantic
-
-# Minimal main.py
-from fastapi import FastAPI
-app = FastAPI(title="My API")
-
-@app.get("/")
-def root():
-    return {"message": "Hello World"}
-
-@app.get("/health")
-def health():
-    return {"status": "ok"}</code></pre>
-    <pre><code># Start dev server
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-# Visit http://localhost:8000/docs to see Swagger docs</code></pre>
-    <p>For detailed API development patterns, refer to the <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener">official FastAPI documentation</a>, which includes comprehensive guides on path operations, dependency injection, and security utilities.</p>
-
-    <h2>3. Database Integration</h2>
-    <pre><code># app/database.py
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, DeclarativeBase
-
-DATABASE_URL = "sqlite:///./data.db"
-engine = create_engine(DATABASE_URL)
-SessionLocal = sessionmaker(bind=engine)
-
-class Base(DeclarativeBase):
-    pass
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()</code></pre>
-
-    <h2>4. Managing with systemd</h2>
-    <p>Similar to <a href="hermes-agent-setup.html">Hermes Agent's service management approach</a>, set up FastAPI as a systemd service:</p>
-    <pre><code>sudo tee /etc/systemd/system/fastapi-app.service > /dev/null << 'EOF'
-[Unit]
-Description=FastAPI App
-After=network.target
-
-[Service]
-Type=simple
-User=www-data
-WorkingDirectory=/opt/my-api
-ExecStart=/opt/my-api/.venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000
-Restart=on-failure
-RestartSec=5
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-sudo systemctl enable --now fastapi-app</code></pre>
-
-    <h2>5. Nginx Reverse Proxy</h2>
-    <pre><code># /etc/nginx/sites-available/my-api
-server {
-    listen 80;
-    server_name your-domain.com;
-
-    location / {
-        proxy_pass http://127.0.0.1:8000;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-    }
-
-    location /static {
-        alias /opt/my-api/static;
-        expires 7d;
-    }
-}
-
-# Enable the site
-sudo ln -s /etc/nginx/sites-available/my-api /etc/nginx/sites-enabled/
-sudo nginx -t && sudo systemctl reload nginx</code></pre>
-
-    <div class="highlight">
-      <h3>💡 About HTTPS</h3>
-      <p>Use Certbot for free SSL certificates with one command: <code>sudo apt install certbot python3-certbot-nginx && sudo certbot --nginx</code></p>
-    </div>
-
-    <h2>6. Docker Deployment</h2>
-    <pre><code># Dockerfile
-FROM python:3.12-slim
-WORKDIR /app
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-COPY . .
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]</code></pre>
-    <pre><code># docker-compose.yml
-version: '3.8'
-services:
-  api:
-    build: .
-    ports:
-      - "8000:8000"
-    volumes:
-      - ./data:/app/data
-    environment:
-      - DATABASE_URL=sqlite:///data/data.db
-    restart: unless-stopped</code></pre>
-
-    <h2>FAQ</h2>
-
-    <h3>What is the difference between FastAPI and Flask?</h3>
-    <p>Flask is a synchronous micro-framework with manual extension configuration, while FastAPI is ASGI-native with automatic OpenAPI docs, built-in Pydantic validation, and async support out of the box. FastAPI generally offers better performance (on par with Node.js and Go) and a more modern developer experience with automatic request/response validation.</p>
-
-    <h3>Do I need to use async with FastAPI?</h3>
-    <p>No. FastAPI supports both sync and async route handlers. Use async for I/O-bound operations (database queries, HTTP calls, file I/O) to get the performance benefits. For CPU-bound tasks, stick with sync or use background tasks. FastAPI automatically handles the threading correctly for sync endpoints.</p>
-
-    <h3>How do I add authentication to my FastAPI app?</h3>
-    <p>FastAPI provides built-in support for OAuth2, JWT tokens, HTTP Basic auth, and API keys through its dependency injection system. The official FastAPI documentation includes a complete OAuth2 with JWT tutorial. For self-hosted deployments, you can also put authentication behind an Nginx reverse proxy or Cloudflare Access.</p>
-
-    <h3>What ASGI server should I use for production?</h3>
-    <p>For production, use Gunicorn with Uvicorn workers (<code>pip install gunicorn uvicorn</code>): <code>gunicorn -w 4 -k uvicorn.workers.UvicornWorker app.main:app</code>. This combines Gunicorn's process management with Uvicorn's ASGI performance. For simpler deployments, Uvicorn alone with <code>--workers 4</code> is also acceptable.</p>
-
-    <h3>How do I handle CORS in FastAPI?</h3>
-    <p>FastAPI has a built-in CORSMiddleware. Simply add <code>from fastapi.middleware.cors import CORSMiddleware</code> and configure allowed origins, methods, and headers. This is essential when your frontend runs on a different domain than your API.</p>
-
-    <h2>Related Articles</h2>
-        <ul>
-          <li><a href="hermes-agent-setup.html">Hermes Agent Complete Setup Guide</a> — systemd service management example</li>
-          <li><a href="nginx-reverse-proxy-guide.html">Nginx Reverse Proxy Setup Guide</a> — how to serve FastAPI behind Nginx</li>
-          <li><a href="docker-compose-guide.html">Docker Compose for Self-Hosting</a> — containerize your FastAPI app</li>
-          <li><a href="server-security-guide.html">Securing Your Self-Hosted Server</a> — harden the server running your API</li>
-          <li><a href="../about.html">About the Author</a> — Frankie's development experience</li>
-        </ul>
-
-    <div class="article-nav">
-      <a href="../index.html">← Back to Home</a>
-    </div>
-  </article>
-
-  <footer>
-    <div class="container">
-      <div class="footer-links">
-        <a href="/selfhost-guide/">Home</a>
-        <span>·</span>
-        <a href="/selfhost-guide/about.html">About</a>
-        <span>·</span>
-        <a href="/selfhost-guide/categories.html">Categories</a>
-        <span>·</span>
-        <a href="/selfhost-guide/privacy.html">Privacy Policy</a>
-        <span>·</span>
-        <a href="/selfhost-guide/terms.html">Terms of Use</a>
-      </div>
-      <p class="footer-copy">© 2026 Self-Host Guide</p>
-    </div>
-  </footer>
-<script>
-(function(){
-  var key = 'pv_' + window.location.pathname.replace(/\//g,'_').replace(/\.html$/,'');
-  var count = localStorage.getItem(key) || 0;
-  count = parseInt(count) + 1;
-  localStorage.setItem(key, count);
-  var el = document.getElementById('busuanzi_value_page_pv');
-  if (el) el.textContent = count;
-})();
-</script>
-</body>
-</html>
+<footer>
+265|    <div class="container">
+266|      <div class="footer-links">
+267|        <a href="/selfhost-guide/">Home</a>
+268|        <span>·</span>
+269|        <a href="/selfhost-guide/about.html">About</a>
+270|        <span>·</span>
+271|        <a href="/selfhost-guide/categories.html">Categories</a>
+272|        <span>·</span>
+273|        <a href="/selfhost-guide/privacy.html">Privacy Policy</a>
+274|        <span>·</span>
+275|        <a href="/selfhost-guide/terms.html">Terms of Use</a>
+276|      </div>
+277|      <p class="footer-copy">© 2026 Self-Host Guide</p>
+278|    </div>
+279|  </footer>
+280|<script>
+281|(function(){
+282|  var key = 'pv_' + window.location.pathname.replace(/\//g,'_').replace(/\.html$/,'');
+283|  var count = localStorage.getItem(key) || 0;
+284|  count = parseInt(count) + 1;
+285|  localStorage.setItem(key, count);
+286|  var el = document.getElementById('busuanzi_value_page_pv');
+287|  if (el) el.textContent = count;
+288|})();
+289|</script>
+290|</body>
+291|</html>

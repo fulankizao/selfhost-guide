@@ -86,6 +86,22 @@
     ]
   }
   </script>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "HowTo",
+    "name": "Monitoring Homelab Guide",
+    "step": [
+      {"@type": "HowToStep", "name": "1. Architecture Overview", "text": "Follow this step."},
+      {"@type": "HowToStep", "name": "2. Deploying the Stack with Docker Compose", "text": "Follow this step."},
+      {"@type": "HowToStep", "name": "3. Exploring Prometheus Metrics", "text": "Follow this step."},
+      {"@type": "HowToStep", "name": "4. Building Your First Grafana Dashboard", "text": "Follow this step."},
+      {"@type": "HowToStep", "name": "5. Alerting: Know When Something Breaks", "text": "Follow this step."},
+      {"@type": "HowToStep", "name": "6. Going Further: Advanced Monitoring", "text": "Follow this step."}
+    ]
+  }
+  </script>
 </head>
 <body>
   <header class="article-header">
@@ -103,6 +119,20 @@
   </nav>
 
   <article class="article-content container">
+<nav class="toc">
+<h3>Table of Contents</h3>
+<ul>
+  <li><a href="#section-1">1. Architecture Overview</a></li>
+  <li><a href="#section-2">2. Deploying the Stack with Docker Compose</a></li>
+  <li><a href="#section-3">3. Exploring Prometheus Metrics</a></li>
+  <li><a href="#section-4">4. Building Your First Grafana Dashboard</a></li>
+  <li><a href="#section-5">5. Alerting: Know When Something Breaks</a></li>
+  <li><a href="#section-6">6. Going Further: Advanced Monitoring</a></li>
+  <li><a href="#section-7">7. Maintenance & Best Practices</a></li>
+</ul>
+</nav>
+
+
     <p>Your homelab is humming along — Docker stacks are running, a reverse proxy is routing traffic, maybe a media server is serving content, and a handful of databases are storing data. But what happens when a disk fills up at 3 AM? Or when a container mysteriously crashes after a power blip? Without monitoring, you're flying blind.</p>
 
     <p><strong>Prometheus</strong> and <strong>Grafana</strong> are the industry-standard open-source duo for metrics collection, storage, and visualization. Prometheus (part of the <strong>Cloud Native Computing Foundation</strong>, like Kubernetes) is a pull-based time-series database that scrapes metrics from your services. Grafana is a rich visualization platform that turns those raw numbers into dashboards, charts, and alert rules. Together, they give observability that rivals commercial tools like Datadog — at zero licensing cost.</p>
@@ -126,7 +156,7 @@
       </ul>
     </div>
 
-    <h2>1. Architecture Overview</h2>
+    <h2 id="section-1">1. Architecture Overview</h2>
     <p>Before we write a single line of configuration, let's understand how the pieces fit together:</p>
 
     <pre><code>┌──────────────┐       HTTP scrape (port 9100)       ┌──────────────┐
@@ -152,7 +182,7 @@
 
     <p>The CNCF's 2024 annual survey reports that Prometheus is now used in over 68% of cloud-native organizations, and Grafana adoption has grown to over 12 million active installations globally. For homelabs, this stack is a natural fit — lightweight, container-native, and free.</p>
 
-    <h2>2. Deploying the Stack with Docker Compose</h2>
+    <h2 id="section-2">2. Deploying the Stack with Docker Compose</h2>
     <p>Create a dedicated directory for your monitoring stack:</p>
     <pre><code>mkdir -p ~/monitoring && cd ~/monitoring
 
@@ -290,7 +320,7 @@ curl -s http://localhost:9090/api/v1/targets | jq .</code></pre>
 
     <p>Open <strong>http://your-lab-ip:9090/targets</strong> in your browser. You should see all three scrape targets (prometheus, node, cadvisor) showing an <strong>UP</strong> state. If any target shows <strong>DOWN</strong>, check that the exporter container is running with <code>docker compose logs &lt;service_name&gt;</code>.</p>
 
-    <h2>3. Exploring Prometheus Metrics</h2>
+    <h2 id="section-3">3. Exploring Prometheus Metrics</h2>
     <p>Prometheus's built-in expression browser at <strong>http://your-lab-ip:9090/graph</strong> lets you run ad-hoc PromQL queries. Try these to verify your setup:</p>
 
     <pre><code># Total CPU usage percentage
@@ -312,7 +342,7 @@ time() - node_boot_time_seconds</code></pre>
 
     <p>PromQL is a powerful functional language. The <code>rate()</code> function calculates per-second averages over a time window, <code>avg by()</code> aggregates across dimensions, and <code>time()</code> returns the current Unix timestamp for calculations. According to the <strong>Prometheus 2024 documentation</strong>, over 200 PromQL functions are available, but these four patterns cover 90% of homelab use cases.</p>
 
-    <h2>4. Building Your First Grafana Dashboard</h2>
+    <h2 id="section-4">4. Building Your First Grafana Dashboard</h2>
 
     <h3>4.1 Configure the Prometheus Data Source</h3>
     <p>Grafana needs to know where Prometheus lives. You can set this up manually in the UI, or — better — automate it with provisioning files.</p>
@@ -366,7 +396,7 @@ providers:
 
     <p><strong>Pro tip:</strong> Download the dashboard JSON and save it to <code>grafana-provisioning/dashboards/</code> so it's automatically available on container restart. Grafana's provisioning system watches this directory and refreshes every 10 seconds (as configured above).</p>
 
-    <h2>5. Alerting: Know When Something Breaks</h2>
+    <h2 id="section-5">5. Alerting: Know When Something Breaks</h2>
     <p>Dashboards are great for post-mortem analysis, but alerts catch problems while they're happening. Grafana's built-in alerting engine (v8+) supports alert rules directly without requiring a separate Alertmanager, though for production stacks you'd pair it with Prometheus Alertmanager.</p>
 
     <h3>5.1 Setting Up Grafana Alerts</h3>
@@ -413,7 +443,7 @@ Note: A value below 1 means the target is DOWN</code></pre>
       <p>Start with 3-5 high-value alerts. Adding too many rules too early leads to alert fatigue — you'll ignore notifications and miss real incidents. The three rules above (disk, CPU, instance down) cover the most common homelab failures.</p>
     </div>
 
-    <h2>6. Going Further: Advanced Monitoring</h2>
+    <h2 id="section-6">6. Going Further: Advanced Monitoring</h2>
     <p>Once the basics are running, consider adding these exporters for deeper visibility:</p>
 
     <table style="width:100%; border-collapse: collapse; margin: 16px 0;">
@@ -451,7 +481,7 @@ Note: A value below 1 means the target is DOWN</code></pre>
 
     <p>Each exporter typically runs as an additional service in your <code>docker-compose.yml</code>. Add its scrape target to the <code>prometheus.yml</code> under <code>scrape_configs</code>, restart, and the metrics appear automatically in Grafana.</p>
 
-    <h2>7. Maintenance & Best Practices</h2>
+    <h2 id="section-7">7. Maintenance & Best Practices</h2>
 
     <h3>7.1 Data Retention</h3>
     <p>Prometheus's default retention is 15 days. For homelabs where disk space isn't abundant, 30 days is a good balance. Adjust in the <code>command</code> section of your Compose file:</p>
@@ -525,7 +555,14 @@ docker compose start</code></pre>
     </ul>
   </article>
 
-  <footer>
+  <div class="author-bio">
+  <div class="author-bio-content">
+    <p><strong>About the Author</strong></p>
+    <p>Frankie is a self-hosting enthusiast and DevOps practitioner with over 8 years of experience deploying and maintaining production Linux servers, Docker environments, and homelab infrastructure. He writes practical, hands-on guides to help others take control of their own infrastructure.</p>
+  </div>
+</div>
+
+<footer>
     <div class="container">
       <div class="footer-links">
         <a href="/selfhost-guide/">Home</a>

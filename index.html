@@ -1,163 +1,164 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Self-Host Guide — Build Your Own Homelab</title>
-  <meta name="description" content="Complete self-hosting tutorials: AI Agent, message gateway, web services, monitoring & alerting. A hands-on Homelab guide for overseas Chinese developers.">
-  <meta name="keywords" content="self-hosting,homelab,Linux tutorial,VPS,WSL,Hermes Agent,Docker,server operations">
-  <link rel="canonical" href="https://fulankizao.github.io/selfhost-guide/">
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "WebSite",
-    "name": "Self-Host Guide",
-    "description": "Build Your Own Homelab"
-  }
-  </script>
-  <link rel="icon" type="image/svg+xml" href="favicon.svg">
-  <!-- Open Graph -->
-  <meta property="og:title" content="Self-Host Guide — Build Your Own Homelab">
-  <meta property="og:description" content="AI Agent, message gateways, web services, monitoring & alerting — take control of your servers at minimal cost.">
-  <meta property="og:url" content="https://fulankizao.github.io/selfhost-guide/">
-  <meta property="og:type" content="website">
-  <meta property="og:site_name" content="Self-Host Guide">
-  <meta property="og:locale" content="en_US">
-  <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="Self-Host Guide — Build Your Own Homelab">
-  <meta name="twitter:description" content="AI Agent, message gateways, web services, monitoring & alerting — take control of your servers at minimal cost.">
-  <link rel="stylesheet" href="style.css">
-  <link rel="alternate" type="application/rss+xml" title="Self-Host Guide RSS Feed" href="/selfhost-guide/rss.xml">
-</head>
-<body>
-  <header class="hero">
-    <div class="container">
-      <h1>🔧 Self-Host Guide</h1>
-      <p class="subtitle">Build Your Own Homelab · Hands-on Tutorials</p>
-      <p class="desc">AI Agent, web services, monitoring — take control of your servers at minimal cost.</p>
-    </div>
-  </header>
-
-  <nav class="nav-bar">
-    <div class="container">
-      <a href="/selfhost-guide/">Home</a>
-      <a href="/selfhost-guide/categories.html">Articles</a>
-      <a href="/selfhost-guide/about.html">About</a>
-    </div>
-  </nav>
-
-  <main class="container">
-    <section class="featured">
-      <h2>📌 Featured Articles</h2>
-      <div class="card-grid">
-        <article class="card">
-          <h3><a href="articles/hermes-agent-setup.html">Hermes Agent Complete Setup Guide (2026)</a></h3>
-          <p>WebUI configuration, QQ Bot integration, systemd auto-start</p>
-          <div class="meta">2026-06-15 · 20 min · <span class="pv" data-key="articles_hermes-agent-setup">0</span> views</div>
-        </article>
-        <article class="card">
-          <h3><a href="articles/wsl-setup.html">WSL2 Ultimate Productivity Environment Setup</a></h3>
-          <p>Proxy configuration, disk compaction, systemd services, dev toolchain</p>
-          <div class="meta">2026-06-15 · 15 min · <span class="pv" data-key="articles_wsl-setup">0</span> views</div>
-        </article>
-        <article class="card">
-          <h3><a href="articles/docker-compose-guide.html">Docker Compose for Self-Hosting</a></h3>
-          <p>Compose basics, commands, Flask+PostgreSQL example</p>
-          <div class="meta">2026-06-16 · 15 min · <span class="pv" data-key="articles_docker-compose-guide">0</span> views</div>
-        </article>
-        <article class="card">
-          <h3><a href="articles/cloudflare-tunnel-guide.html">Cloudflare Tunnel: Free & Secure Way to Expose Services</a></h3>
-          <p>Expose apps without opening ports, Docker integration</p>
-          <div class="meta">2026-06-16 · 12 min · <span class="pv" data-key="articles_cloudflare-tunnel-guide">0</span> views</div>
-        </article>
-        <article class="card">
-          <h3><a href="articles/nginx-reverse-proxy-guide.html">Nginx Reverse Proxy Setup Guide</a></h3>
-          <p>Multi-site config, SSL, WebSocket proxy, performance tuning</p>
-          <div class="meta">2026-06-16 · 18 min · <span class="pv" data-key="articles_nginx-reverse-proxy-guide">0</span> views</div>
-        </article>
-        <article class="card">
-          <h3><a href="articles/wireguard-vpn-guide.html">How to Set Up Your Own VPN with WireGuard</a></h3>
-          <p>Server and client config, performance, Docker deployment</p>
-          <div class="meta">2026-06-16 · 15 min · <span class="pv" data-key="articles_wireguard-vpn-guide">0</span> views</div>
-        </article>
-        <article class="card">
-          <h3><a href="articles/monitoring-homelab-guide.html">Monitoring with Prometheus and Grafana</a></h3>
-          <p>Docker Compose stack, dashboards, alerting rules</p>
-          <div class="meta">2026-06-16 · 18 min · <span class="pv" data-key="articles_monitoring-homelab-guide">0</span> views</div>
-        </article>
-        <article class="card">
-          <h3><a href="articles/backup-strategies-guide.html">Automatic Backup Strategies</a></h3>
-          <p>3-2-1 rule, database backups, off-site sync, recovery testing</p>
-          <div class="meta">2026-06-16 · 15 min · <span class="pv" data-key="articles_backup-strategies-guide">0</span> views</div>
-        </article>
-        <article class="card">
-          <h3><a href="articles/server-security-guide.html">Securing Your Self-Hosted Server</a></h3>
-          <p>SSH hardening, firewall, fail2ban, Docker security, auditing</p>
-          <div class="meta">2026-06-16 · 20 min · <span class="pv" data-key="articles_server-security-guide">0</span> views</div>
-        </article>
-        <article class="card">
-          <h3><a href="articles/vaultwarden-password-manager.html">Self-Hosted Password Manager with Vaultwarden</a></h3>
-          <p>Docker deployment, reverse proxy, backups, client setup</p>
-          <div class="meta">2026-06-16 · 12 min · <span class="pv" data-key="articles_vaultwarden-password-manager">0</span> views</div>
-        </article>
-        <article class="card">
-          <h3><a href="articles/docker-networking-guide.html">Docker Networking Explained</a></h3>
-          <p>Bridge, host, overlay networks, Compose networking, troubleshooting</p>
-          <div class="meta">2026-06-16 · 15 min · <span class="pv" data-key="articles_docker-networking-guide">0</span> views</div>
-        </article>
-        <article class="card">
-          <h3><a href="articles/ansible-homelab-guide.html">Ansible for Homelab Automation</a></h3>
-          <p>Inventory, playbooks, roles, server hardening automation</p>
-          <div class="meta">2026-06-16 · 15 min · <span class="pv" data-key="articles_ansible-homelab-guide">0</span> views</div>
-        </article>
-        <article class="card">
-          <h3><a href="articles/bookstack-wiki-guide.html">How to Set Up a Personal Wiki with BookStack</a></h3>
-          <p>Docker deploy, Nginx proxy, LDAP auth, backup automation</p>
-          <div class="meta">2026-06-16 · 12 min · <span class="pv" data-key="articles_bookstack-wiki-guide">0</span> views</div>
-        </article>
-        <article class="card">
-          <h3><a href="articles/linux-disk-cleanup.html">Linux Server Disk Cleanup Guide</a></h3>
-          <p>Log rotation, Docker cleanup, locating large files</p>
-          <div class="meta">2026-06-15 · 10 min · <span class="pv" data-key="articles_linux-disk-cleanup">0</span> views</div>
-        </article>
-        <article class="card">
-          <h3><a href="articles/fastapi-deploy.html">FastAPI: Development to Deployment</a></h3>
-          <p>Project structure, Nginx reverse proxy, Docker packaging</p>
-          <div class="meta">2026-06-15 · 15 min · <span class="pv" data-key="articles_fastapi-deploy">0</span> views</div>
-        </article>
-      </div>
-    </section>
-  </main>
-
-  <footer>
-    <div class="container">
-      <div class="footer-links">
-        <a href="/selfhost-guide/">Home</a>
-        <span>·</span>
-        <a href="/selfhost-guide/about.html">About</a>
-        <span>·</span>
-        <a href="/selfhost-guide/categories.html">Articles</a>
-        <span>·</span>
-        <a href="/selfhost-guide/privacy.html">Privacy Policy</a>
-        <span>·</span>
-        <a href="/selfhost-guide/terms.html">Terms of Use</a>
-      </div>
-      <p class="footer-copy">© 2026 Self-Host Guide · <span id="visit-count">0</span> visits</p>
-    </div>
-  </footer>
-  <script>
-  // Homepage article view counter
-  var prefix = 'pv__selfhost-guide_';
-  document.querySelectorAll('.pv').forEach(function(el) {
-    var fullKey = prefix + el.dataset.key;
-    var c = localStorage.getItem(fullKey) || 0;
-    el.textContent = c;
-  });
-  // Global visit counter
-  var visitKey = 'pv__selfhost-guide_';
-  var visits = localStorage.getItem(visitKey + 'index') || 0;
-  document.getElementById('visit-count').textContent = parseInt(visits) + 1;
-  localStorage.setItem(visitKey + 'index', parseInt(visits) + 1);
-  </script>
-</body>
-</html>
+1|1|<!DOCTYPE html>
+2|2|<html lang="en">
+3|3|<head>
+4|4|  <meta charset="UTF-8">
+5|5|  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+6|6|  <title>Self-Host Guide — Build Your Own Homelab</title>
+7|7|  <meta name="description" content="Complete self-hosting tutorials: AI Agent, message gateway, web services, monitoring & alerting. A hands-on Homelab guide for overseas Chinese developers.">
+8|8|  <meta name="keywords" content="self-hosting,homelab,Linux tutorial,VPS,WSL,Hermes Agent,Docker,server operations">
+9|9|  <link rel="canonical" href="https://fulankizao.github.io/selfhost-guide/">
+10|10|  <script type="application/ld+json">
+11|11|  {
+12|12|    "@context": "https://schema.org",
+13|13|    "@type": "WebSite",
+14|14|    "name": "Self-Host Guide",
+15|15|    "description": "Build Your Own Homelab"
+16|16|  }
+17|17|  </script>
+18|18|  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+19|19|  <!-- Open Graph -->
+20|20|  <meta property="og:title" content="Self-Host Guide — Build Your Own Homelab">
+21|21|  <meta property="og:description" content="AI Agent, message gateways, web services, monitoring & alerting — take control of your servers at minimal cost.">
+22|22|  <meta property="og:url" content="https://fulankizao.github.io/selfhost-guide/">
+23|23|  <meta property="og:type" content="website">
+24|24|  <meta property="og:site_name" content="Self-Host Guide">
+25|25|  <meta property="og:locale" content="en_US">
+26|26|  <meta name="twitter:card" content="summary">
+27|27|  <meta name="twitter:title" content="Self-Host Guide — Build Your Own Homelab">
+28|28|  <meta name="twitter:description" content="AI Agent, message gateways, web services, monitoring & alerting — take control of your servers at minimal cost.">
+29|29|  <link rel="stylesheet" href="style.css">
+30|30|  <link rel="alternate" type="application/rss+xml" title="Self-Host Guide RSS Feed" href="/selfhost-guide/rss.xml">
+31|31|</head>
+32|32|<body>
+33|33|  <header class="hero">
+34|34|    <div class="container">
+35|35|      <h1>🔧 Self-Host Guide</h1>
+36|36|      <p class="subtitle">Build Your Own Homelab · Hands-on Tutorials</p>
+37|37|      <p class="desc">AI Agent, web services, monitoring — take control of your servers at minimal cost.</p>
+38|38|    </div>
+39|39|  </header>
+40|40|
+41|41|  <nav class="nav-bar">
+42|42|    <div class="container">
+43|43|      <a href="/selfhost-guide/">Home</a>
+44|44|      <a href="/selfhost-guide/categories.html">Articles</a>
+45|45|      <a href="/selfhost-guide/about.html">About</a>
+46|46|    </div>
+47|47|  </nav>
+48|48|
+49|49|  <main class="container">
+50|50|    <section class="featured">
+51|51|      <h2>📌 Featured Articles</h2>
+52|52|      <div class="card-grid">
+53|53|        <article class="card">
+54|54|          <h3><a href="articles/hermes-agent-setup.html">Hermes Agent Complete Setup Guide (2026)</a></h3>
+55|55|          <p>WebUI configuration, QQ Bot integration, systemd auto-start</p>
+56|56|          <div class="meta">2026-06-15 · 20 min · <span class="pv" data-key="articles_hermes-agent-setup">0</span> views</div>
+57|57|        </article>
+58|58|        <article class="card">
+59|59|          <h3><a href="articles/wsl-setup.html">WSL2 Ultimate Productivity Environment Setup</a></h3>
+60|60|          <p>Proxy configuration, disk compaction, systemd services, dev toolchain</p>
+61|61|          <div class="meta">2026-06-15 · 15 min · <span class="pv" data-key="articles_wsl-setup">0</span> views</div>
+62|62|        </article>
+63|63|        <article class="card">
+64|64|          <h3><a href="articles/docker-compose-guide.html">Docker Compose for Self-Hosting</a></h3>
+65|65|          <p>Compose basics, commands, Flask+PostgreSQL example</p>
+66|66|          <div class="meta">2026-06-16 · 15 min · <span class="pv" data-key="articles_docker-compose-guide">0</span> views</div>
+67|67|        </article>
+68|68|        <article class="card">
+69|69|          <h3><a href="articles/cloudflare-tunnel-guide.html">Cloudflare Tunnel: Free & Secure Way to Expose Services</a></h3>
+70|70|          <p>Expose apps without opening ports, Docker integration</p>
+71|71|          <div class="meta">2026-06-16 · 12 min · <span class="pv" data-key="articles_cloudflare-tunnel-guide">0</span> views</div>
+72|72|        </article>
+73|73|        <article class="card">
+74|74|          <h3><a href="articles/nginx-reverse-proxy-guide.html">Nginx Reverse Proxy Setup Guide</a></h3>
+75|75|          <p>Multi-site config, SSL, WebSocket proxy, performance tuning</p>
+76|76|          <div class="meta">2026-06-16 · 18 min · <span class="pv" data-key="articles_nginx-reverse-proxy-guide">0</span> views</div>
+77|77|        </article>
+78|78|        <article class="card">
+79|79|          <h3><a href="articles/wireguard-vpn-guide.html">How to Set Up Your Own VPN with WireGuard</a></h3>
+80|80|          <p>Server and client config, performance, Docker deployment</p>
+81|81|          <div class="meta">2026-06-13 · 15 min · <span class="pv" data-key="articles_wireguard-vpn-guide">0</span> views</div>
+82|82|        </article>
+83|83|        <article class="card">
+84|84|          <h3><a href="articles/monitoring-homelab-guide.html">Monitoring with Prometheus and Grafana</a></h3>
+85|85|          <p>Docker Compose stack, dashboards, alerting rules</p>
+86|86|          <div class="meta">2026-06-16 · 18 min · <span class="pv" data-key="articles_monitoring-homelab-guide">0</span> views</div>
+87|87|        </article>
+88|88|        <article class="card">
+89|89|          <h3><a href="articles/backup-strategies-guide.html">Automatic Backup Strategies</a></h3>
+90|90|          <p>3-2-1 rule, database backups, off-site sync, recovery testing</p>
+91|91|          <div class="meta">2026-06-16 · 15 min · <span class="pv" data-key="articles_backup-strategies-guide">0</span> views</div>
+92|92|        </article>
+93|93|        <article class="card">
+94|94|          <h3><a href="articles/server-security-guide.html">Securing Your Self-Hosted Server</a></h3>
+95|95|          <p>SSH hardening, firewall, fail2ban, Docker security, auditing</p>
+96|96|          <div class="meta">2026-06-15 · 20 min · <span class="pv" data-key="articles_server-security-guide">0</span> views</div>
+97|97|        </article>
+98|98|        <article class="card">
+99|99|          <h3><a href="articles/vaultwarden-password-manager.html">Self-Hosted Password Manager with Vaultwarden</a></h3>
+100|100|          <p>Docker deployment, reverse proxy, backups, client setup</p>
+101|101|          <div class="meta">2026-06-15 · 12 min · <span class="pv" data-key="articles_vaultwarden-password-manager">0</span> views</div>
+102|102|        </article>
+103|103|        <article class="card">
+104|104|          <h3><a href="articles/docker-networking-guide.html">Docker Networking Explained</a></h3>
+105|105|          <p>Bridge, host, overlay networks, Compose networking, troubleshooting</p>
+106|106|          <div class="meta">2026-06-14 · 15 min · <span class="pv" data-key="articles_docker-networking-guide">0</span> views</div>
+107|107|        </article>
+108|108|        <article class="card">
+109|109|          <h3><a href="articles/ansible-homelab-guide.html">Ansible for Homelab Automation</a></h3>
+110|110|          <p>Inventory, playbooks, roles, server hardening automation</p>
+111|111|          <div class="meta">2026-06-11 · 15 min · <span class="pv" data-key="articles_ansible-homelab-guide">0</span> views</div>
+112|112|        </article>
+113|113|        <article class="card">
+114|114|          <h3><a href="articles/bookstack-wiki-guide.html">How to Set Up a Personal Wiki with BookStack</a></h3>
+115|115|          <p>Docker deploy, Nginx proxy, LDAP auth, backup automation</p>
+116|116|          <div class="meta">2026-06-12 · 15 min · <span class="pv" data-key="articles_bookstack-wiki-guide">0</span> views</div>
+117|117|        </article>
+118|118|        <article class="card">
+119|119|          <h3><a href="articles/linux-disk-cleanup.html">Linux Server Disk Cleanup Guide</a></h3>
+120|120|          <p>Log rotation, Docker cleanup, locating large files</p>
+121|121|          <div class="meta">2026-06-15 · 10 min · <span class="pv" data-key="articles_linux-disk-cleanup">0</span> views</div>
+122|122|        </article>
+123|123|        <article class="card">
+124|124|          <h3><a href="articles/fastapi-deploy.html">FastAPI: Development to Deployment</a></h3>
+125|125|          <p>Project structure, Nginx reverse proxy, Docker packaging</p>
+126|126|          <div class="meta">2026-06-15 · 15 min · <span class="pv" data-key="articles_fastapi-deploy">0</span> views</div>
+127|127|        </article>
+128|128|      </div>
+129|129|    </section>
+130|130|  </main>
+131|131|
+132|132|  <footer>
+133|133|    <div class="container">
+134|134|      <div class="footer-links">
+135|135|        <a href="/selfhost-guide/">Home</a>
+136|136|        <span>·</span>
+137|137|        <a href="/selfhost-guide/about.html">About</a>
+138|138|        <span>·</span>
+139|139|        <a href="/selfhost-guide/categories.html">Articles</a>
+140|140|        <span>·</span>
+141|141|        <a href="/selfhost-guide/privacy.html">Privacy Policy</a>
+142|142|        <span>·</span>
+143|143|        <a href="/selfhost-guide/terms.html">Terms of Use</a>
+144|144|      </div>
+145|145|      <p class="footer-copy">© 2026 Self-Host Guide · <span id="visit-count">0</span> visits</p>
+146|146|    </div>
+147|147|  </footer>
+148|148|  <script>
+149|149|  // Homepage article view counter
+150|150|  var prefix = 'pv__selfhost-guide_';
+151|151|  document.querySelectorAll('.pv').forEach(function(el) {
+152|152|    var fullKey = prefix + el.dataset.key;
+153|153|    var c = localStorage.getItem(fullKey) || 0;
+154|154|    el.textContent = c;
+155|155|  });
+156|156|  // Global visit counter
+157|157|  var visitKey = 'pv__selfhost-guide_';
+158|158|  var visits = localStorage.getItem(visitKey + 'index') || 0;
+159|159|  document.getElementById('visit-count').textContent = parseInt(visits) + 1;
+160|160|  localStorage.setItem(visitKey + 'index', parseInt(visits) + 1);
+161|161|  </script>
+162|162|</body>
+163|163|</html>
+164|164|
