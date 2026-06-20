@@ -21,7 +21,7 @@
 21|21|    "headline": "Nginx Reverse Proxy Setup Guide for Self-Hosted Applications",
 22|22|    "datePublished": "2026-06-16",
 23|23|    "dateModified": "2026-06-16",
-24|24|    "author": {"@type": "Person", "name": "<span class="author-avatar">F</span> Frankie"}
+24|24|    "author": {"@type": "Person", "name": "F Frankie"}
 25|25|  }
 26|26|  </script>
 27|27|  <script type="application/ld+json">
@@ -376,6 +376,8 @@
 376|360|
 377|361|    <h3>How do I debug a misconfigured Nginx reverse proxy?</h3>
 378|362|    <p>First check syntax with <code>sudo nginx -t</code>. Then examine the error log: <code>sudo tail -f /var/log/nginx/error.log</code>. Common issues include: backend service not running (check with <code>curl http://127.0.0.1:PORT</code>), firewall blocking the proxy port, or incorrect proxy_pass URL (don't forget the trailing slash — it changes path behavior).</p>
+  <meta property="og:image" content="https://fulankizao.github.io/selfhost-guide/og-image.svg">
+  <meta name="twitter:image" content="https://fulankizao.github.io/selfhost-guide/og-image.svg">
 379|363|
 380|364|    <h3>Should I use Nginx or Caddy for my reverse proxy?</h3>
 381|365|    <p>Both are excellent. Nginx is more mature with richer configuration options, broader community support, and better performance tuning capabilities. Caddy is simpler to set up with automatic HTTPS by default but has fewer advanced features. For self-hosters who want full control and maximum performance, Nginx is the recommended choice. For beginners who want something that \"just works,\" Caddy is a valid alternative.</p>
