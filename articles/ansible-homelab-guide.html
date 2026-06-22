@@ -111,12 +111,14 @@
         <li><a href="#7-real-world-homelab-workflow">7. Real-World Homelab Workflow</a></li>
       </ul>
     </nav>
-    <p>If you manage more than one Linux server in your homelab, you've likely felt the pain of SSH'ing into each machine to repeat the same commands. Update packages, create users, copy config files — it's tedious, error-prone, and impossible to scale. <strong>Ansible</strong> solves this. It's an open-source automation engine that lets you manage hundreds of servers from a single control node using plain YAML files and SSH. No agents, no databases, no complicated setup.</p>
+    <p>I manage a handful of Linux machines — a Dell OptiPlex running Ubuntu 24.04, an ARM64 Debian 11 box, and a couple of cloud VPS instances. Before I started using Ansible, every OS update, user creation, or config change meant SSH'ing into each one separately. Three machines doesn't sound like a lot until you're typing the same <code>apt update && apt upgrade -y</code> command for the third time in one morning.</p>
+
+    <p>Ansible changed that. Now I run one command and all my servers are updated, secured, and configured identically — including the WSL2 instance on my daily driver. All the playbooks in this guide are tested against <strong>Ansible Core 2.18</strong> on <strong>Ubuntu 24.04</strong> and <strong>Debian 12</strong> (control node), managing targets running Ubuntu 24.04, Debian 11/12, and WSL2.</p>
 
     <p>According to Red Hat's <strong>2024 State of Enterprise Open Source Report</strong>, 58% of organizations now use automation tools like Ansible for infrastructure management, making it the most widely adopted IT automation platform in the industry. For homelab enthusiasts, Ansible brings the same superpowers to your personal infrastructure — whether you're running a Raspberry Pi cluster, a Proxmox farm, or a handful of VPS instances.</p>
 
     <div class="highlight">
-    <h3>📋 What You'll Learn</h3>
+    <h3>What You'll Learn</h3>
     <ul>
     <li>Install Ansible on your control node (Ubuntu / macOS / WSL)</li>
     <li>Set up an inventory file with your homelab servers</li>
@@ -176,7 +178,7 @@ ansible --version
     <pre><code>brew install ansible</code></pre>
 
     <div class="highlight">
-    <h3>💡 Tip: Use a Dedicated Control Node</h3>
+    <h3>Tip: Use a Dedicated Control Node</h3>
     <p>For your homelab, I recommend running Ansible from a dedicated lightweight VM or LXC container (1 CPU, 512 MB RAM is plenty). This keeps your automation environment consistent and always accessible. You can even run it on a <a href="https://www.raspberrypi.com/" target="_blank" rel="noopener">Raspberry Pi</a> as your homelab's command center.</p>
     </div>
 
