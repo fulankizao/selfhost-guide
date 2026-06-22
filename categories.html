@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>All Articles — Self-Host Guide</title>
-  <meta name="description" content="All articles from Self-Host Guide: AI Agent, Linux operations, web service deployment, and more Homelab hands-on tutorials.">
+  <meta name="description" content="All articles from Self-Host Guide — browsable by category. AI agents, Docker, Linux, VPN, security, backup, and more hands-on homelab tutorials.">
   <link rel="canonical" href="https://fulankizao.github.io/selfhost-guide/categories.html">
   <link rel="stylesheet" href="style.css">
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
@@ -21,82 +21,129 @@
   </script>
 </head>
 <body>
+  <nav class="nav-bar" aria-label="Main navigation">
+    <div class="container">
+    <ul>
+    <li><a href="/selfhost-guide/">← Back to Home</a></li>
+      </ul>
+    </div>
+</nav>
+
   <header class="article-header">
     <div class="container">
-      <h1>📂 All Articles</h1>
+    <h1>All Articles</h1>
     </div>
   </header>
 
-  <nav class="nav-bar">
-    <div class="container">
-      <a href="/selfhost-guide/">← Back to Home</a>
-    </div>
-  </nav>
-
-  <article class="article-content container">
+  <main class="article-content container">
     <ul class="cat-list">
-      <li>
-        <a href="articles/ansible-homelab-guide.html">Ansible Homelab Guide</a>
+    <li class="cat-item" data-tag="automation">
+    <span class="tag tag-automation">AUTOMATION</span>
+    <a href="articles/ansible-homelab-guide.html" class="cat-title">Ansible Homelab Guide</a>
+    <span class="cat-date">2026-06-11</span>
+    <p class="cat-desc">Automate server provisioning and configuration with Ansible playbooks.</p>
       </li>
-      <li>
-        <a href="articles/backup-strategies-guide.html">Backup Strategies Guide</a>
+    <li class="cat-item" data-tag="backup">
+    <span class="tag tag-backup">BACKUP</span>
+    <a href="articles/backup-strategies-guide.html" class="cat-title">Backup Strategies Guide</a>
+    <span class="cat-date">2026-06-16</span>
+    <p class="cat-desc">Implement the 3-2-1 backup rule with off-site sync and recovery testing.</p>
       </li>
-      <li>
-        <a href="articles/bookstack-wiki-guide.html">Bookstack Wiki Guide</a>
+    <li class="cat-item" data-tag="wiki">
+    <span class="tag tag-wiki">WIKI</span>
+    <a href="articles/bookstack-wiki-guide.html" class="cat-title">Bookstack Wiki Guide</a>
+    <span class="cat-date">2026-06-12</span>
+    <p class="cat-desc">Deploy a personal wiki with BookStack, Nginx reverse proxy, and LDAP auth.</p>
       </li>
-      <li>
-        <a href="articles/cloudflare-tunnel-guide.html">Cloudflare Tunnel Guide</a>
+    <li class="cat-item" data-tag="network">
+    <span class="tag tag-network">NETWORK</span>
+    <a href="articles/cloudflare-tunnel-guide.html" class="cat-title">Cloudflare Tunnel Guide</a>
+    <span class="cat-date">2026-06-16</span>
+    <p class="cat-desc">Expose self-hosted services securely without opening firewall ports.</p>
       </li>
-      <li>
-        <a href="articles/docker-compose-guide.html">Docker Compose Guide</a>
+    <li class="cat-item" data-tag="docker">
+    <span class="tag tag-docker">DOCKER</span>
+    <a href="articles/docker-compose-guide.html" class="cat-title">Docker Compose Guide</a>
+    <span class="cat-date">2026-06-16</span>
+    <p class="cat-desc">Master Docker Compose for multi-container self-hosted applications.</p>
       </li>
-      <li>
-        <a href="articles/docker-networking-guide.html">Docker Networking Guide</a>
+    <li class="cat-item" data-tag="docker">
+    <span class="tag tag-docker">DOCKER</span>
+    <a href="articles/docker-networking-guide.html" class="cat-title">Docker Networking Guide</a>
+    <span class="cat-date">2026-06-14</span>
+    <p class="cat-desc">Understand bridge, host, and overlay networks in Docker.</p>
       </li>
-      <li>
-        <a href="articles/fastapi-deploy.html">Fastapi Deploy</a>
+    <li class="cat-item" data-tag="web">
+    <span class="tag tag-web">WEB</span>
+    <a href="articles/fastapi-deploy.html" class="cat-title">Fastapi Deploy</a>
+    <span class="cat-date">2026-06-15</span>
+    <p class="cat-desc">Build and deploy FastAPI applications with Nginx and Docker.</p>
       </li>
-      <li>
-        <a href="articles/hermes-agent-setup.html">Hermes Agent Setup</a>
+    <li class="cat-item" data-tag="agent">
+    <span class="tag tag-agent">AGENT</span>
+    <a href="articles/hermes-agent-setup.html" class="cat-title">Hermes Agent Setup</a>
+    <span class="cat-date">2026-06-15</span>
+    <p class="cat-desc">Complete Hermes Agent setup with WebUI, QQ Bot, and systemd auto-start.</p>
       </li>
-      <li>
-        <a href="articles/linux-disk-cleanup.html">Linux Disk Cleanup</a>
+    <li class="cat-item" data-tag="linux">
+    <span class="tag tag-linux">LINUX</span>
+    <a href="articles/linux-disk-cleanup.html" class="cat-title">Linux Disk Cleanup</a>
+    <span class="cat-date">2026-06-15</span>
+    <p class="cat-desc">Free up disk space with log rotation, Docker cleanup, and file analysis.</p>
       </li>
-      <li>
-        <a href="articles/monitoring-homelab-guide.html">Monitoring Homelab Guide</a>
+    <li class="cat-item" data-tag="agent">
+    <span class="tag tag-agent">AGENT</span>
+    <a href="articles/monitoring-homelab-guide.html" class="cat-title">Monitoring Homelab Guide</a>
+    <span class="cat-date">2026-06-16</span>
+    <p class="cat-desc">Monitor your homelab with Prometheus, Grafana, and alerting rules.</p>
       </li>
-      <li>
-        <a href="articles/nginx-reverse-proxy-guide.html">Nginx Reverse Proxy Guide</a>
+    <li class="cat-item" data-tag="web">
+    <span class="tag tag-web">WEB</span>
+    <a href="articles/nginx-reverse-proxy-guide.html" class="cat-title">Nginx Reverse Proxy Guide</a>
+    <span class="cat-date">2026-06-16</span>
+    <p class="cat-desc">Configure Nginx as a reverse proxy with SSL and WebSocket support.</p>
       </li>
-      <li>
-        <a href="articles/server-security-guide.html">Server Security Guide</a>
+    <li class="cat-item" data-tag="security">
+    <span class="tag tag-security">SECURITY</span>
+    <a href="articles/server-security-guide.html" class="cat-title">Server Security Guide</a>
+    <span class="cat-date">2026-06-15</span>
+    <p class="cat-desc">Harden your Linux server with SSH config, firewall, and fail2ban.</p>
       </li>
-      <li>
-        <a href="articles/vaultwarden-password-manager.html">Vaultwarden Password Manager</a>
+    <li class="cat-item" data-tag="security">
+    <span class="tag tag-security">SECURITY</span>
+    <a href="articles/vaultwarden-password-manager.html" class="cat-title">Vaultwarden Password Manager</a>
+    <span class="cat-date">2026-06-15</span>
+    <p class="cat-desc">Self-host your password manager with Vaultwarden and backups.</p>
       </li>
-      <li>
-        <a href="articles/wireguard-vpn-guide.html">Wireguard Vpn Guide</a>
+    <li class="cat-item" data-tag="vpn">
+    <span class="tag tag-vpn">VPN</span>
+    <a href="articles/wireguard-vpn-guide.html" class="cat-title">Wireguard Vpn Guide</a>
+    <span class="cat-date">2026-06-13</span>
+    <p class="cat-desc">Set up a high-performance WireGuard VPN server on Ubuntu/Debian.</p>
       </li>
-      <li>
-        <a href="articles/wsl-setup.html">Wsl Setup</a>
+    <li class="cat-item" data-tag="linux">
+    <span class="tag tag-linux">LINUX</span>
+    <a href="articles/wsl-setup.html" class="cat-title">Wsl Setup</a>
+    <span class="cat-date">2026-06-15</span>
+    <p class="cat-desc">Optimize WSL2 for development with proxy config and systemd services.</p>
       </li>
     </ul>
-  </article>
+  </main>
 
   <footer>
     <div class="container">
-      <div class="footer-links">
-        <a href="/selfhost-guide/">Home</a>
-        <span>·</span>
-        <a href="/selfhost-guide/about.html">About</a>
-        <span>·</span>
-        <a href="/selfhost-guide/categories.html">Articles</a>
-        <span>·</span>
-        <a href="/selfhost-guide/privacy.html">Privacy Policy</a>
-        <span>·</span>
-        <a href="/selfhost-guide/terms.html">Terms of Use</a>
+    <div class="footer-links">
+    <a href="/selfhost-guide/">Home</a>
+    <span>·</span>
+    <a href="/selfhost-guide/about.html">About</a>
+    <span>·</span>
+    <a href="/selfhost-guide/categories.html">Articles</a>
+    <span>·</span>
+    <a href="/selfhost-guide/privacy.html">Privacy Policy</a>
+    <span>·</span>
+    <a href="/selfhost-guide/terms.html">Terms of Use</a>
       </div>
-      <p class="footer-copy">© 2026 Self-Host Guide</p>
+    <p class="footer-copy">© 2026 Self-Host Guide</p>
     </div>
   </footer>
 </body>

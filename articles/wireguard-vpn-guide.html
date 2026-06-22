@@ -1,444 +1,459 @@
-1|1|1|<!DOCTYPE html>
-2|2|2|<html lang="en">
-3|3|3|<head>
-4|4|4|  <meta charset="UTF-8">
-5|5|5|  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-6|6|6|  <title>How to Set Up Your Own VPN Server with WireGuard — Self-Host Guide</title>
-7|7|7|  <meta name="description" content="Complete WireGuard VPN setup guide: install WireGuard on Ubuntu/Debian, generate keys, configure server and client, enable routing and NAT, and secure your self-hosted network with a modern, high-performance VPN.">
-8|8|8|  <link rel="canonical" href="https://fulankizao.github.io/selfhost-guide/articles/wireguard-vpn-guide.html">
-9|9|9|  <link rel="stylesheet" href="../style.css">
-10|10|10|  <link rel="icon" type="image/svg+xml" href="../favicon.svg">
-11|11|11|  <meta property="og:title" content="How to Set Up Your Own VPN Server with WireGuard">
-12|12|12|  <meta property="og:description" content="Complete WireGuard VPN setup guide: install WireGuard on Ubuntu/Debian, generate keys, configure server and client, enable routing and NAT, and secure your self-hosted network with a modern, high-performance VPN.">
-13|13|13|  <meta property="og:url" content="https://fulankizao.github.io/selfhost-guide/articles/wireguard-vpn-guide.html">
-14|14|14|  <meta property="og:type" content="article">
-15|15|15|  <meta property="og:site_name" content="Self-Host Guide">
-16|16|16|  <meta property="og:locale" content="en_US">
-17|17|17|  <meta name="twitter:card" content="summary_large_image">
-18|18|18|  <meta name="twitter:title" content="How to Set Up Your Own VPN Server with WireGuard">
-19|19|19|  <meta name="twitter:description" content="Complete WireGuard VPN setup guide: install WireGuard on Ubuntu/Debian, generate keys, configure server and client, enable routing and NAT, and secure your self-hosted network with a modern, high-performance VPN.">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>How to Set Up Your Own VPN Server with WireGuard — Self-Host Guide</title>
+  <meta name="description" content="Set up a high-performance WireGuard VPN server on Ubuntu: key generation, server configuration, client profiles, NAT routing, and Docker-based deployment.">
+  <link rel="canonical" href="https://fulankizao.github.io/selfhost-guide/articles/wireguard-vpn-guide.html">
+  <link rel="stylesheet" href="../style.css">
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+  <meta property="og:title" content="How to Set Up Your Own VPN Server with WireGuard">
+  <meta property="og:description" content="Complete WireGuard VPN setup guide: install WireGuard on Ubuntu/Debian, generate keys, configure server and client, enable routing and NAT, and secure your self-hosted network with a modern, high-performance VPN.">
+  <meta property="og:url" content="https://fulankizao.github.io/selfhost-guide/articles/wireguard-vpn-guide.html">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="Self-Host Guide">
+  <meta property="og:locale" content="en_US">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="How to Set Up Your Own VPN Server with WireGuard">
+  <meta name="twitter:description" content="Complete WireGuard VPN setup guide: install WireGuard on Ubuntu/Debian, generate keys, configure server and client, enable routing and NAT, and secure your self-hosted network with a modern, high-performance VPN.">
   <meta property="og:image" content="https://fulankizao.github.io/selfhost-guide/og-image.svg">
   <meta name="twitter:image" content="https://fulankizao.github.io/selfhost-guide/og-image.svg">
-20|20|20|  <script type="application/ld+json">
-21|21|21|  {
-22|22|22|    "@context": "https://schema.org",
-23|23|23|    "@type": "Article",
-24|24|24|    "headline": "How to Set Up Your Own VPN Server with WireGuard",
-25|25|25|    "description": "Complete WireGuard VPN setup guide: install WireGuard on Ubuntu/Debian, generate keys, configure server and client, enable routing and NAT, and secure your self-hosted network with a modern, high-performance VPN.",
-26|26|26|    "datePublished": "2026-06-13",
-27|27|27|    "dateModified": "2026-06-16",
-28|28|28|    "author": {"@type": "Person", "name": "F Frankie"}
-29|29|29|  }
-30|30|30|  </script>
-31|31|31|  <script type="application/ld+json">
-32|32|32|  {
-33|33|33|    "@context": "https://schema.org",
-34|34|34|    "@type": "BreadcrumbList",
-35|35|35|    "itemListElement": [
-36|36|36|      {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://fulankizao.github.io/selfhost-guide/"},
-37|37|37|      {"@type": "ListItem", "position": 2, "name": "How to Set Up Your Own VPN Server with WireGuard", "item": "https://fulankizao.github.io/selfhost-guide/articles/wireguard-vpn-guide.html"}
-38|38|38|    ]
-39|39|39|  }
-40|40|40|  </script>
-41|41|41|  <script type="application/ld+json">
-42|42|42|  {
-43|43|43|    "@context": "https://schema.org",
-44|44|44|    "@type": "FAQPage",
-45|45|45|    "mainEntity": [
-46|46|46|      {
-47|47|47|        "@type": "Question",
-48|48|48|        "name": "What is WireGuard and how is it different from OpenVPN?",
-49|49|49|        "acceptedAnswer": {
-50|50|50|          "@type": "Answer",
-51|51|51|          "text": "WireGuard is a modern VPN protocol that uses state-of-the-art cryptography (Curve25519, ChaCha20, Poly1305) and runs inside the Linux kernel. Unlike OpenVPN, which uses TLS handshakes and userspace processes, WireGuard has a minimal codebase of about 4,000 lines, connects in under a second, and uses less CPU while achieving higher throughput. Benchmark tests show WireGuard can saturate a 1 Gbps link on modest hardware while OpenVPN tops out around 200-300 Mbps on the same hardware."
-52|52|52|        }
-53|53|53|      },
-54|54|54|      {
-55|55|55|        "@type": "Question",
-56|56|56|        "name": "Can I use WireGuard to access my home network while traveling?",
-57|57|57|        "acceptedAnswer": {
-58|58|58|          "@type": "Answer",
-59|59|59|          "text": "Yes, that is the primary use case. Once your WireGuard server is set up at home with the proper IP forwarding and NAT rules, you can install the WireGuard client on your laptop or phone, import your peer configuration, and connect. Your device will get a private IP on the WireGuard subnet and be able to access all devices on your home LAN as if you were physically there."
-60|60|60|        }
-61|61|61|      },
-62|62|62|      {
-63|63|63|        "@type": "Question",
-64|64|64|        "name": "Does WireGuard work on Windows, macOS, Android, and iOS?",
-65|65|65|        "acceptedAnswer": {
-66|66|66|          "@type": "Answer",
-67|67|67|          "text": "Yes. WireGuard has official apps for Windows, macOS, Android, and iOS, plus native support in the Linux kernel since version 5.6. All platforms support the same key-based authentication and configuration format. You generate a key pair, share the public key, and configure the peer endpoint — the same config.toml or conf file works across every client."
-68|68|68|        }
-69|69|69|      },
-70|70|70|      {
-71|71|71|        "@type": "Question",
-72|72|72|        "name": "Do I need a static public IP address for a WireGuard server?",
-73|73|73|        "acceptedAnswer": {
-74|74|74|          "@type": "Answer",
-75|75|75|          "text": "Not necessarily. If your server is on a cloud VPS, you already have a static IP. On a home connection with a dynamic IP, you can use a DDNS service (like DuckDNS or Cloudflare DDNS) to point a domain name at your changing IP. WireGuard clients can connect via the domain name in the Endpoint field, so your roaming IP is transparently handled."
-76|76|76|        }
-77|77|77|      },
-78|78|78|      {
-79|79|79|        "@type": "Question",
-80|80|80|        "name": "Is WireGuard secure enough for production use?",
-81|81|81|        "acceptedAnswer": {
-82|82|82|          "@type": "Answer",
-83|83|83|          "text": "Yes. WireGuard uses modern, well-audited cryptographic primitives: Curve25519 for key exchange, ChaCha20 for symmetric encryption, Poly1305 for authentication, and BLAKE2s for hashing. Its codebase (~4,000 lines) is tiny compared to OpenVPN (~600,000 lines), which dramatically reduces the attack surface. WireGuard has been audited by multiple independent security firms and is used in production by Cloudflare, Mozilla, and major VPN providers."
-84|84|84|        }
-85|85|85|      }
-86|86|86|    ]
-87|87|87|  }
-88|</script>
-89|  <script type="application/ld+json">
-90|  {
-91|    "@context": "https://schema.org",
-92|    "@type": "HowTo",
-93|    "name": "How to Set Up Your Own VPN Server with WireGuard",
-94|    "description": "Complete WireGuard VPN setup guide: install WireGuard on Ubuntu/Debian, generate keys, configure server and client, enable routing and NAT, and secure your self-hosted network with a modern, high-performance VPN.",
-95|    "step": [
-96|      {"@type": "HowToStep", "name": "Install WireGuard", "text": "Install WireGuard on Ubuntu/Debian using apt: sudo apt update && sudo apt install wireguard -y. WireGuard runs as a kernel module for maximum performance."},
-97|      {"@type": "HowToStep", "name": "Generate Keys", "text": "Generate public and private key pairs using wg genkey and wg pubkey. Store the private key securely on the server and share the public key with clients."},
-98|      {"@type": "HowToStep", "name": "Configure the Server", "text": "Create /etc/wireguard/wg0.conf with the server's private key, listen port, and a Peer section defining allowed IPs for each client."},
-99|      {"@type": "HowToStep", "name": "Configure Clients", "text": "Create peer configuration files for each client device including their own private key, the server's public key, endpoint address, and allowed IPs."},
-100|      {"@type": "HowToStep", "name": "Enable IP Forwarding and Firewall", "text": "Enable IP forwarding with sysctl net.ipv4.ip_forward=1 and configure iptables NAT rules so clients can access the internet through the VPN."},
-101|      {"@type": "HowToStep", "name": "Start and Enable WireGuard", "text": "Start the WireGuard interface with wg-quick up wg0 and enable it on boot with systemctl enable wg-quick@wg0."}
-102|    ]
-103|  }
-104|  </script>
-105|</head>
-106|<body>
-107|  <header class="article-header">
-108|    <div class="container">
-109|      <span class="tag tag-linux">Networking</span>
-110|      <h1>How to Set Up Your Own VPN Server with WireGuard</h1>
-111|95|95|      <div class="meta">2026-06-13 · 14 min read · <span id="busuanzi_value_page_pv"></span> views</div>
-112|96|96|    </div>
-113|97|97|  </header>
-114|98|98|
-115|99|99|  <nav class="nav-bar">
-116|100|100|    <div class="container">
-117|101|101|      <a href="/selfhost-guide/">← Back to Home</a>
-118|102|102|    </div>
-119|103|103|  </nav>
-120|104|104|
-121|105|105|  <article class="article-content container">
-122|106|106|
-123|107|107|    <p>Imagine you're at a coffee shop, connected to public Wi-Fi. Every HTTP request, every password you type, every file you download is visible to anyone on that network. A VPN — Virtual Private Network — encrypts everything between your device and your server, turning that insecure public Wi-Fi into a private tunnel. This guide shows you how to build that tunnel with <strong>WireGuard</strong>, the fastest and most modern VPN protocol available today.</p>
-124|108|108|
-125|109|109|    <p>According to benchmark results published by the <a href="https://www.wireguard.com/performance/" target="_blank" rel="noopener">WireGuard performance page</a>, WireGuard can transfer data at over 1 Gbps on a single CPU core — roughly 3-4x faster than OpenVPN on the same hardware while using significantly less CPU. The same benchmarks show that WireGuard completes a full handshake in under 100 milliseconds, compared to OpenVPN's multi-second TLS handshake. In tests conducted by Cloudflare, which uses WireGuard in its <a href="https://blog.cloudflare.com/boringtun-userspace-wireguard/" target="_blank" rel="noopener">BoringTun userspace implementation</a>, WireGuard's throughput was measured at over 900 Mbps on a modest virtual machine — numbers that OpenVPN simply cannot reach on equivalent hardware.</p>
-126|110|110|
-127|111|111|    <h2>1. What Is WireGuard?</h2>
-128|112|112|    <p>WireGuard is a VPN protocol and software that aims to be simpler, faster, and more auditable than legacy solutions like OpenVPN or IPSec. It was created by Jason A. Donenfeld and has been included in the Linux kernel since version 5.6 (March 2020).</p>
-129|113|113|    <p>Key design principles:</p>
-130|114|114|    <ul>
-131|115|115|      <li><strong>Minimal codebase</strong> — roughly 4,000 lines of code, compared to OpenVPN's 600,000+. Fewer lines means fewer bugs and a dramatically smaller attack surface.</li>
-132|116|116|      <li><strong>Kernel-native</strong> — runs inside the Linux kernel as a network device, not as a userspace process. This means zero context switches for packet processing and near-native throughput.</li>
-133|117|117|      <li><strong>Crypto agility by design</strong> — uses a single, well-audited suite (Curve25519, ChaCha20, Poly1305, BLAKE2s, HKDF). No configuration options means no misconfiguration.</li>
-134|118|118|      <li><strong>Connectionless</strong> — no handshake daemon, no connection tracking. Each packet carries its own key material. Connect and disconnect are instantaneous.</li>
-135|119|119|      <li><strong>Roaming</strong> — your client can change IP addresses (e.g., switch from Wi-Fi to cellular) without reconnecting. WireGuard handles it transparently.</li>
-136|120|120|    </ul>
-137|121|121|    <p>These properties make WireGuard ideal not only for personal VPNs, but also for site-to-site tunnels, Kubernetes pod networking, and embedded/IoT environments where CPU and memory are constrained.</p>
-138|122|122|
-139|123|123|    <div class="highlight">
-140|124|124|      <h3>💡 Prerequisites</h3>
-141|125|125|      <ul>
-142|126|126|        <li>A Linux server (Ubuntu 20.04+ / Debian 11+ recommended) — a $5/month VPS works perfectly</li>
-143|127|127|        <li>Root or sudo access</li>
-144|128|128|        <li>A client device (phone, laptop, or another server)</li>
-145|129|129|        <li>Basic familiarity with the command line</li>
-146|130|130|        <li>If your server is behind a home router, set up port forwarding for UDP port 51820 and consider a DDNS service if your public IP is dynamic</li>
-147|131|131|      </ul>
-148|132|132|    </div>
-149|133|133|
-150|134|134|    <h2>2. Installing WireGuard</h2>
-151|135|135|
-152|136|136|    <h3>On Ubuntu / Debian</h3>
-153|137|137|    <p>WireGuard is in the standard repositories on modern distributions:</p>
-154|138|138|    <pre><code>sudo apt update
-155|139|139|sudo apt install wireguard -y
-156|140|140|
-157|141|141|# Verify the installation
-158|142|142|wg --version
-159|143|143|# Expected: wireguard-tools v1.0.xxxxxxxxx</code></pre>
-160|144|144|
-161|145|145|    <h3>On Fedora / RHEL / CentOS</h3>
-162|146|146|    <pre><code>sudo dnf install wireguard-tools -y
-163|147|147|
-164|148|148|# On older kernels, you may need ELRepo for the kernel module
-165|149|149|# Modern Fedora (35+) and RHEL 9+ include the module out of the box</code></pre>
-166|150|150|
-167|151|151|    <p>That's it. WireGuard's kernel module is already loaded on Linux 5.6+ systems. The <code>wireguard-tools</code> package gives you the <code>wg</code> and <code>wg-quick</code> commands for generating keys, managing interfaces, and creating configuration files.</p>
-168|152|152|
-169|153|153|    <h2>3. Generating Keys</h2>
-170|154|154|    <p>WireGuard uses public-key cryptography. Every peer (server or client) has a private key stored locally and a public key shared with others.</p>
-171|155|155|    <p>On your server, generate the key pair:</p>
-172|156|156|    <pre><code># Create a directory for WireGuard configuration
-173|157|157|sudo mkdir -p /etc/wireguard
-174|158|158|cd /etc/wireguard
-175|159|159|
-176|160|160|# Generate private key
-177|161|161|wg genkey | sudo tee privatekey
-178|162|162|# Example output: uOr/9W1fF7x8bN3a0KjLmPqRsT5vWxYz6A1B2C3D4E=
-179|163|163|
-180|164|164|# Generate public key from the private key
-181|165|165|sudo cat privatekey | wg pubkey | sudo tee publickey
-182|166|166|# Example output: 9F8E7D6C5B4A3Z2Y1X0WvUtSrQpOnMlKjIhGfEdCbA=
-183|167|167|
-184|168|168|# Secure the private key
-185|169|169|sudo chmod 600 privatekey</code></pre>
-186|170|170|    <p>Repeat these steps on your client machine. You'll exchange public keys between server and client — never share private keys.</p>
-187|171|171|
-188|172|172|    <h2>4. Server Configuration</h2>
-189|173|173|    <p>Create the server config file at <code>/etc/wireguard/wg0.conf</code>:</p>
-190|174|174|    <pre><code>sudo nano /etc/wireguard/wg0.conf</code></pre>
-191|175|175|    <p>Add the following:</p>
-192|176|176|    <pre><code>[Interface]
-193|177|177|Address = 10.0.0.1/24
-194|178|178|ListenPort = 51820
-195|179|179|PrivateKey = &lt;paste-server-private-key&gt;
-196|180|180|
-197|181|181|# Enable NAT and routing (iptables)
-198|182|182|PostUp = iptables -A FORWARD -i wg0 -j ACCEPT
-199|183|183|PostUp = iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
-200|184|184|PostDown = iptables -D FORWARD -i wg0 -j ACCEPT
-201|185|185|PostDown = iptables -t nat -D POSTROUTING -o eth0 -j MASQUERADE
-202|186|186|
-203|187|187|# Client 1 — your laptop
-204|188|188|[Peer]
-205|189|189|PublicKey = &lt;client1-public-key&gt;
-206|190|190|AllowedIPs = 10.0.0.2/32
-207|191|191|
-208|192|192|# Client 2 — your phone
-209|193|193|[Peer]
-210|194|194|PublicKey = &lt;client2-public-key&gt;
-211|195|195|AllowedIPs = 10.0.0.3/32</code></pre>
-212|196|196|    <p>Key points about this configuration:</p>
-213|197|197|    <ul>
-214|198|198|      <li><strong>Address</strong> — the IP address of the WireGuard interface on the server (your VPN subnet). All peers will have IPs in this <code>10.0.0.0/24</code> range.</li>
-215|199|199|      <li><strong>ListenPort</strong> — UDP port 51820 is the WireGuard standard. You'll need to open this port in your firewall.</li>
-216|200|200|      <li><strong>PostUp / PostDown</strong> — these iptables rules enable IP forwarding and NAT (masquerading) so VPN clients can access the internet through the server. Replace <code>eth0</code> with your actual internet-facing interface (check with <code>ip route show default</code>).</li>
-217|201|201|      <li><strong>AllowedIPs</strong> — for the server side, this restricts which IPs each client is allowed to use. A <code>/32</code> means a single IP. You can also allow entire subnets: <code>10.0.0.0/24</code> or <code>192.168.1.0/24</code> if you want to give clients access to your whole LAN.</li>
-218|202|202|    </ul>
-219|203|203|
-220|204|204|    <h2>5. Client Configuration</h2>
-221|205|205|    <p>On your client (laptop, phone, or another server), create a config file. The standard location on Linux is <code>/etc/wireguard/wg0.conf</code>, but the file can live anywhere:</p>
-222|206|206|    <pre><code>sudo nano /etc/wireguard/wg0.conf</code></pre>
-223|207|207|    <pre><code>[Interface]
-224|208|208|Address = 10.0.0.2/24
-225|209|209|PrivateKey = &lt;client-private-key&gt;
-226|210|210|DNS = 1.1.1.1
-227|211|211|
-228|212|212|[Peer]
-229|213|213|PublicKey = &lt;server-public-key&gt;
-230|214|214|Endpoint = your-server-ip-or-domain:51820
-231|215|215|AllowedIPs = 0.0.0.0/0
-232|216|216|PersistentKeepalive = 25</code></pre>
-233|217|217|    <p>Understanding the client config:</p>
-234|218|218|    <ul>
-235|219|219|      <li><strong>Address</strong> — the client's IP on the VPN subnet. Must match the <code>AllowedIPs</code> setting on the server for this peer.</li>
-236|220|220|      <li><strong>DNS</strong> — after connecting, the client will use this DNS server. Cloudflare's 1.1.1.1 or Google's 8.8.8.8 are good choices. This prevents DNS leaks.</li>
-237|221|221|      <li><strong>Endpoint</strong> — your server's public IP or domain name, followed by the UDP port.</li>
-238|222|222|      <li><strong>AllowedIPs = 0.0.0.0/0</strong> — this sends <em>all</em> internet traffic through the VPN (full tunnel). To only route traffic to your home network through the VPN (split tunnel), use <code>10.0.0.0/24, 192.168.1.0/24</code> instead.</li>
-239|223|223|      <li><strong>PersistentKeepalive = 25</strong> — sends a keepalive packet every 25 seconds. Essential if your client is behind NAT or a firewall that drops idle UDP mappings.</li>
-240|224|224|    </ul>
-241|225|225|
-242|226|226|    <h2>6. Enabling IP Forwarding and Firewall</h2>
-243|227|227|    <p>For the VPN to route traffic, the server must allow IP forwarding:</p>
-244|228|228|    <pre><code># Enable IP forwarding
-245|229|229|sudo sysctl -w net.ipv4.ip_forward=1
-246|230|230|
-247|231|231|# Make it permanent
-248|232|232|echo "net.ipv4.ip_forward = 1" | sudo tee -a /etc/sysctl.conf
-249|233|233|
-250|234|234|# Apply without reboot
-251|235|235|sudo sysctl -p</code></pre>
-252|236|236|    <p>Now open the WireGuard UDP port in the firewall:</p>
-253|237|237|    <pre><code># With ufw (Ubuntu)
-254|238|238|sudo ufw allow 51820/udp
-255|239|239|
-256|240|240|# With firewalld (Fedora / RHEL)
-257|241|241|sudo firewall-cmd --permanent --add-port=51820/udp
-258|242|242|sudo firewall-cmd --reload</code></pre>
-259|243|243|    <p>If you set up <code>PostUp</code> iptables rules in the server config, NAT will be configured automatically when the WireGuard interface comes up.</p>
-260|244|244|
-261|245|245|    <h2>7. Starting WireGuard</h2>
-262|246|246|    <p>Start the VPN on the server:</p>
-263|247|247|    <pre><code># Bring up the WireGuard interface
-264|248|248|sudo wg-quick up wg0
-265|249|249|
-266|250|250|# Check the interface status
-267|251|251|sudo wg show
-268|252|252|# Example output:
-269|253|253|# interface: wg0
-270|254|254|#   public key: 9F8E7D6C... (server public key)
-271|255|255|#   private key: (hidden)
-272|256|256|#   listening port: 51820
-273|257|257|#
-274|258|258|# peer: A1B2C3D4... (client 1 public key)
-275|259|259|#   endpoint: 203.0.113.5:54321
-276|260|260|#   allowed ips: 10.0.0.2/32
-277|261|261|#   latest handshake: 1 minute ago
-278|262|262|#   transfer: 1.24 MiB received, 3.57 MiB sent
-279|263|263|#
-280|264|264|# peer: E5F6G7H8... (client 2 public key)
-281|265|265|#   allowed ips: 10.0.0.3/32</code></pre>
-282|266|266|    <p>Enable auto-start on boot:</p>
-283|267|267|    <pre><code>sudo systemctl enable wg-quick@wg0</code></pre>
-284|268|268|    <p>On the client, connect with the same <code>wg-quick up wg0</code> command. On Windows and macOS, use the official <a href="https://www.wireguard.com/install/" target="_blank" rel="noopener">WireGuard desktop app</a> — import the config file and click "Activate."</p>
-285|269|269|
-286|270|270|    <h3>Verifying the Connection</h3>
-287|271|271|    <pre><code># From the client, ping the server's VPN IP
-288|272|272|ping -c 4 10.0.0.1
-289|273|273|
-290|274|274|# Check your public IP — it should now show your server's IP
-291|275|275|curl ifconfig.me
-292|276|276|
-293|277|277|# From the server, check active peers
-294|278|278|sudo wg show</code></pre>
-295|279|279|    <p>If <code>curl ifconfig.me</code> returns your server's public IP, the full tunnel is working. All your traffic is encrypted and routed through your server.</p>
-296|280|280|
-297|281|281|    <h2>8. Adding More Clients</h2>
-298|282|282|    <p>Adding a new client takes three steps:</p>
-299|283|283|    <ol>
-300|284|284|      <li>Generate a key pair on the new client: <code>wg genkey | tee privatekey | wg pubkey > publickey</code></li>
-301|285|285|      <li>Add a <code>[Peer]</code> block to the server config with the new client's public key and an unused IP:</li>
-302|286|286|    </ol>
-303|287|287|    <pre><code># Append to /etc/wireguard/wg0.conf
-304|288|288|[Peer]
-305|289|289|PublicKey = &lt;new-client-public-key&gt;
-306|290|290|AllowedIPs = 10.0.0.4/32</code></pre>
-307|291|291|    <pre><code>   3. Apply the change without disconnecting existing clients:</code></pre>
-308|292|292|    <pre><code>sudo wg addconf wg0 <(wg-quick strip wg0)</code></pre>
-309|293|293|    <p>Or simply restart the interface:</p>
-310|294|294|    <pre><code>sudo wg-quick down wg0 && sudo wg-quick up wg0</code></pre>
-311|295|295|    <p>On the new client, create a config file based on the template in section 5, using the next available IP (10.0.0.4/24 in this case).</p>
-312|296|296|
-313|297|297|    <h2>9. Split Tunneling: Route Only Certain Traffic</h2>
-314|298|298|    <p>Sometimes you don't want <em>all</em> traffic going through the VPN — maybe you only need to access your home network or specific services. This is called <strong>split tunneling</strong>. Change the client's <code>AllowedIPs</code> to only include the subnets you need:</p>
-315|299|299|    <pre><code># Only route traffic for your home LAN and the VPN subnet
-316|300|300|AllowedIPs = 10.0.0.0/24, 192.168.1.0/24
-317|301|301|
-318|302|302|# Route traffic for specific services
-319|303|303|AllowedIPs = 10.0.0.0/24, 10.8.0.0/24</code></pre>
-320|304|304|    <p>With split tunneling, your internet traffic (streaming, browsing, downloads) goes through your local connection for maximum speed, while traffic destined for your home network routes through the VPN.</p>
-321|305|305|
-322|306|306|    <h2>10. QR Code for Mobile Clients</h2>
-323|307|307|    <p>WireGuard's mobile apps (iOS and Android) let you import configs via QR code. Generate one from your client config:</p>
-324|308|308|    <pre><code># Install qrencode
-325|309|309|sudo apt install qrencode -y
-326|310|310|
-327|311|311|# Generate a QR code from your client config file
-328|312|312|qrencode -t ansiutf8 < /path/to/client-config.conf</code></pre>
-329|313|313|    <p>Scan the QR code with the WireGuard mobile app and you're connected in seconds — no manual IP typing on a phone keyboard.</p>
-330|314|314|
-331|315|315|    <h2>11. Performance Tuning</h2>
-332|316|316|    <p>WireGuard is already fast by default, but a few tweaks can push it further:</p>
-333|317|317|
-334|318|318|    <h3>11.1 Increase MTU</h3>
-335|319|319|    <p>The default MTU for WireGuard is 1420 bytes. On modern networks, you can often increase this:</p>
-336|320|320|    <pre><code># In the [Interface] section of wg0.conf
-337|321|321|MTU = 1500</code></pre>
-338|322|322|    <p>Test with different values (1420, 1450, 1500) and measure throughput with <code>iperf3</code>.</p>
-339|323|323|
-340|324|324|    <h3>11.2 Multiple Workers</h3>
-341|325|325|    <p>WireGuard can use multiple CPU cores for parallel packet processing. Enable it by adding a kernel parameter:</p>
-342|326|326|    <pre><code># In /etc/modprobe.d/wireguard.conf
-343|327|327|options wireguard wireguard_parallelism=4</code></pre>
-344|328|328|    <p>This is only beneficial on multi-core servers handling many concurrent peers with high traffic.</p>
-345|329|329|
-346|330|330|    <h3>11.3 Tuning Kernel Network Buffers</h3>
-347|331|331|    <pre><code># Increase network buffer sizes for high-throughput tunnels
-348|332|332|sudo sysctl -w net.core.rmem_max=2500000
-349|333|333|sudo sysctl -w net.core.wmem_max=2500000
-350|334|334|echo "net.core.rmem_max=2500000" | sudo tee -a /etc/sysctl.conf
-351|335|335|echo "net.core.wmem_max=2500000" | sudo tee -a /etc/sysctl.conf</code></pre>
-352|336|336|
-353|337|337|    <h2>12. Common Issues and Troubleshooting</h2>
-354|338|338|
-355|339|339|    <h3>Handshake Fails / No Connection</h3>
-356|340|340|    <p>Check the following in order:</p>
-357|341|341|    <ul>
-358|342|342|      <li>Is the WireGuard port (51820/udp) open on the server? Test with <code>sudo ufw status</code> or <code>sudo firewall-cmd --list-ports</code>.</li>
-359|343|343|      <li>Can the client reach the server's endpoint? <code>nc -zv your-server-ip 51820</code> (uses UDP, but netcat gives a clue).</li>
-360|344|344|      <li>Are the public keys correct? Double-check every character — a single typo breaks the handshake.</li>
-361|345|345|      <li>Is the server's public IP correct in the client's <code>Endpoint</code> field?</li>
-362|346|346|    </ul>
-363|347|347|
-364|348|348|    <h3>Connected but No Internet Access</h3>
-365|349|349|    <p>This usually means IP forwarding or NAT isn't configured:</p>
-366|350|350|    <ul>
-367|351|351|      <li>Verify <code>net.ipv4.ip_forward = 1</code> is active: <code>sudo sysctl net.ipv4.ip_forward</code>.</li>
-368|352|352|      <li>Check iptables NAT rules: <code>sudo iptables -t nat -L POSTROUTING</code>.</li>
-369|353|353|      <li>Confirm the <code>PostUp</code> commands in wg0.conf reference the correct external interface (e.g., <code>eth0</code> vs <code>ens3</code> vs <code>enp0s3</code>).</li>
-370|354|354|      <li>Test DNS: <code>nslookup google.com</code> or <code>dig google.com</code> from the client.</li>
-371|355|355|    </ul>
-372|356|356|
-373|357|357|    <h3>Slow Speeds</h3>
-374|358|358|    <ul>
-375|359|359|      <li>Check if you're CPU-bound: <code>top</code> or <code>htop</code> during a speed test. WireGuard uses very little CPU, but encryption does have a cost.</li>
-376|360|360|      <li>Test with <code>iperf3</code> between client and server over the VPN to isolate the WireGuard layer from internet bandwidth limits.</li>
-377|361|361|      <li>Experiment with MTU values. Fragmentation is a common cause of throughput degradation.</li>
-378|362|362|    </ul>
-379|363|363|
-380|364|364|    <h3>Connection Drops After Idle</h3>
-381|365|365|    <p>This is common on NATted networks (hotels, mobile hotspots). Increase <code>PersistentKeepalive</code> on the client:</p>
-382|366|366|    <pre><code>PersistentKeepalive = 25</code></pre>
-383|367|367|    <p>Values between 20-30 seconds are usually sufficient. Lower values increase battery usage on mobile devices.</p>
-384|368|368|
-385|369|369|    <h2>13. Security Considerations</h2>
-386|370|370|    <p>WireGuard is designed to be secure by default, but a few best practices are worth following:</p>
-387|371|371|    <ul>
-388|372|372|      <li><strong>Keep private keys private</strong> — treat them like SSH private keys. Use <code>chmod 600</code> on all <code>privatekey</code> files and config files containing private keys.</li>
-389|373|373|      <li><strong>Rotate keys periodically</strong> — generate fresh key pairs every 6-12 months. Adding a new peer doesn't require changing the server key.</li>
-390|374|374|      <li><strong>Restrict AllowedIPs</strong> — on the server, use specific <code>/32</code> IPs per peer rather than broad ranges. This prevents a compromised client from claiming other IPs.</li>
-391|375|375|      <li><strong>Monitor peer activity</strong> — <code>sudo wg show</code> displays the latest handshake time and bytes transferred. Unexpected new peers are a red flag.</li>
-392|376|376|      <li><strong>Combine with a firewall</strong> — restrict which ports and services are accessible over the VPN using your server's firewall rules.</li>
-393|377|377|    </ul>
-394|378|378|    <p>According to the <a href="https://www.wireguard.com/formal-verification/" target="_blank" rel="noopener">WireGuard formal verification page</a>, the protocol has undergone multiple formal verifications using the CryptoVerif tool, proving the correctness of its cryptographic protocol. Combined with its minimal codebase, this gives WireGuard the strongest security assurance of any production VPN protocol.</p>
-395|379|379|
-396|380|380|    <h2>FAQ</h2>
-397|381|381|
-398|382|382|    <h3>How do I choose between a full tunnel and split tunnel?</h3>
-399|383|383|    <p>Use a <strong>full tunnel</strong> (AllowedIPs = 0.0.0.0/0) when privacy and security are paramount — coffee shops, airports, hotels, or any untrusted network. Use <strong>split tunnel</strong> when you only need access to your home network and want to preserve local internet speed for streaming, gaming, or large downloads. Split tunneling also avoids issues with geo-restricted content (e.g., Netflix) that may block VPN IPs.</p>
-400|384|384|
-401|385|385|    <h3>Can I run multiple WireGuard interfaces on the same server?</h3>
-402|386|386|    <p>Yes. You can create <code>wg1.conf</code>, <code>wg2.conf</code>, etc., each with its own subnet, port, and set of peers. This is useful for separating traffic (e.g., personal VPN on wg0, work VPN on wg1, site-to-site on wg2). Each interface must use a unique port.</p>
-403|387|387|
-404|388|388|    <h3>Does WireGuard log connection data?</h3>
-405|389|389|    <p>No. WireGuard itself does not log peer IPs, traffic volumes, or connection timestamps by default. The kernel module has no logging capability beyond handshake status. However, your server's network logs (<code>/var/log/syslog</code>) may contain iptables or firewall logs depending on your configuration. If operating a commercial VPN service, you would need third-party logging software; WireGuard provides no telemetry of its own.</p>
-406|390|390|
-407|391|391|    <h3>What port should I use besides 51820?</h3>
-408|392|392|    <p>WireGuard can use any UDP port. If 51820 is blocked by a corporate or hotel firewall, try 443 (standard HTTPS port — often open), 53 (DNS — almost never blocked), or 123 (NTP). Some operators use port 51820 over TCP using a wrapper like <code>udp2raw</code> or <code>socat</code>, though this adds overhead. Using port 443 over UDP is usually the most effective workaround.</p>
-409|393|393|
-410|394|394|    <h2>Summary</h2>
-411|395|395|    <p>WireGuard has fundamentally changed how self-hosters think about VPNs. It's fast enough that you won't notice the encryption overhead, simple enough that you can configure it in minutes, and secure enough that even security-conscious organizations like Cloudflare and Mozilla use it in production.</p>
-412|396|396|    <p>Here is a quick setup checklist:</p>
-413|397|397|    <ul>
-414|398|398|      <li>Install <code>wireguard-tools</code> on both server and client</li>
-415|399|399|      <li>Generate key pairs on each device with <code>wg genkey</code> / <code>wg pubkey</code></li>
-416|400|400|      <li>Create <code>/etc/wireguard/wg0.conf</code> on the server with interface address, listen port, private key, PostUp NAT rules, and peer entries</li>
-417|401|401|      <li>Create <code>wg0.conf</code> on each client with its address, private key, server's public key, endpoint, and AllowedIPs</li>
-418|402|402|      <li>Enable IP forwarding on the server and open UDP port 51820 in the firewall</li>
-419|403|403|      <li>Start with <code>wg-quick up wg0</code> and enable the systemd service for auto-start</li>
-420|404|404|      <li>Verify with <code>ping 10.0.0.1</code> and <code>curl ifconfig.me</code></li>
-421|405|405|    </ul>
-422|406|406|    <p>Whether you want to secure your traffic on public Wi-Fi, access your home network while traveling, or connect geographically distributed servers, WireGuard is the tool you'll reach for. Set it up once, and you'll have secure, private connectivity wherever you go.</p>
-423|407|407|
-424|408|408|    <div class="article-nav">
-425|409|409|      <a href="../index.html">← Back to Home</a>
-426|410|410|    </div>
-427|411|411|
-428|412|412|    <h2>Related Articles</h2>
-429|413|413|    <ul>
-430|414|414|      <li><a href="cloudflare-tunnel-guide.html">Cloudflare Tunnel: Free & Secure Way to Expose Self-Hosted Services</a> — Compare Cloudflare Tunnel vs WireGuard for remote access</li>
-431|415|415|      <li><a href="wsl-setup.html">WSL2 Production Environment Complete Setup</a> — Run your WireGuard server inside WSL on Windows</li>
-432|416|416|      <li><a href="docker-compose-guide.html">Docker Compose for Self-Hosting: A Complete Guide</a> — Containerize your WireGuard setup with Docker</li>
-433|417|417|    </ul>
-434|418|418|
-435|419|419|    <p><em>Reference: <a href="https://www.wireguard.com/performance/" target="_blank" rel="noopener">WireGuard Performance Benchmarks — Official Site</a>. Benchmarks cited reflect tests on modern x86 hardware running Linux kernel 5.6+. Real-world performance depends on CPU, network conditions, and configuration.</em></p>
-436|420|420|
-437|421|421|  </article>
-438|422|422|
-439|423|423|  <div class="author-bio">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "How to Set Up Your Own VPN Server with WireGuard",
+    "description": "Complete WireGuard VPN setup guide: install WireGuard on Ubuntu/Debian, generate keys, configure server and client, enable routing and NAT, and secure your self-hosted network with a modern, high-performance VPN.",
+    "datePublished": "2026-06-13",
+    "dateModified": "2026-06-16",
+    "author": {"@type": "Person", "name": "F Frankie"}
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://fulankizao.github.io/selfhost-guide/"},
+      {"@type": "ListItem", "position": 2, "name": "How to Set Up Your Own VPN Server with WireGuard", "item": "https://fulankizao.github.io/selfhost-guide/articles/wireguard-vpn-guide.html"}
+    ]
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "What is WireGuard and how is it different from OpenVPN?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "WireGuard is a modern VPN protocol that uses state-of-the-art cryptography (Curve25519, ChaCha20, Poly1305) and runs inside the Linux kernel. Unlike OpenVPN, which uses TLS handshakes and userspace processes, WireGuard has a minimal codebase of about 4,000 lines, connects in under a second, and uses less CPU while achieving higher throughput. Benchmark tests show WireGuard can saturate a 1 Gbps link on modest hardware while OpenVPN tops out around 200-300 Mbps on the same hardware."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Can I use WireGuard to access my home network while traveling?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes, that is the primary use case. Once your WireGuard server is set up at home with the proper IP forwarding and NAT rules, you can install the WireGuard client on your laptop or phone, import your peer configuration, and connect. Your device will get a private IP on the WireGuard subnet and be able to access all devices on your home LAN as if you were physically there."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Does WireGuard work on Windows, macOS, Android, and iOS?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes. WireGuard has official apps for Windows, macOS, Android, and iOS, plus native support in the Linux kernel since version 5.6. All platforms support the same key-based authentication and configuration format. You generate a key pair, share the public key, and configure the peer endpoint — the same config.toml or conf file works across every client."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Do I need a static public IP address for a WireGuard server?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Not necessarily. If your server is on a cloud VPS, you already have a static IP. On a home connection with a dynamic IP, you can use a DDNS service (like DuckDNS or Cloudflare DDNS) to point a domain name at your changing IP. WireGuard clients can connect via the domain name in the Endpoint field, so your roaming IP is transparently handled."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Is WireGuard secure enough for production use?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes. WireGuard uses modern, well-audited cryptographic primitives: Curve25519 for key exchange, ChaCha20 for symmetric encryption, Poly1305 for authentication, and BLAKE2s for hashing. Its codebase (~4,000 lines) is tiny compared to OpenVPN (~600,000 lines), which dramatically reduces the attack surface. WireGuard has been audited by multiple independent security firms and is used in production by Cloudflare, Mozilla, and major VPN providers."
+        }
+      }
+    ]
+  }
+</script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "HowTo",
+    "name": "How to Set Up Your Own VPN Server with WireGuard",
+    "description": "Complete WireGuard VPN setup guide: install WireGuard on Ubuntu/Debian, generate keys, configure server and client, enable routing and NAT, and secure your self-hosted network with a modern, high-performance VPN.",
+    "step": [
+      {"@type": "HowToStep", "name": "Install WireGuard", "text": "Install WireGuard on Ubuntu/Debian using apt: sudo apt update && sudo apt install wireguard -y. WireGuard runs as a kernel module for maximum performance."},
+      {"@type": "HowToStep", "name": "Generate Keys", "text": "Generate public and private key pairs using wg genkey and wg pubkey. Store the private key securely on the server and share the public key with clients."},
+      {"@type": "HowToStep", "name": "Configure the Server", "text": "Create /etc/wireguard/wg0.conf with the server's private key, listen port, and a Peer section defining allowed IPs for each client."},
+      {"@type": "HowToStep", "name": "Configure Clients", "text": "Create peer configuration files for each client device including their own private key, the server's public key, endpoint address, and allowed IPs."},
+      {"@type": "HowToStep", "name": "Enable IP Forwarding and Firewall", "text": "Enable IP forwarding with sysctl net.ipv4.ip_forward=1 and configure iptables NAT rules so clients can access the internet through the VPN."},
+      {"@type": "HowToStep", "name": "Start and Enable WireGuard", "text": "Start the WireGuard interface with wg-quick up wg0 and enable it on boot with systemctl enable wg-quick@wg0."}
+    ]
+  }
+  </script>
+</head>
+<body>
+  <nav class="nav-bar" aria-label="Main navigation">
+    <div class="container">
+      <ul>
+        <li><a href="/selfhost-guide/">← Back to Home</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <header class="article-header">
+    <div class="container">
+      <span class="tag tag-network">Networking</span>
+      <h1>How to Set Up Your Own VPN Server with WireGuard</h1>
+      <div class="meta">2026-06-13 · 14 min read · <span id="busuanzi_value_page_pv"></span> views</div>
+      </div>
+  </header>
+
+  <article class="article-content container">
+    <nav class="toc">
+      <h2>Table of Contents</h2>
+      <ul>
+        <li><a href="#1-what-is-wireguard">1. What Is WireGuard?</a></li>
+        <li><a href="#2-installing-wireguard">2. Installing WireGuard</a></li>
+        <li><a href="#3-generating-keys">3. Generating Keys</a></li>
+        <li><a href="#4-server-configuration">4. Server Configuration</a></li>
+        <li><a href="#5-client-configuration">5. Client Configuration</a></li>
+        <li><a href="#6-enabling-ip-forwarding-and-firewall">6. Enabling IP Forwarding and Firewall</a></li>
+        <li><a href="#7-starting-wireguard">7. Starting WireGuard</a></li>
+        <li><a href="#8-adding-more-clients">8. Adding More Clients</a></li>
+      </ul>
+    </nav>
+
+    <p>Imagine you're at a coffee shop, connected to public Wi-Fi. Every HTTP request, every password you type, every file you download is visible to anyone on that network. A VPN — Virtual Private Network — encrypts everything between your device and your server, turning that insecure public Wi-Fi into a private tunnel. This guide shows you how to build that tunnel with <strong>WireGuard</strong>, the fastest and most modern VPN protocol available today.</p>
+
+    <p>According to benchmark results published by the <a href="https://www.wireguard.com/performance/" target="_blank" rel="noopener">WireGuard performance page</a>, WireGuard can transfer data at over 1 Gbps on a single CPU core — roughly 3-4x faster than OpenVPN on the same hardware while using significantly less CPU. The same benchmarks show that WireGuard completes a full handshake in under 100 milliseconds, compared to OpenVPN's multi-second TLS handshake. In tests conducted by Cloudflare, which uses WireGuard in its <a href="https://blog.cloudflare.com/boringtun-userspace-wireguard/" target="_blank" rel="noopener">BoringTun userspace implementation</a>, WireGuard's throughput was measured at over 900 Mbps on a modest virtual machine — numbers that OpenVPN simply cannot reach on equivalent hardware.</p>
+
+    <h2>1. What Is WireGuard?</h2>
+    <p>WireGuard is a VPN protocol and software that aims to be simpler, faster, and more auditable than legacy solutions like OpenVPN or IPSec. It was created by Jason A. Donenfeld and has been included in the Linux kernel since version 5.6 (March 2020).</p>
+    <p>Key design principles:</p>
+    <ul>
+    <li><strong>Minimal codebase</strong> — roughly 4,000 lines of code, compared to OpenVPN's 600,000+. Fewer lines means fewer bugs and a dramatically smaller attack surface.</li>
+    <li><strong>Kernel-native</strong> — runs inside the Linux kernel as a network device, not as a userspace process. This means zero context switches for packet processing and near-native throughput.</li>
+    <li><strong>Crypto agility by design</strong> — uses a single, well-audited suite (Curve25519, ChaCha20, Poly1305, BLAKE2s, HKDF). No configuration options means no misconfiguration.</li>
+    <li><strong>Connectionless</strong> — no handshake daemon, no connection tracking. Each packet carries its own key material. Connect and disconnect are instantaneous.</li>
+    <li><strong>Roaming</strong> — your client can change IP addresses (e.g., switch from Wi-Fi to cellular) without reconnecting. WireGuard handles it transparently.</li>
+    </ul>
+    <p>These properties make WireGuard ideal not only for personal VPNs, but also for site-to-site tunnels, Kubernetes pod networking, and embedded/IoT environments where CPU and memory are constrained.</p>
+
+    <div class="highlight">
+    <h3>💡 Prerequisites</h3>
+    <ul>
+    <li>A Linux server (Ubuntu 20.04+ / Debian 11+ recommended) — a $5/month VPS works perfectly</li>
+    <li>Root or sudo access</li>
+    <li>A client device (phone, laptop, or another server)</li>
+    <li>Basic familiarity with the command line</li>
+    <li>If your server is behind a home router, set up port forwarding for UDP port 51820 and consider a DDNS service if your public IP is dynamic</li>
+      </ul>
+    </div>
+
+    <h2>2. Installing WireGuard</h2>
+
+    <h3>On Ubuntu / Debian</h3>
+    <p>WireGuard is in the standard repositories on modern distributions:</p>
+    <pre><code>sudo apt update
+sudo apt install wireguard -y
+
+# Verify the installation
+wg --version
+# Expected: wireguard-tools v1.0.xxxxxxxxx</code></pre>
+
+    <h3>On Fedora / RHEL / CentOS</h3>
+    <pre><code>sudo dnf install wireguard-tools -y
+
+# On older kernels, you may need ELRepo for the kernel module
+# Modern Fedora (35+) and RHEL 9+ include the module out of the box</code></pre>
+
+    <p>That's it. WireGuard's kernel module is already loaded on Linux 5.6+ systems. The <code>wireguard-tools</code> package gives you the <code>wg</code> and <code>wg-quick</code> commands for generating keys, managing interfaces, and creating configuration files.</p>
+
+    <h2>3. Generating Keys</h2>
+    <p>WireGuard uses public-key cryptography. Every peer (server or client) has a private key stored locally and a public key shared with others.</p>
+    <p>On your server, generate the key pair:</p>
+    <pre><code># Create a directory for WireGuard configuration
+sudo mkdir -p /etc/wireguard
+cd /etc/wireguard
+
+# Generate private key
+wg genkey | sudo tee privatekey
+# Example output: uOr/9W1fF7x8bN3a0KjLmPqRsT5vWxYz6A1B2C3D4E=
+
+# Generate public key from the private key
+sudo cat privatekey | wg pubkey | sudo tee publickey
+# Example output: 9F8E7D6C5B4A3Z2Y1X0WvUtSrQpOnMlKjIhGfEdCbA=
+
+# Secure the private key
+sudo chmod 600 privatekey</code></pre>
+    <p>Repeat these steps on your client machine. You'll exchange public keys between server and client — never share private keys.</p>
+
+    <h2>4. Server Configuration</h2>
+    <p>Create the server config file at <code>/etc/wireguard/wg0.conf</code>:</p>
+    <pre><code>sudo nano /etc/wireguard/wg0.conf</code></pre>
+    <p>Add the following:</p>
+    <pre><code>[Interface]
+Address = 10.0.0.1/24
+ListenPort = 51820
+PrivateKey = &lt;paste-server-private-key&gt;
+
+# Enable NAT and routing (iptables)
+PostUp = iptables -A FORWARD -i wg0 -j ACCEPT
+PostUp = iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
+PostDown = iptables -D FORWARD -i wg0 -j ACCEPT
+PostDown = iptables -t nat -D POSTROUTING -o eth0 -j MASQUERADE
+
+# Client 1 — your laptop
+[Peer]
+PublicKey = &lt;client1-public-key&gt;
+AllowedIPs = 10.0.0.2/32
+
+# Client 2 — your phone
+[Peer]
+PublicKey = &lt;client2-public-key&gt;
+AllowedIPs = 10.0.0.3/32</code></pre>
+    <p>Key points about this configuration:</p>
+    <ul>
+    <li><strong>Address</strong> — the IP address of the WireGuard interface on the server (your VPN subnet). All peers will have IPs in this <code>10.0.0.0/24</code> range.</li>
+    <li><strong>ListenPort</strong> — UDP port 51820 is the WireGuard standard. You'll need to open this port in your firewall.</li>
+    <li><strong>PostUp / PostDown</strong> — these iptables rules enable IP forwarding and NAT (masquerading) so VPN clients can access the internet through the server. Replace <code>eth0</code> with your actual internet-facing interface (check with <code>ip route show default</code>).</li>
+    <li><strong>AllowedIPs</strong> — for the server side, this restricts which IPs each client is allowed to use. A <code>/32</code> means a single IP. You can also allow entire subnets: <code>10.0.0.0/24</code> or <code>192.168.1.0/24</code> if you want to give clients access to your whole LAN.</li>
+    </ul>
+
+    <h2>5. Client Configuration</h2>
+    <p>On your client (laptop, phone, or another server), create a config file. The standard location on Linux is <code>/etc/wireguard/wg0.conf</code>, but the file can live anywhere:</p>
+    <pre><code>sudo nano /etc/wireguard/wg0.conf</code></pre>
+    <pre><code>[Interface]
+Address = 10.0.0.2/24
+PrivateKey = &lt;client-private-key&gt;
+DNS = 1.1.1.1
+
+[Peer]
+PublicKey = &lt;server-public-key&gt;
+Endpoint = your-server-ip-or-domain:51820
+AllowedIPs = 0.0.0.0/0
+PersistentKeepalive = 25</code></pre>
+    <p>Understanding the client config:</p>
+    <ul>
+    <li><strong>Address</strong> — the client's IP on the VPN subnet. Must match the <code>AllowedIPs</code> setting on the server for this peer.</li>
+    <li><strong>DNS</strong> — after connecting, the client will use this DNS server. Cloudflare's 1.1.1.1 or Google's 8.8.8.8 are good choices. This prevents DNS leaks.</li>
+    <li><strong>Endpoint</strong> — your server's public IP or domain name, followed by the UDP port.</li>
+    <li><strong>AllowedIPs = 0.0.0.0/0</strong> — this sends <em>all</em> internet traffic through the VPN (full tunnel). To only route traffic to your home network through the VPN (split tunnel), use <code>10.0.0.0/24, 192.168.1.0/24</code> instead.</li>
+    <li><strong>PersistentKeepalive = 25</strong> — sends a keepalive packet every 25 seconds. Essential if your client is behind NAT or a firewall that drops idle UDP mappings.</li>
+    </ul>
+
+    <h2>6. Enabling IP Forwarding and Firewall</h2>
+    <p>For the VPN to route traffic, the server must allow IP forwarding:</p>
+    <pre><code># Enable IP forwarding
+sudo sysctl -w net.ipv4.ip_forward=1
+
+# Make it permanent
+echo "net.ipv4.ip_forward = 1" | sudo tee -a /etc/sysctl.conf
+
+# Apply without reboot
+sudo sysctl -p</code></pre>
+    <p>Now open the WireGuard UDP port in the firewall:</p>
+    <pre><code># With ufw (Ubuntu)
+sudo ufw allow 51820/udp
+
+# With firewalld (Fedora / RHEL)
+sudo firewall-cmd --permanent --add-port=51820/udp
+sudo firewall-cmd --reload</code></pre>
+    <p>If you set up <code>PostUp</code> iptables rules in the server config, NAT will be configured automatically when the WireGuard interface comes up.</p>
+
+    <h2>7. Starting WireGuard</h2>
+    <p>Start the VPN on the server:</p>
+    <pre><code># Bring up the WireGuard interface
+sudo wg-quick up wg0
+
+# Check the interface status
+sudo wg show
+# Example output:
+# interface: wg0
+#   public key: 9F8E7D6C... (server public key)
+#   private key: (hidden)
+#   listening port: 51820
+#
+# peer: A1B2C3D4... (client 1 public key)
+#   endpoint: 203.0.113.5:54321
+#   allowed ips: 10.0.0.2/32
+#   latest handshake: 1 minute ago
+#   transfer: 1.24 MiB received, 3.57 MiB sent
+#
+# peer: E5F6G7H8... (client 2 public key)
+#   allowed ips: 10.0.0.3/32</code></pre>
+    <p>Enable auto-start on boot:</p>
+    <pre><code>sudo systemctl enable wg-quick@wg0</code></pre>
+    <p>On the client, connect with the same <code>wg-quick up wg0</code> command. On Windows and macOS, use the official <a href="https://www.wireguard.com/install/" target="_blank" rel="noopener">WireGuard desktop app</a> — import the config file and click "Activate."</p>
+
+    <h3>Verifying the Connection</h3>
+    <pre><code># From the client, ping the server's VPN IP
+ping -c 4 10.0.0.1
+
+# Check your public IP — it should now show your server's IP
+curl ifconfig.me
+
+# From the server, check active peers
+sudo wg show</code></pre>
+    <p>If <code>curl ifconfig.me</code> returns your server's public IP, the full tunnel is working. All your traffic is encrypted and routed through your server.</p>
+
+    <h2>8. Adding More Clients</h2>
+    <p>Adding a new client takes three steps:</p>
+    <ol>
+    <li>Generate a key pair on the new client: <code>wg genkey | tee privatekey | wg pubkey > publickey</code></li>
+    <li>Add a <code>[Peer]</code> block to the server config with the new client's public key and an unused IP:</li>
+    </ol>
+    <pre><code># Append to /etc/wireguard/wg0.conf
+[Peer]
+PublicKey = &lt;new-client-public-key&gt;
+AllowedIPs = 10.0.0.4/32</code></pre>
+    <pre><code>   3. Apply the change without disconnecting existing clients:</code></pre>
+    <pre><code>sudo wg addconf wg0 <(wg-quick strip wg0)</code></pre>
+    <p>Or simply restart the interface:</p>
+    <pre><code>sudo wg-quick down wg0 && sudo wg-quick up wg0</code></pre>
+    <p>On the new client, create a config file based on the template in section 5, using the next available IP (10.0.0.4/24 in this case).</p>
+
+    <h2>9. Split Tunneling: Route Only Certain Traffic</h2>
+    <p>Sometimes you don't want <em>all</em> traffic going through the VPN — maybe you only need to access your home network or specific services. This is called <strong>split tunneling</strong>. Change the client's <code>AllowedIPs</code> to only include the subnets you need:</p>
+    <pre><code># Only route traffic for your home LAN and the VPN subnet
+AllowedIPs = 10.0.0.0/24, 192.168.1.0/24
+
+# Route traffic for specific services
+AllowedIPs = 10.0.0.0/24, 10.8.0.0/24</code></pre>
+    <p>With split tunneling, your internet traffic (streaming, browsing, downloads) goes through your local connection for maximum speed, while traffic destined for your home network routes through the VPN.</p>
+
+    <h2>10. QR Code for Mobile Clients</h2>
+    <p>WireGuard's mobile apps (iOS and Android) let you import configs via QR code. Generate one from your client config:</p>
+    <pre><code># Install qrencode
+sudo apt install qrencode -y
+
+# Generate a QR code from your client config file
+qrencode -t ansiutf8 < /path/to/client-config.conf</code></pre>
+    <p>Scan the QR code with the WireGuard mobile app and you're connected in seconds — no manual IP typing on a phone keyboard.</p>
+
+    <h2>11. Performance Tuning</h2>
+    <p>WireGuard is already fast by default, but a few tweaks can push it further:</p>
+
+    <h3>11.1 Increase MTU</h3>
+    <p>The default MTU for WireGuard is 1420 bytes. On modern networks, you can often increase this:</p>
+    <pre><code># In the [Interface] section of wg0.conf
+MTU = 1500</code></pre>
+    <p>Test with different values (1420, 1450, 1500) and measure throughput with <code>iperf3</code>.</p>
+
+    <h3>11.2 Multiple Workers</h3>
+    <p>WireGuard can use multiple CPU cores for parallel packet processing. Enable it by adding a kernel parameter:</p>
+    <pre><code># In /etc/modprobe.d/wireguard.conf
+options wireguard wireguard_parallelism=4</code></pre>
+    <p>This is only beneficial on multi-core servers handling many concurrent peers with high traffic.</p>
+
+    <h3>11.3 Tuning Kernel Network Buffers</h3>
+    <pre><code># Increase network buffer sizes for high-throughput tunnels
+sudo sysctl -w net.core.rmem_max=2500000
+sudo sysctl -w net.core.wmem_max=2500000
+echo "net.core.rmem_max=2500000" | sudo tee -a /etc/sysctl.conf
+echo "net.core.wmem_max=2500000" | sudo tee -a /etc/sysctl.conf</code></pre>
+
+    <h2>12. Common Issues and Troubleshooting</h2>
+
+    <h3>Handshake Fails / No Connection</h3>
+    <p>Check the following in order:</p>
+    <ul>
+    <li>Is the WireGuard port (51820/udp) open on the server? Test with <code>sudo ufw status</code> or <code>sudo firewall-cmd --list-ports</code>.</li>
+    <li>Can the client reach the server's endpoint? <code>nc -zv your-server-ip 51820</code> (uses UDP, but netcat gives a clue).</li>
+    <li>Are the public keys correct? Double-check every character — a single typo breaks the handshake.</li>
+    <li>Is the server's public IP correct in the client's <code>Endpoint</code> field?</li>
+    </ul>
+
+    <h3>Connected but No Internet Access</h3>
+    <p>This usually means IP forwarding or NAT isn't configured:</p>
+    <ul>
+    <li>Verify <code>net.ipv4.ip_forward = 1</code> is active: <code>sudo sysctl net.ipv4.ip_forward</code>.</li>
+    <li>Check iptables NAT rules: <code>sudo iptables -t nat -L POSTROUTING</code>.</li>
+    <li>Confirm the <code>PostUp</code> commands in wg0.conf reference the correct external interface (e.g., <code>eth0</code> vs <code>ens3</code> vs <code>enp0s3</code>).</li>
+    <li>Test DNS: <code>nslookup google.com</code> or <code>dig google.com</code> from the client.</li>
+    </ul>
+
+    <h3>Slow Speeds</h3>
+    <ul>
+    <li>Check if you're CPU-bound: <code>top</code> or <code>htop</code> during a speed test. WireGuard uses very little CPU, but encryption does have a cost.</li>
+    <li>Test with <code>iperf3</code> between client and server over the VPN to isolate the WireGuard layer from internet bandwidth limits.</li>
+    <li>Experiment with MTU values. Fragmentation is a common cause of throughput degradation.</li>
+    </ul>
+
+    <h3>Connection Drops After Idle</h3>
+    <p>This is common on NATted networks (hotels, mobile hotspots). Increase <code>PersistentKeepalive</code> on the client:</p>
+    <pre><code>PersistentKeepalive = 25</code></pre>
+    <p>Values between 20-30 seconds are usually sufficient. Lower values increase battery usage on mobile devices.</p>
+
+    <h2>13. Security Considerations</h2>
+    <p>WireGuard is designed to be secure by default, but a few best practices are worth following:</p>
+    <ul>
+    <li><strong>Keep private keys private</strong> — treat them like SSH private keys. Use <code>chmod 600</code> on all <code>privatekey</code> files and config files containing private keys.</li>
+    <li><strong>Rotate keys periodically</strong> — generate fresh key pairs every 6-12 months. Adding a new peer doesn't require changing the server key.</li>
+    <li><strong>Restrict AllowedIPs</strong> — on the server, use specific <code>/32</code> IPs per peer rather than broad ranges. This prevents a compromised client from claiming other IPs.</li>
+    <li><strong>Monitor peer activity</strong> — <code>sudo wg show</code> displays the latest handshake time and bytes transferred. Unexpected new peers are a red flag.</li>
+    <li><strong>Combine with a firewall</strong> — restrict which ports and services are accessible over the VPN using your server's firewall rules.</li>
+    </ul>
+    <p>According to the <a href="https://www.wireguard.com/formal-verification/" target="_blank" rel="noopener">WireGuard formal verification page</a>, the protocol has undergone multiple formal verifications using the CryptoVerif tool, proving the correctness of its cryptographic protocol. Combined with its minimal codebase, this gives WireGuard the strongest security assurance of any production VPN protocol.</p>
+
+    <h2>FAQ</h2>
+
+    <h3>How do I choose between a full tunnel and split tunnel?</h3>
+    <p>Use a <strong>full tunnel</strong> (AllowedIPs = 0.0.0.0/0) when privacy and security are paramount — coffee shops, airports, hotels, or any untrusted network. Use <strong>split tunnel</strong> when you only need access to your home network and want to preserve local internet speed for streaming, gaming, or large downloads. Split tunneling also avoids issues with geo-restricted content (e.g., Netflix) that may block VPN IPs.</p>
+
+    <h3>Can I run multiple WireGuard interfaces on the same server?</h3>
+    <p>Yes. You can create <code>wg1.conf</code>, <code>wg2.conf</code>, etc., each with its own subnet, port, and set of peers. This is useful for separating traffic (e.g., personal VPN on wg0, work VPN on wg1, site-to-site on wg2). Each interface must use a unique port.</p>
+
+    <h3>Does WireGuard log connection data?</h3>
+    <p>No. WireGuard itself does not log peer IPs, traffic volumes, or connection timestamps by default. The kernel module has no logging capability beyond handshake status. However, your server's network logs (<code>/var/log/syslog</code>) may contain iptables or firewall logs depending on your configuration. If operating a commercial VPN service, you would need third-party logging software; WireGuard provides no telemetry of its own.</p>
+
+    <h3>What port should I use besides 51820?</h3>
+    <p>WireGuard can use any UDP port. If 51820 is blocked by a corporate or hotel firewall, try 443 (standard HTTPS port — often open), 53 (DNS — almost never blocked), or 123 (NTP). Some operators use port 51820 over TCP using a wrapper like <code>udp2raw</code> or <code>socat</code>, though this adds overhead. Using port 443 over UDP is usually the most effective workaround.</p>
+
+    <h2>Summary</h2>
+    <p>WireGuard has fundamentally changed how self-hosters think about VPNs. It's fast enough that you won't notice the encryption overhead, simple enough that you can configure it in minutes, and secure enough that even security-conscious organizations like Cloudflare and Mozilla use it in production.</p>
+    <p>Here is a quick setup checklist:</p>
+    <ul>
+    <li>Install <code>wireguard-tools</code> on both server and client</li>
+    <li>Generate key pairs on each device with <code>wg genkey</code> / <code>wg pubkey</code></li>
+    <li>Create <code>/etc/wireguard/wg0.conf</code> on the server with interface address, listen port, private key, PostUp NAT rules, and peer entries</li>
+    <li>Create <code>wg0.conf</code> on each client with its address, private key, server's public key, endpoint, and AllowedIPs</li>
+    <li>Enable IP forwarding on the server and open UDP port 51820 in the firewall</li>
+    <li>Start with <code>wg-quick up wg0</code> and enable the systemd service for auto-start</li>
+    <li>Verify with <code>ping 10.0.0.1</code> and <code>curl ifconfig.me</code></li>
+    </ul>
+    <p>Whether you want to secure your traffic on public Wi-Fi, access your home network while traveling, or connect geographically distributed servers, WireGuard is the tool you'll reach for. Set it up once, and you'll have secure, private connectivity wherever you go.</p>
+
+    <div class="article-nav">
+    <a href="../index.html">← Back to Home</a>
+    </div>
+
+    <h2>Related Articles</h2>
+    <ul>
+    <li><a href="cloudflare-tunnel-guide.html">Cloudflare Tunnel: Free & Secure Way to Expose Self-Hosted Services</a> — Compare Cloudflare Tunnel vs WireGuard for remote access</li>
+    <li><a href="wsl-setup.html">WSL2 Production Environment Complete Setup</a> — Run your WireGuard server inside WSL on Windows</li>
+    <li><a href="docker-compose-guide.html">Docker Compose for Self-Hosting: A Complete Guide</a> — Containerize your WireGuard setup with Docker</li>
+    </ul>
+
+    <p><em>Reference: <a href="https://www.wireguard.com/performance/" target="_blank" rel="noopener">WireGuard Performance Benchmarks — Official Site</a>. Benchmarks cited reflect tests on modern x86 hardware running Linux kernel 5.6+. Real-world performance depends on CPU, network conditions, and configuration.</em></p>
+
+  </article>
+
+  <div class="author-bio">
   <div class="author-bio-content">
     <p><strong>About the Author</strong></p>
     <p>Frankie is a self-hosting enthusiast and DevOps practitioner with over 8 years of experience deploying and maintaining production Linux servers, Docker environments, and homelab infrastructure. He writes practical, hands-on guides to help others take control of their own infrastructure.</p>
@@ -446,30 +461,30 @@
 </div>
 
 <footer class="site-footer">
-440|424|424|    <div class="container">
-441|425|425|      <div class="footer-links">
-442|426|426|        <a href="/selfhost-guide/">Home</a>
-443|427|427|        <span>·</span>
-444|428|428|        <a href="/selfhost-guide/about.html">About</a>
-445|429|429|        <span>·</span>
-446|430|430|        <a href="/selfhost-guide/categories.html">Categories</a>
-447|431|431|        <span>·</span>
-448|432|432|        <a href="/selfhost-guide/privacy.html">Privacy Policy</a>
-449|433|433|        <span>·</span>
-450|434|434|        <a href="/selfhost-guide/terms.html">Terms of Use</a>
-451|435|435|      </div>
-452|436|436|      <p class="footer-copy">© 2026 Self-Host Guide</p>
-453|437|437|    </div>
-454|438|438|  </footer>
-455|439|439|<script>
-456|440|440|(function(){
-457|441|441|  var key = 'pv_' + window.location.pathname.replace(/\//g,'_').replace(/\.html$/,'');
-458|442|442|  var count = localStorage.getItem(key) || 0;
-459|443|443|  count = parseInt(count) + 1;
-460|444|444|  localStorage.setItem(key, count);
-461|445|445|  var el = document.getElementById('busuanzi_value_page_pv');
-462|446|446|  if (el) el.textContent = count;
-463|447|447|})();
-464|448|448|</script>
-465|449|449|</body>
-466|450|450|</html>
+    <div class="container">
+    <div class="footer-links">
+    <a href="/selfhost-guide/">Home</a>
+    <span>·</span>
+    <a href="/selfhost-guide/about.html">About</a>
+    <span>·</span>
+    <a href="/selfhost-guide/categories.html">Categories</a>
+    <span>·</span>
+    <a href="/selfhost-guide/privacy.html">Privacy Policy</a>
+    <span>·</span>
+    <a href="/selfhost-guide/terms.html">Terms of Use</a>
+      </div>
+    <p class="footer-copy">© 2026 Self-Host Guide</p>
+    </div>
+  </footer>
+<script>
+(function(){
+  var key = 'pv_' + window.location.pathname.replace(/\//g,'_').replace(/\.html$/,'');
+  var count = localStorage.getItem(key) | 0;
+  count = parseInt(count) + 1;
+  localStorage.setItem(key, count);
+  var el = document.getElementById('busuanzi_value_page_pv');
+  if (el) el.textContent = count;
+})();
+</script>
+</body>
+</html>

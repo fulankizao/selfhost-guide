@@ -1,115 +1,116 @@
-1|1|<!DOCTYPE html>
-2|2|<html lang="en">
-3|3|<head>
-4|4|  <meta charset="UTF-8">
-5|5|  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-6|6|  <title>Securing Your Self-Hosted Server: A Practical Guide — Self-Host Guide</title>
-7|7|  <meta name="description" content="Complete server security hardening guide: SSH hardening, firewall rules with UFW, fail2ban, Docker security, AppArmor/SELinux, automatic updates, intrusion detection, and monitoring for self-hosted servers.">
-8|8|  <link rel="canonical" href="https://fulankizao.github.io/selfhost-guide/articles/server-security-guide.html">
-9|9|  <link rel="stylesheet" href="../style.css">
-10|10|  <link rel="icon" type="image/svg+xml" href="../favicon.svg">
-11|11|  <meta property="og:title" content="Securing Your Self-Hosted Server: A Practical Guide">
-12|12|  <meta property="og:description" content="Complete server security hardening guide: SSH hardening, firewall rules with UFW, fail2ban, Docker security, AppArmor/SELinux, automatic updates, intrusion detection, and monitoring for self-hosted servers.">
-13|13|  <meta property="og:type" content="article">
-14|14|  <meta property="og:site_name" content="Self-Host Guide">
-15|15|  <meta name="twitter:card" content="summary_large_image">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Securing Your Self-Hosted Server: A Practical Guide — Self-Host Guide</title>
+  <meta name="description" content="Harden your Linux server: SSH key configuration, firewall rules with UFW, fail2ban setup, Docker security scanning, and regular security auditing practices.">
+  <link rel="canonical" href="https://fulankizao.github.io/selfhost-guide/articles/server-security-guide.html">
+  <link rel="stylesheet" href="../style.css">
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+  <meta property="og:title" content="Securing Your Self-Hosted Server: A Practical Guide">
+  <meta property="og:description" content="Complete server security hardening guide: SSH hardening, firewall rules with UFW, fail2ban, Docker security, AppArmor/SELinux, automatic updates, intrusion detection, and monitoring for self-hosted servers.">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="Self-Host Guide">
+  <meta name="twitter:card" content="summary_large_image">
   <meta property="og:image" content="https://fulankizao.github.io/selfhost-guide/og-image.svg">
   <meta name="twitter:image" content="https://fulankizao.github.io/selfhost-guide/og-image.svg">
-16|16|  <script type="application/ld+json">
-17|17|  {
-18|18|    "@context": "https://schema.org",
-19|19|    "@type": "Article",
-20|20|    "headline": "Securing Your Self-Hosted Server: A Practical Guide",
-21|21|    "description": "Complete server security hardening guide: SSH hardening, firewall rules with UFW, fail2ban, Docker security, AppArmor/SELinux, automatic updates, intrusion detection, and monitoring for self-hosted servers.",
-22|22|    "datePublished": "2026-06-15",
-23|23|    "dateModified": "2026-06-16",
-24|24|    "author": {"@type": "Person", "name": "F Frankie"},
-25|25|    "publisher": {"@type": "Organization", "name": "Self-Host Guide"},
-26|26|    "mainEntityOfPage": {
-27|27|      "@type": "WebPage",
-28|28|      "@id": "https://fulankizao.github.io/selfhost-guide/articles/server-security-guide.html"
-29|29|    }
-30|30|  }
-31|31|  </script>
-32|32|  <script type="application/ld+json">
-33|33|  {
-34|34|    "@context": "https://schema.org",
-35|35|    "@type": "BreadcrumbList",
-36|36|    "itemListElement": [
-37|37|      {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://fulankizao.github.io/selfhost-guide/"},
-38|38|      {"@type": "ListItem", "position": 2, "name": "Securing Your Self-Hosted Server: A Practical Guide"}
-39|39|    ]
-40|40|  }
-41|41|  </script>
-42|42|  <script type="application/ld+json">
-43|43|  {
-44|44|    "@context": "https://schema.org",
-45|45|    "@type": "FAQPage",
-46|46|    "mainEntity": [
-47|47|      {
-48|48|        "@type": "Question",
-49|49|        "name": "What is the most important security step for a new self-hosted server?",
-50|50|        "acceptedAnswer": {
-51|51|          "@type": "Answer",
-52|52|          "text": "Disabling password-based SSH authentication and using SSH key pairs only. This single measure blocks the vast majority of automated brute-force attacks. Combined with changing the default SSH port and installing fail2ban, you eliminate 99% of opportunistic attacks before they reach your services."
-53|53|        }
-54|54|      },
-55|55|      {
-56|56|        "@type": "Question",
-57|57|        "name": "Do I need a firewall if my server is behind a home router?",
-58|58|        "acceptedAnswer": {
-59|59|          "@type": "Answer",
-60|60|          "text": "Yes. A host-based firewall like UFW or nftables provides defense-in-depth. Even behind a NAT router, internal threats (compromised IoT devices on your LAN, malware, or a misconfigured service binding to 0.0.0.0) can expose ports to your local network. A firewall ensures only the services you intend to expose are reachable."
-61|61|        }
-62|62|      },
-63|63|      {
-64|64|        "@type": "Question",
-65|65|        "name": "How often should I update my self-hosted server?",
-66|66|        "acceptedAnswer": {
-67|67|          "@type": "Answer",
-68|68|          "text": "Security patches should be applied within 24-48 hours of release for critical vulnerabilities. Unattended-upgrades can handle this automatically for apt packages. Docker containers should be rebuilt and redeployed weekly via a cron job or watchtower. The Verizon 2025 Data Breach Investigations Report found that 60% of breaches involved unpatched known vulnerabilities where a patch was available but not applied."
-69|69|        }
-70|70|      },
-71|71|      {
-72|72|        "@type": "Question",
-73|73|        "name": "Is fail2ban still necessary if I use SSH keys?",
-74|74|        "acceptedAnswer": {
-75|75|          "@type": "Answer",
-76|76|          "text": "Yes. While SSH keys eliminate password-guessing attacks on SSH, fail2ban protects other services too — web apps, mail servers, and any service that accepts authenticated connections. It monitors log files for repeated failures and temporarily bans offending IPs via the firewall."
-77|77|        }
-78|78|      },
-79|79|      {
-80|80|        "@type": "Question",
-81|81|        "name": "Should I use Docker for better security isolation?",
-82|82|        "acceptedAnswer": {
-83|83|          "@type": "Answer",
-84|84|          "text": "Docker provides significant isolation benefits when configured correctly. Each container runs in its own namespaces with limited capabilities by default. However, Docker is not a security panacea — you must avoid privilege escalation with --privileged flags, use read-only root filesystems where possible, drop unnecessary Linux capabilities, and never mount the Docker socket into containers unless absolutely required."
-85|85|        }
-86|86|      }
-87|87|    ]
-88|88|  }
-89|89|  </script>
-90|90|</head>
-91|91|<body>
-92|92|  <header class="article-header">
-93|93|    <div class="container">
-94|94|      <span class="tag tag-security">Security</span>
-95|95|      <h1>Securing Your Self-Hosted Server: A Practical Guide</h1>
-96|96|      <div class="meta">2026-06-15 · 15 min read · <span id="busuanzi_value_page_pv"></span> views</div>
-97|97|    </div>
-98|98|  </header>
-99|99|
-100|100|  <nav class="nav-bar">
-101|101|    <div class="container">
-102|102|      <a href="/selfhost-guide/">← Back to Home</a>
-103|103|    </div>
-104|104|  </nav>
-105|105|
-106|106|  <article class="article-content container">
-107|107|
-108|108|    
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "Securing Your Self-Hosted Server: A Practical Guide",
+    "description": "Complete server security hardening guide: SSH hardening, firewall rules with UFW, fail2ban, Docker security, AppArmor/SELinux, automatic updates, intrusion detection, and monitoring for self-hosted servers.",
+    "datePublished": "2026-06-15",
+    "dateModified": "2026-06-16",
+    "author": {"@type": "Person", "name": "F Frankie"},
+    "publisher": {"@type": "Organization", "name": "Self-Host Guide"},
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": "https://fulankizao.github.io/selfhost-guide/articles/server-security-guide.html"
+    }
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://fulankizao.github.io/selfhost-guide/"},
+      {"@type": "ListItem", "position": 2, "name": "Securing Your Self-Hosted Server: A Practical Guide"}
+    ]
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "What is the most important security step for a new self-hosted server?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Disabling password-based SSH authentication and using SSH key pairs only. This single measure blocks the vast majority of automated brute-force attacks. Combined with changing the default SSH port and installing fail2ban, you eliminate 99% of opportunistic attacks before they reach your services."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Do I need a firewall if my server is behind a home router?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes. A host-based firewall like UFW or nftables provides defense-in-depth. Even behind a NAT router, internal threats (compromised IoT devices on your LAN, malware, or a misconfigured service binding to 0.0.0.0) can expose ports to your local network. A firewall ensures only the services you intend to expose are reachable."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How often should I update my self-hosted server?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Security patches should be applied within 24-48 hours of release for critical vulnerabilities. Unattended-upgrades can handle this automatically for apt packages. Docker containers should be rebuilt and redeployed weekly via a cron job or watchtower. The Verizon 2025 Data Breach Investigations Report found that 60% of breaches involved unpatched known vulnerabilities where a patch was available but not applied."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Is fail2ban still necessary if I use SSH keys?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes. While SSH keys eliminate password-guessing attacks on SSH, fail2ban protects other services too — web apps, mail servers, and any service that accepts authenticated connections. It monitors log files for repeated failures and temporarily bans offending IPs via the firewall."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Should I use Docker for better security isolation?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Docker provides significant isolation benefits when configured correctly. Each container runs in its own namespaces with limited capabilities by default. However, Docker is not a security panacea — you must avoid privilege escalation with --privileged flags, use read-only root filesystems where possible, drop unnecessary Linux capabilities, and never mount the Docker socket into containers unless absolutely required."
+        }
+      }
+    ]
+  }
+  </script>
+</head>
+<body>
+  <nav class="nav-bar" aria-label="Main navigation">
+    <div class="container">
+      <ul>
+        <li><a href="/selfhost-guide/">← Back to Home</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <header class="article-header">
+    <div class="container">
+      <span class="tag tag-security">Security</span>
+    <h1>Securing Your Self-Hosted Server: A Practical Guide</h1>
+      <div class="meta">2026-06-15 · 15 min read · <span id="busuanzi_value_page_pv"></span> views</div>
+      </div>
+  </header>
+
+  <article class="article-content container">
+
 <nav class="toc">
-<h3>Table of Contents</h3>
+<h2>Table of Contents</h2>
 <ul>
   <li><a href="#section-1">1. SSH Hardening — Your First Line of Defense</a></li>
   <li><a href="#section-2">2. Firewall Configuration with UFW</a></li>
@@ -125,327 +126,327 @@
 </nav>
 
 <p>Self-hosting gives you full control over your data, services, and infrastructure. But that control comes with a responsibility: you are now the system administrator, and the security of your server is entirely in your hands. A compromised server can leak personal data, serve malware to visitors, or become part of a botnet — all within minutes of going online if basic precautions are skipped.</p>
-109|109|
-110|110|    <p>According to the <strong>Verizon 2025 Data Breach Investigations Report (DBIR)</strong>, 60% of breaches involved attackers exploiting known vulnerabilities where a patch was available but not applied, and credential-based attacks accounted for over 40% of all breach entry methods. These are the two categories of risk that a well-hardened self-hosted server can virtually eliminate.</p>
-111|111|
-112|112|    <p>This guide covers the full security stack: SSH hardening, firewall configuration, intrusion prevention with fail2ban, automatic updates, Docker security best practices, AppArmor/SELinux, file integrity monitoring, and log auditing. Each section includes concrete commands you can run on any Ubuntu or Debian-based server.</p>
-113|113|
-114|114|    <h2 id="section-1">1. SSH Hardening — Your First Line of Defense</h2>
-115|115|    <p>SSH is the most attacked service on any internet-facing Linux server. Automated bots scan the entire IPv4 address space within minutes of a new server coming online, trying default credentials and exploiting old vulnerabilities. Hardening SSH is step zero of server security.</p>
-116|116|
-117|117|    <h3>1.1 Key-Based Authentication Only</h3>
-118|118|    <p>Generate an ED25519 key pair on your local machine (not the server):</p>
-119|119|    <pre><code>ssh-keygen -t ed25519 -a 100 -f ~/.ssh/selfhost_key</code></pre>
-120|120|    <p>Copy the public key to your server:</p>
-121|121|    <pre><code>ssh-copy-id -i ~/.ssh/selfhost_key.pub user@your-server-ip</code></pre>
-122|122|    <p>Test that key-based login works, then disable passwords in <code>/etc/ssh/sshd_config</code>:</p>
-123|123|    <pre><code>PasswordAuthentication no
-124|124|ChallengeResponseAuthentication no
-125|125|PermitRootLogin no
-126|126|PubkeyAuthentication yes</code></pre>
-127|127|    <p>Apply changes:</p>
-128|128|    <pre><code>sudo systemctl restart sshd</code></pre>
-129|129|
-130|130|    <h3>1.2 Change the Default SSH Port</h3>
-131|131|    <p>Changing the SSH port from 22 to a high-numbered port (e.g., 2222) drastically reduces log noise from automated scanners:</p>
-132|132|    <pre><code>Port 2222</code></pre>
-133|133|    <p>Update <code>/etc/ssh/sshd_config</code>, then add the new port to your firewall (see Section 2). After confirming you can connect on the new port, remove port 22 from your firewall rules.</p>
-134|134|
-135|135|    <h3>1.3 Additional SSH Hardening Options</h3>
-136|136|    <pre><code># In /etc/ssh/sshd_config
-137|137|MaxAuthTries 3
-138|138|MaxSessions 2
-139|139|LoginGraceTime 30
-140|140|AllowUsers your-username
-141|141|ClientAliveInterval 300
-142|142|ClientAliveCountMax 2</code></pre>
-143|143|    <ul>
-144|144|      <li><strong>MaxAuthTries 3</strong> — Limits authentication attempts per connection.</li>
-145|145|      <li><strong>MaxSessions 2</strong> — Prevents a single user from opening too many concurrent sessions.</li>
-146|146|      <li><strong>LoginGraceTime 30</strong> — Closes unauthenticated connections after 30 seconds.</li>
-147|147|      <li><strong>AllowUsers</strong> — Whitelists specific usernames; everything else is rejected.</li>
-148|148|      <li><strong>ClientAliveInterval</strong> + <strong>ClientAliveCountMax</strong> — Drops idle connections after 10 minutes of inactivity.</li>
-149|149|    </ul>
-150|150|
-151|151|    <h2 id="section-2">2. Firewall Configuration with UFW</h2>
-152|152|    <p>The Uncomplicated Firewall (UFW) provides a simple interface to iptables/nftables. A default-deny policy ensures only explicitly allowed ports are reachable.</p>
-153|153|
-154|154|    <pre><code># Set default policies
-155|155|sudo ufw default deny incoming
-156|156|sudo ufw default allow outgoing
-157|157|
-158|158|# Allow SSH on your custom port (if changed)
-159|159|sudo ufw allow 2222/tcp comment 'SSH'
-160|160|
-161|161|# Allow HTTP and HTTPS
-162|162|sudo ufw allow 80/tcp comment 'HTTP'
-163|163|sudo ufw allow 443/tcp comment 'HTTPS'
-164|164|
-165|165|# Allow your self-hosted services (e.g., WireGuard)
-166|166|sudo ufw allow 51820/udp comment 'WireGuard'
-167|167|
-168|168|# Enable the firewall
-169|169|sudo ufw enable
-170|170|
-171|171|# Check the rules
-172|172|sudo ufw status verbose</code></pre>
-173|173|    <p>UFW logs blocked packets to <code>/var/log/ufw.log</code>. Check it periodically to spot scanning activity:</p>
-174|174|    <pre><code>sudo tail -f /var/log/ufw.log | grep BLOCK</code></pre>
-175|175|    <p><strong>Pro tip:</strong> Never enable UFW over SSH before allowing your SSH port — you will lock yourself out. Always add your SSH port rule first, then enable.</p>
-176|176|
-177|177|    <h3>2.1 Rate Limiting with UFW</h3>
-178|178|    <p>UFW supports basic rate limiting to mitigate brute-force attempts:</p>
-179|179|    <pre><code>sudo ufw limit ssh</code></pre>
-180|180|    <p>This allows 6 connections per 30 seconds from the same IP before blocking further attempts for that period.</p>
-181|181|
-182|182|    <h2 id="section-3">3. Fail2ban — Automated Intrusion Prevention</h2>
-183|183|    <p>Fail2ban monitors service logs for repeated failure patterns and temporarily bans offending IPs via firewall rules. It ships with pre-configured filters for SSH, Apache, Nginx, and many other services.</p>
-184|184|
-185|185|    <pre><code># Install fail2ban
-186|186|sudo apt update
-187|187|sudo apt install fail2ban -y
-188|188|
-189|189|# Create a local configuration file
-190|190|sudo cp /etc/fail2ban/jail.conf /etc/fail2ban/jail.local</code></pre>
-191|191|    <p>Edit <code>/etc/fail2ban/jail.local</code> to customize settings:</p>
-192|192|    <pre><code>[DEFAULT]
-193|193|bantime = 3600          # 1 hour ban (in seconds)
-194|194|findtime = 600          # 10 minute window
-195|195|maxretry = 5            # 5 failures triggers a ban
-196|196|
-197|197|[sshd]
-198|198|enabled = true
-199|199|port = 2222             # Match your custom SSH port</code></pre>
-200|200|    <p>Add a jail for Nginx (if you use it):</p>
-201|201|    <pre><code>[nginx-http-auth]
-202|202|enabled = true
-203|203|
-204|204|[nginx-botsearch]
-205|205|enabled = true</code></pre>
-206|206|    <p>Start fail2ban:</p>
-207|207|    <pre><code>sudo systemctl enable fail2ban --now
-208|208|
-209|209|# Check banned IPs
-210|210|sudo fail2ban-client status sshd</code></pre>
-211|211|    <p>Fail2ban is especially valuable for self-hosters because it protects services that must be publicly accessible (like web apps) from credential stuffing and directory traversal attacks.</p>
-212|212|
-213|213|    <h2 id="section-4">4. Automatic Security Updates</h2>
-214|214|    <p>The Verizon 2025 DBIR finding that 60% of breaches involved unpatched vulnerabilities underscores the critical importance of keeping your system up to date. Automate this with <code>unattended-upgrades</code>:</p>
-215|215|
-216|216|    <pre><code>sudo apt install unattended-upgrades -y
-217|217|sudo dpkg-reconfigure --priority=low unattended-upgrades</code></pre>
-218|218|    <p>For fine-grained control, edit <code>/etc/apt/apt.conf.d/50unattended-upgrades</code>:</p>
-219|219|    <pre><code>Unattended-Upgrade::Allowed-Origins {
-220|220|    "${distro_id}:${distro_codename}-security";
-221|221|};
-222|222|
-223|223|Unattended-Upgrade::AutoFixInterruptedDpkg "true";
-224|224|Unattended-Upgrade::MinimalSteps "true";
-225|225|Unattended-Upgrade::Remove-Unused-Dependencies "true";
-226|226|Unattended-Upgrade::AutomaticReboot "false";</code></pre>
-227|227|    <p>For Docker containers, use Watchtower to automatically update running containers:</p>
-228|228|    <pre><code>docker run -d \
-229|229|  --name watchtower \
-230|230|  --restart unless-stopped \
-231|231|  -v /var/run/docker.sock:/var/run/docker.sock \
-232|232|  containrrr/watchtower \
-233|233|  --schedule "0 0 4 * * *"   # 4 AM daily</code></pre>
-234|234|    <p><strong>Warning:</strong> Review update-testing on a staging instance before enabling automatic container restarts for production services.</p>
-235|235|
-236|236|    <h2 id="section-5">5. Docker Security Best Practices</h2>
-237|237|    <p>Docker adds a layer of isolation, but misconfiguration can actually weaken security. Follow these rules for every container you run:</p>
-238|238|
-239|239|    <h3>5.1 Run as Non-Root User</h3>
-240|240|    <p>Many official Docker images default to root. Override this in your <code>docker-compose.yml</code>:</p>
-241|241|    <pre><code>services:
-242|242|  myapp:
-243|243|    image: myapp:latest
-244|244|    user: "1000:1000"   # UID:GID of a non-root user</code></pre>
-245|245|
-246|246|    <h3>5.2 Drop All Capabilities, Add Only What's Needed</h3>
-247|247|    <p>Linux capabilities grant privileged operations to containers. Drop all and add only what your app requires:</p>
-248|248|    <pre><code>services:
-249|249|  nginx:
-250|250|    image: nginx:alpine
-251|251|    cap_drop:
-252|252|      - ALL
-253|253|    cap_add:
-254|254|      - NET_BIND_SERVICE  # Allows binding to port 80</code></pre>
-255|255|
-256|256|    <h3>5.3 Read-Only Root Filesystem</h3>
-257|257|    <p>Prevent attackers from writing malicious files to the container's filesystem:</p>
-258|258|    <pre><code>services:
-259|259|  myapp:
-260|260|    image: myapp:latest
-261|261|    read_only: true
-262|262|    tmpfs:
-263|263|      - /tmp   # Allow temp writes only in tmpfs</code></pre>
-264|264|
-265|265|    <h3>5.4 Never Mount the Docker Socket</h3>
-266|266|    <p>Mounting <code>/var/run/docker.sock</code> into a container gives it root-level access to the Docker daemon — equivalent to full host compromise. Avoid this pattern unless you fully understand the implications. If you must (e.g., for Watchtower or Portainer), restrict it to a dedicated management container with minimal privileges.</p>
-267|267|
-268|268|    <h3>5.5 Use Docker Bench Security</h3>
-269|269|    <p>Run <a href="https://github.com/docker/docker-bench-security" target="_blank" rel="noopener">Docker Bench Security</a> to audit your host and container configuration against the CIS Docker Benchmark:</p>
-270|270|    <pre><code>docker run --rm --net host \
-271|271|  -v /etc:/etc:ro \
-272|272|  -v /var/run/docker.sock:/var/run/docker.sock:ro \
-273|273|  docker/docker-bench-security</code></pre>
-274|274|    <p>This script checks 100+ security controls and highlights misconfigurations with remediation steps.</p>
-275|275|
-276|276|    <h2 id="section-6">6. Mandatory Access Control: AppArmor &amp; SELinux</h2>
-277|277|    <p>Linux Discretionary Access Control (DAC) — standard file permissions — is the first security layer. Mandatory Access Control (MAC) systems like AppArmor (Ubuntu default) or SELinux (Fedora/CentOS default) add a second layer that constrains what processes can do even when running as root.</p>
-278|278|
-279|279|    <p>AppArmor profiles are pre-installed for common services. Check their status:</p>
-280|280|    <pre><code>sudo aa-status</code></pre>
-281|281|    <p>Enable AppArmor for a specific Docker container by appending a security-opt flag:</p>
-282|282|    <pre><code>services:
-283|283|  myapp:
-284|284|    image: myapp:latest
-285|285|    security_opt:
-286|286|      - apparmor:docker-default</code></pre>
-287|287|    <p>On SELinux-based systems, ensure it is enforcing:</p>
-288|288|    <pre><code>getenforce
-289|289|# Should output: Enforcing
-290|290|
-291|291|# Set to enforcing if it's permissive
-292|292|sudo setenforce 1</code></pre>
-293|293|    <p>MAC systems would have prevented many high-profile container escape vulnerabilities — the extra layer catches exploits that bypass standard permissions.</p>
-294|294|
-295|295|    <h2 id="section-7">7. File Integrity Monitoring with AIDE</h2>
-296|296|    <p>If an attacker does gain access, you need to know what changed. AIDE (Advanced Intrusion Detection Environment) builds a database of file hashes and alerts you when files are modified.</p>
-297|297|
-298|298|    <pre><code># Install AIDE
-299|299|sudo apt install aide -y
-300|300|
-301|301|# Initialize the database (first run only)
-302|302|sudo aideinit
-303|303|
-304|304|# Move the database to its default location
-305|305|sudo mv /var/lib/aide/aide.db.new /var/lib/aide/aide.db
-306|306|
-307|307|# Run a check
-308|308|sudo aide --check</code></pre>
-309|309|    <p>Schedule weekly checks via cron:</p>
-310|310|    <pre><code>sudo crontab -e
-311|311|# Add this line:
-312|312|0 3 * * 0 /usr/bin/aide --check | mail -s "AIDE report" your@email.com</code></pre>
-313|313|
-314|314|    <h2 id="section-8">8. Log Auditing and Centralized Monitoring</h2>
-315|315|    <p>Logs tell the story of what happened. Without a monitoring system, you are flying blind.</p>
-316|316|
-317|317|    <h3>8.1 Auditd for System Call Monitoring</h3>
-318|318|    <p>Auditd records system calls, file accesses, and authentication events:</p>
-319|319|    <pre><code>sudo apt install auditd -y
-320|320|sudo auditctl -e 1   # Enable auditing
-321|321|sudo aureport --summary   # View summary report</code></pre>
-322|322|    <p>Monitor <code>/etc/passwd</code> for unauthorized changes:</p>
-323|323|    <pre><code>sudo auditctl -w /etc/passwd -p wa -k passwd_changes
-324|324|sudo auditctl -w /etc/shadow -p wa -k shadow_changes</code></pre>
-325|325|    <p>View audit logs with <code>ausearch</code>:</p>
-326|326|    <pre><code>sudo ausearch -k passwd_changes --start today</code></pre>
-327|327|
-328|328|    <h3>8.2 Centralized Logging with Rsyslog</h3>
-329|329|    <p>Forward logs to a remote log server (or a syslog-compatible service) so attackers cannot tamper with them after gaining access:</p>
-330|330|    <pre><code># In /etc/rsyslog.conf
-331|331|*.* @logs.example.com:514   # UDP forwarding
-332|332|# Or over TCP with TLS for sensitive environments</code></pre>
-333|333|
-334|334|    <h3>8.3 Integration with Monitoring Tools</h3>
-335|335|    <p>Pair security hardening with a monitoring stack from our <a href="monitoring-homelab-guide.html">Monitoring Your Homelab guide</a>. Tools like Grafana, Prometheus, and Loki can visualize failed SSH attempts, firewall drops, and system resource anomalies that may indicate compromise.</p>
-336|336|
-337|337|    <h2 id="section-9">9. Additional Hardening Measures</h2>
-338|338|
-339|339|    <h3>9.1 Disable Unused Services</h3>
-340|340|    <p>Every running service is a potential attack surface. List listening ports and audit them:</p>
-341|341|    <pre><code>sudo ss -tulpn   # List all listening TCP and UDP ports
-342|342|sudo lsof -i -P -n | grep LISTEN</code></pre>
-343|343|    <p>Disable and mask any service you don't need:</p>
-344|344|    <pre><code>sudo systemctl disable --now avahi-daemon
-345|345|sudo systemctl mask avahi-daemon</code></pre>
-346|346|
-347|347|    <h3>9.2 Kernel Hardening with sysctl</h3>
-348|348|    <p>Add these lines to <code>/etc/sysctl.d/99-hardening.conf</code>:</p>
-349|349|    <pre><code># IP spoofing protection
-350|350|net.ipv4.conf.all.rp_filter = 1
-351|351|net.ipv4.conf.default.rp_filter = 1
-352|352|
-353|353|# Ignore ICMP redirects
-354|354|net.ipv4.conf.all.accept_redirects = 0
-355|355|net.ipv6.conf.all.accept_redirects = 0
-356|356|
-357|357|# Ignore source-routed packets
-358|358|net.ipv4.conf.all.accept_source_route = 0
-359|359|net.ipv6.conf.all.accept_source_route = 0
-360|360|
-361|361|# Disable IPv6 if not needed, or only enable privacy extensions
-362|362|net.ipv6.conf.all.use_tempaddr = 2
-363|363|
-364|364|# Increase SYN backlog and enable SYN cookies (DoS protection)
-365|365|net.ipv4.tcp_syncookies = 1
-366|366|net.ipv4.tcp_syn_backlog = 1024</code></pre>
-367|367|    <p>Apply immediately:</p>
-368|368|    <pre><code>sudo sysctl -p /etc/sysctl.d/99-hardening.conf</code></pre>
-369|369|
-370|370|    <h3>9.3 Two-Factor Authentication for SSH</h3>
-371|371|    <p>For an additional layer beyond SSH keys, enable TOTP-based 2FA using <code>libpam-google-authenticator</code>:</p>
-372|372|    <pre><code>sudo apt install libpam-google-authenticator -y
-373|373|google-authenticator    # Follow the setup, scan QR code into your authenticator app</code></pre>
-374|374|    <p>Edit <code>/etc/pam.d/sshd</code> to add:</p>
-375|375|    <pre><code>auth required pam_google_authenticator.so</code></pre>
-376|376|    <p>Then in <code>/etc/ssh/sshd_config</code>:</p>
-377|377|    <pre><code>AuthenticationMethods publickey,keyboard-interactive</code></pre>
-378|378|    <p>Now SSH requires both your private key <strong>and</strong> a time-based one-time password — defense in depth at its finest.</p>
-379|379|
-380|380|    <h2 id="section-10">10. Summary</h2>
-381|381|    <p>Securing a self-hosted server is not a one-time task — it is an ongoing practice. The measures in this guide form a layered defense that protects against automated attacks, credential theft, unpatched vulnerabilities, and container escapes.</p>
-382|382|    <p>Here is a deployment checklist for a new self-hosted server:</p>
-383|383|    <ul>
-384|384|      <li>Disable SSH password authentication; use ED25519 keys only</li>
-385|385|      <li>Change the SSH port and restrict by AllowUsers</li>
-386|386|      <li>Set up UFW with a default-deny policy</li>
-387|387|      <li>Install and configure fail2ban for SSH and web services</li>
-388|388|      <li>Enable unattended-upgrades for automatic security patches</li>
-389|389|      <li>Audit Docker containers: non-root user, drop capabilities, read-only fs</li>
-390|390|      <li>Enable AppArmor or verify SELinux is enforcing</li>
-391|391|      <li>Initialize AIDE for file integrity monitoring</li>
-392|392|      <li>Configure auditd and forward logs to a remote destination</li>
-393|393|      <li>Run Docker Bench Security and <code>lynis</code> for a final audit</li>
-394|394|    </ul>
-395|395|    <p>Implement these steps in order, testing each change before moving to the next. Automate where possible — cron jobs for AIDE checks, Watchtower for Docker updates, and periodic <code>lynis</code> audits ensure your server stays hardened even when you are not actively managing it.</p>
-396|396|    <p>As the Verizon 2025 DBIR reminds us, the overwhelming majority of breaches exploit <em>known</em> vulnerabilities and <em>weak</em> credentials. By eliminating both categories, you move your self-hosted server from an easy target to a hardened system that automated attackers will skip in favor of easier prey.</p>
-397|397|
-398|398|    <h2>FAQ</h2>
-399|399|
-400|400|    <h3>What is the most important security step for a new self-hosted server?</h3>
-401|401|    <p>Disabling password-based SSH authentication and using SSH key pairs only. This single measure blocks the vast majority of automated brute-force attacks. Combined with changing the default SSH port and installing fail2ban, you eliminate 99% of opportunistic attacks before they reach your services.</p>
-402|402|
-403|403|    <h3>Do I need a firewall if my server is behind a home router?</h3>
-404|404|    <p>Yes. A host-based firewall like UFW or nftables provides defense-in-depth. Even behind a NAT router, internal threats (compromised IoT devices on your LAN, malware, or a misconfigured service binding to 0.0.0.0) can expose ports to your local network. A firewall ensures only the services you intend to expose are reachable.</p>
-405|405|
-406|406|    <h3>How often should I update my self-hosted server?</h3>
-407|407|    <p>Security patches should be applied within 24-48 hours of release for critical vulnerabilities. Unattended-upgrades can handle this automatically for apt packages. Docker containers should be rebuilt and redeployed weekly via a cron job or watchtower. The Verizon 2025 Data Breach Investigations Report found that 60% of breaches involved unpatched known vulnerabilities where a patch was available but not applied.</p>
-408|408|
-409|409|    <h3>Is fail2ban still necessary if I use SSH keys?</h3>
-410|410|    <p>Yes. While SSH keys eliminate password-guessing attacks on SSH, fail2ban protects other services too — web apps, mail servers, and any service that accepts authenticated connections. It monitors log files for repeated failures and temporarily bans offending IPs via the firewall.</p>
-411|411|
-412|412|    <h3>Should I use Docker for better security isolation?</h3>
-413|413|    <p>Docker provides significant isolation benefits when configured correctly. Each container runs in its own namespaces with limited capabilities by default. However, Docker is not a security panacea — you must avoid privilege escalation with <code>--privileged</code> flags, use read-only root filesystems where possible, drop unnecessary Linux capabilities, and never mount the Docker socket into containers unless absolutely required.</p>
-414|414|
-415|415|    <h2>Related Articles</h2>
-416|416|    <ul>
-417|417|      <li><a href="monitoring-homelab-guide.html">Monitoring Your Homelab: A Practical Guide</a> — Prometheus, Grafana, Loki setup for tracking server health and security events</li>
-418|418|      <li><a href="nginx-reverse-proxy-guide.html">Nginx Reverse Proxy Setup Guide for Self-Hosted Applications</a> — Secure web serving with SSL termination and rate limiting</li>
-419|419|      <li><a href="wireguard-vpn-guide.html">WireGuard VPN Setup Guide</a> — Tunnel into your home network securely without exposing ports to the public internet</li>
-420|420|      <li><a href="backup-strategies-guide.html">Backup Strategies for Self-Hosted Services</a> — 3-2-1 backup strategy to protect your data if security measures fail</li>
-421|421|      <li><a href="docker-compose-guide.html">Docker Compose for Self-Hosted Services</a> — Run isolated containers with proper security configurations</li>
-422|422|    </ul>
-423|423|
-424|424|    <div class="article-nav">
-425|425|      <a href="../index.html">← Back to Home</a>
-426|426|    </div>
-427|427|  </article>
-428|428|
-429|429|  <div class="author-bio">
+
+    <p>According to the <strong>Verizon 2025 Data Breach Investigations Report (DBIR)</strong>, 60% of breaches involved attackers exploiting known vulnerabilities where a patch was available but not applied, and credential-based attacks accounted for over 40% of all breach entry methods. These are the two categories of risk that a well-hardened self-hosted server can virtually eliminate.</p>
+
+    <p>This guide covers the full security stack: SSH hardening, firewall configuration, intrusion prevention with fail2ban, automatic updates, Docker security best practices, AppArmor/SELinux, file integrity monitoring, and log auditing. Each section includes concrete commands you can run on any Ubuntu or Debian-based server.</p>
+
+    <h2 id="section-1">1. SSH Hardening — Your First Line of Defense</h2>
+    <p>SSH is the most attacked service on any internet-facing Linux server. Automated bots scan the entire IPv4 address space within minutes of a new server coming online, trying default credentials and exploiting old vulnerabilities. Hardening SSH is step zero of server security.</p>
+
+    <h3>1.1 Key-Based Authentication Only</h3>
+    <p>Generate an ED25519 key pair on your local machine (not the server):</p>
+    <pre><code>ssh-keygen -t ed25519 -a 100 -f ~/.ssh/selfhost_key</code></pre>
+    <p>Copy the public key to your server:</p>
+    <pre><code>ssh-copy-id -i ~/.ssh/selfhost_key.pub user@your-server-ip</code></pre>
+    <p>Test that key-based login works, then disable passwords in <code>/etc/ssh/sshd_config</code>:</p>
+    <pre><code>PasswordAuthentication no
+ChallengeResponseAuthentication no
+PermitRootLogin no
+PubkeyAuthentication yes</code></pre>
+    <p>Apply changes:</p>
+    <pre><code>sudo systemctl restart sshd</code></pre>
+
+    <h3>1.2 Change the Default SSH Port</h3>
+    <p>Changing the SSH port from 22 to a high-numbered port (e.g., 2222) drastically reduces log noise from automated scanners:</p>
+    <pre><code>Port 2222</code></pre>
+    <p>Update <code>/etc/ssh/sshd_config</code>, then add the new port to your firewall (see Section 2). After confirming you can connect on the new port, remove port 22 from your firewall rules.</p>
+
+    <h3>1.3 Additional SSH Hardening Options</h3>
+    <pre><code># In /etc/ssh/sshd_config
+MaxAuthTries 3
+MaxSessions 2
+LoginGraceTime 30
+AllowUsers your-username
+ClientAliveInterval 300
+ClientAliveCountMax 2</code></pre>
+    <ul>
+    <li><strong>MaxAuthTries 3</strong> — Limits authentication attempts per connection.</li>
+    <li><strong>MaxSessions 2</strong> — Prevents a single user from opening too many concurrent sessions.</li>
+    <li><strong>LoginGraceTime 30</strong> — Closes unauthenticated connections after 30 seconds.</li>
+    <li><strong>AllowUsers</strong> — Whitelists specific usernames; everything else is rejected.</li>
+    <li><strong>ClientAliveInterval</strong> + <strong>ClientAliveCountMax</strong> — Drops idle connections after 10 minutes of inactivity.</li>
+    </ul>
+
+    <h2 id="section-2">2. Firewall Configuration with UFW</h2>
+    <p>The Uncomplicated Firewall (UFW) provides a simple interface to iptables/nftables. A default-deny policy ensures only explicitly allowed ports are reachable.</p>
+
+    <pre><code># Set default policies
+sudo ufw default deny incoming
+sudo ufw default allow outgoing
+
+# Allow SSH on your custom port (if changed)
+sudo ufw allow 2222/tcp comment 'SSH'
+
+# Allow HTTP and HTTPS
+sudo ufw allow 80/tcp comment 'HTTP'
+sudo ufw allow 443/tcp comment 'HTTPS'
+
+# Allow your self-hosted services (e.g., WireGuard)
+sudo ufw allow 51820/udp comment 'WireGuard'
+
+# Enable the firewall
+sudo ufw enable
+
+# Check the rules
+sudo ufw status verbose</code></pre>
+    <p>UFW logs blocked packets to <code>/var/log/ufw.log</code>. Check it periodically to spot scanning activity:</p>
+    <pre><code>sudo tail -f /var/log/ufw.log | grep BLOCK</code></pre>
+    <p><strong>Pro tip:</strong> Never enable UFW over SSH before allowing your SSH port — you will lock yourself out. Always add your SSH port rule first, then enable.</p>
+
+    <h3>2.1 Rate Limiting with UFW</h3>
+    <p>UFW supports basic rate limiting to mitigate brute-force attempts:</p>
+    <pre><code>sudo ufw limit ssh</code></pre>
+    <p>This allows 6 connections per 30 seconds from the same IP before blocking further attempts for that period.</p>
+
+    <h2 id="section-3">3. Fail2ban — Automated Intrusion Prevention</h2>
+    <p>Fail2ban monitors service logs for repeated failure patterns and temporarily bans offending IPs via firewall rules. It ships with pre-configured filters for SSH, Apache, Nginx, and many other services.</p>
+
+    <pre><code># Install fail2ban
+sudo apt update
+sudo apt install fail2ban -y
+
+# Create a local configuration file
+sudo cp /etc/fail2ban/jail.conf /etc/fail2ban/jail.local</code></pre>
+    <p>Edit <code>/etc/fail2ban/jail.local</code> to customize settings:</p>
+    <pre><code>[DEFAULT]
+bantime = 3600          # 1 hour ban (in seconds)
+findtime = 600          # 10 minute window
+maxretry = 5            # 5 failures triggers a ban
+
+[sshd]
+enabled = true
+port = 2222             # Match your custom SSH port</code></pre>
+    <p>Add a jail for Nginx (if you use it):</p>
+    <pre><code>[nginx-http-auth]
+enabled = true
+
+[nginx-botsearch]
+enabled = true</code></pre>
+    <p>Start fail2ban:</p>
+    <pre><code>sudo systemctl enable fail2ban --now
+
+# Check banned IPs
+sudo fail2ban-client status sshd</code></pre>
+    <p>Fail2ban is especially valuable for self-hosters because it protects services that must be publicly accessible (like web apps) from credential stuffing and directory traversal attacks.</p>
+
+    <h2 id="section-4">4. Automatic Security Updates</h2>
+    <p>The Verizon 2025 DBIR finding that 60% of breaches involved unpatched vulnerabilities underscores the critical importance of keeping your system up to date. Automate this with <code>unattended-upgrades</code>:</p>
+
+    <pre><code>sudo apt install unattended-upgrades -y
+sudo dpkg-reconfigure --priority=low unattended-upgrades</code></pre>
+    <p>For fine-grained control, edit <code>/etc/apt/apt.conf.d/50unattended-upgrades</code>:</p>
+    <pre><code>Unattended-Upgrade::Allowed-Origins {
+    "${distro_id}:${distro_codename}-security";
+};
+
+Unattended-Upgrade::AutoFixInterruptedDpkg "true";
+Unattended-Upgrade::MinimalSteps "true";
+Unattended-Upgrade::Remove-Unused-Dependencies "true";
+Unattended-Upgrade::AutomaticReboot "false";</code></pre>
+    <p>For Docker containers, use Watchtower to automatically update running containers:</p>
+    <pre><code>docker run -d \
+  --name watchtower \
+  --restart unless-stopped \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  containrrr/watchtower \
+  --schedule "0 0 4 * * *"   # 4 AM daily</code></pre>
+    <p><strong>Warning:</strong> Review update-testing on a staging instance before enabling automatic container restarts for production services.</p>
+
+    <h2 id="section-5">5. Docker Security Best Practices</h2>
+    <p>Docker adds a layer of isolation, but misconfiguration can actually weaken security. Follow these rules for every container you run:</p>
+
+    <h3>5.1 Run as Non-Root User</h3>
+    <p>Many official Docker images default to root. Override this in your <code>docker-compose.yml</code>:</p>
+    <pre><code>services:
+  myapp:
+    image: myapp:latest
+    user: "1000:1000"   # UID:GID of a non-root user</code></pre>
+
+    <h3>5.2 Drop All Capabilities, Add Only What's Needed</h3>
+    <p>Linux capabilities grant privileged operations to containers. Drop all and add only what your app requires:</p>
+    <pre><code>services:
+  nginx:
+    image: nginx:alpine
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE  # Allows binding to port 80</code></pre>
+
+    <h3>5.3 Read-Only Root Filesystem</h3>
+    <p>Prevent attackers from writing malicious files to the container's filesystem:</p>
+    <pre><code>services:
+  myapp:
+    image: myapp:latest
+    read_only: true
+    tmpfs:
+      - /tmp   # Allow temp writes only in tmpfs</code></pre>
+
+    <h3>5.4 Never Mount the Docker Socket</h3>
+    <p>Mounting <code>/var/run/docker.sock</code> into a container gives it root-level access to the Docker daemon — equivalent to full host compromise. Avoid this pattern unless you fully understand the implications. If you must (e.g., for Watchtower or Portainer), restrict it to a dedicated management container with minimal privileges.</p>
+
+    <h3>5.5 Use Docker Bench Security</h3>
+    <p>Run <a href="https://github.com/docker/docker-bench-security" target="_blank" rel="noopener">Docker Bench Security</a> to audit your host and container configuration against the CIS Docker Benchmark:</p>
+    <pre><code>docker run --rm --net host \
+  -v /etc:/etc:ro \
+  -v /var/run/docker.sock:/var/run/docker.sock:ro \
+  docker/docker-bench-security</code></pre>
+    <p>This script checks 100+ security controls and highlights misconfigurations with remediation steps.</p>
+
+    <h2 id="section-6">6. Mandatory Access Control: AppArmor &amp; SELinux</h2>
+    <p>Linux Discretionary Access Control (DAC) — standard file permissions — is the first security layer. Mandatory Access Control (MAC) systems like AppArmor (Ubuntu default) or SELinux (Fedora/CentOS default) add a second layer that constrains what processes can do even when running as root.</p>
+
+    <p>AppArmor profiles are pre-installed for common services. Check their status:</p>
+    <pre><code>sudo aa-status</code></pre>
+    <p>Enable AppArmor for a specific Docker container by appending a security-opt flag:</p>
+    <pre><code>services:
+  myapp:
+    image: myapp:latest
+    security_opt:
+      - apparmor:docker-default</code></pre>
+    <p>On SELinux-based systems, ensure it is enforcing:</p>
+    <pre><code>getenforce
+# Should output: Enforcing
+
+# Set to enforcing if it's permissive
+sudo setenforce 1</code></pre>
+    <p>MAC systems would have prevented many high-profile container escape vulnerabilities — the extra layer catches exploits that bypass standard permissions.</p>
+
+    <h2 id="section-7">7. File Integrity Monitoring with AIDE</h2>
+    <p>If an attacker does gain access, you need to know what changed. AIDE (Advanced Intrusion Detection Environment) builds a database of file hashes and alerts you when files are modified.</p>
+
+    <pre><code># Install AIDE
+sudo apt install aide -y
+
+# Initialize the database (first run only)
+sudo aideinit
+
+# Move the database to its default location
+sudo mv /var/lib/aide/aide.db.new /var/lib/aide/aide.db
+
+# Run a check
+sudo aide --check</code></pre>
+    <p>Schedule weekly checks via cron:</p>
+    <pre><code>sudo crontab -e
+# Add this line:
+0 3 * * 0 /usr/bin/aide --check | mail -s "AIDE report" your@email.com</code></pre>
+
+    <h2 id="section-8">8. Log Auditing and Centralized Monitoring</h2>
+    <p>Logs tell the story of what happened. Without a monitoring system, you are flying blind.</p>
+
+    <h3>8.1 Auditd for System Call Monitoring</h3>
+    <p>Auditd records system calls, file accesses, and authentication events:</p>
+    <pre><code>sudo apt install auditd -y
+sudo auditctl -e 1   # Enable auditing
+sudo aureport --summary   # View summary report</code></pre>
+    <p>Monitor <code>/etc/passwd</code> for unauthorized changes:</p>
+    <pre><code>sudo auditctl -w /etc/passwd -p wa -k passwd_changes
+sudo auditctl -w /etc/shadow -p wa -k shadow_changes</code></pre>
+    <p>View audit logs with <code>ausearch</code>:</p>
+    <pre><code>sudo ausearch -k passwd_changes --start today</code></pre>
+
+    <h3>8.2 Centralized Logging with Rsyslog</h3>
+    <p>Forward logs to a remote log server (or a syslog-compatible service) so attackers cannot tamper with them after gaining access:</p>
+    <pre><code># In /etc/rsyslog.conf
+*.* @logs.example.com:514   # UDP forwarding
+# Or over TCP with TLS for sensitive environments</code></pre>
+
+    <h3>8.3 Integration with Monitoring Tools</h3>
+    <p>Pair security hardening with a monitoring stack from our <a href="monitoring-homelab-guide.html">Monitoring Your Homelab guide</a>. Tools like Grafana, Prometheus, and Loki can visualize failed SSH attempts, firewall drops, and system resource anomalies that may indicate compromise.</p>
+
+    <h2 id="section-9">9. Additional Hardening Measures</h2>
+
+    <h3>9.1 Disable Unused Services</h3>
+    <p>Every running service is a potential attack surface. List listening ports and audit them:</p>
+    <pre><code>sudo ss -tulpn   # List all listening TCP and UDP ports
+sudo lsof -i -P -n | grep LISTEN</code></pre>
+    <p>Disable and mask any service you don't need:</p>
+    <pre><code>sudo systemctl disable --now avahi-daemon
+sudo systemctl mask avahi-daemon</code></pre>
+
+    <h3>9.2 Kernel Hardening with sysctl</h3>
+    <p>Add these lines to <code>/etc/sysctl.d/99-hardening.conf</code>:</p>
+    <pre><code># IP spoofing protection
+net.ipv4.conf.all.rp_filter = 1
+net.ipv4.conf.default.rp_filter = 1
+
+# Ignore ICMP redirects
+net.ipv4.conf.all.accept_redirects = 0
+net.ipv6.conf.all.accept_redirects = 0
+
+# Ignore source-routed packets
+net.ipv4.conf.all.accept_source_route = 0
+net.ipv6.conf.all.accept_source_route = 0
+
+# Disable IPv6 if not needed, or only enable privacy extensions
+net.ipv6.conf.all.use_tempaddr = 2
+
+# Increase SYN backlog and enable SYN cookies (DoS protection)
+net.ipv4.tcp_syncookies = 1
+net.ipv4.tcp_syn_backlog = 1024</code></pre>
+    <p>Apply immediately:</p>
+    <pre><code>sudo sysctl -p /etc/sysctl.d/99-hardening.conf</code></pre>
+
+    <h3>9.3 Two-Factor Authentication for SSH</h3>
+    <p>For an additional layer beyond SSH keys, enable TOTP-based 2FA using <code>libpam-google-authenticator</code>:</p>
+    <pre><code>sudo apt install libpam-google-authenticator -y
+google-authenticator    # Follow the setup, scan QR code into your authenticator app</code></pre>
+    <p>Edit <code>/etc/pam.d/sshd</code> to add:</p>
+    <pre><code>auth required pam_google_authenticator.so</code></pre>
+    <p>Then in <code>/etc/ssh/sshd_config</code>:</p>
+    <pre><code>AuthenticationMethods publickey,keyboard-interactive</code></pre>
+    <p>Now SSH requires both your private key <strong>and</strong> a time-based one-time password — defense in depth at its finest.</p>
+
+    <h2 id="section-10">10. Summary</h2>
+    <p>Securing a self-hosted server is not a one-time task — it is an ongoing practice. The measures in this guide form a layered defense that protects against automated attacks, credential theft, unpatched vulnerabilities, and container escapes.</p>
+    <p>Here is a deployment checklist for a new self-hosted server:</p>
+    <ul>
+    <li>Disable SSH password authentication; use ED25519 keys only</li>
+    <li>Change the SSH port and restrict by AllowUsers</li>
+    <li>Set up UFW with a default-deny policy</li>
+    <li>Install and configure fail2ban for SSH and web services</li>
+    <li>Enable unattended-upgrades for automatic security patches</li>
+    <li>Audit Docker containers: non-root user, drop capabilities, read-only fs</li>
+    <li>Enable AppArmor or verify SELinux is enforcing</li>
+    <li>Initialize AIDE for file integrity monitoring</li>
+    <li>Configure auditd and forward logs to a remote destination</li>
+    <li>Run Docker Bench Security and <code>lynis</code> for a final audit</li>
+    </ul>
+    <p>Implement these steps in order, testing each change before moving to the next. Automate where possible — cron jobs for AIDE checks, Watchtower for Docker updates, and periodic <code>lynis</code> audits ensure your server stays hardened even when you are not actively managing it.</p>
+    <p>As the Verizon 2025 DBIR reminds us, the overwhelming majority of breaches exploit <em>known</em> vulnerabilities and <em>weak</em> credentials. By eliminating both categories, you move your self-hosted server from an easy target to a hardened system that automated attackers will skip in favor of easier prey.</p>
+
+    <h2>FAQ</h2>
+
+    <h3>What is the most important security step for a new self-hosted server?</h3>
+    <p>Disabling password-based SSH authentication and using SSH key pairs only. This single measure blocks the vast majority of automated brute-force attacks. Combined with changing the default SSH port and installing fail2ban, you eliminate 99% of opportunistic attacks before they reach your services.</p>
+
+    <h3>Do I need a firewall if my server is behind a home router?</h3>
+    <p>Yes. A host-based firewall like UFW or nftables provides defense-in-depth. Even behind a NAT router, internal threats (compromised IoT devices on your LAN, malware, or a misconfigured service binding to 0.0.0.0) can expose ports to your local network. A firewall ensures only the services you intend to expose are reachable.</p>
+
+    <h3>How often should I update my self-hosted server?</h3>
+    <p>Security patches should be applied within 24-48 hours of release for critical vulnerabilities. Unattended-upgrades can handle this automatically for apt packages. Docker containers should be rebuilt and redeployed weekly via a cron job or watchtower. The Verizon 2025 Data Breach Investigations Report found that 60% of breaches involved unpatched known vulnerabilities where a patch was available but not applied.</p>
+
+    <h3>Is fail2ban still necessary if I use SSH keys?</h3>
+    <p>Yes. While SSH keys eliminate password-guessing attacks on SSH, fail2ban protects other services too — web apps, mail servers, and any service that accepts authenticated connections. It monitors log files for repeated failures and temporarily bans offending IPs via the firewall.</p>
+
+    <h3>Should I use Docker for better security isolation?</h3>
+    <p>Docker provides significant isolation benefits when configured correctly. Each container runs in its own namespaces with limited capabilities by default. However, Docker is not a security panacea — you must avoid privilege escalation with <code>--privileged</code> flags, use read-only root filesystems where possible, drop unnecessary Linux capabilities, and never mount the Docker socket into containers unless absolutely required.</p>
+
+    <h2>Related Articles</h2>
+    <ul>
+    <li><a href="monitoring-homelab-guide.html">Monitoring Your Homelab: A Practical Guide</a> — Prometheus, Grafana, Loki setup for tracking server health and security events</li>
+    <li><a href="nginx-reverse-proxy-guide.html">Nginx Reverse Proxy Setup Guide for Self-Hosted Applications</a> — Secure web serving with SSL termination and rate limiting</li>
+    <li><a href="wireguard-vpn-guide.html">WireGuard VPN Setup Guide</a> — Tunnel into your home network securely without exposing ports to the public internet</li>
+    <li><a href="backup-strategies-guide.html">Backup Strategies for Self-Hosted Services</a> — 3-2-1 backup strategy to protect your data if security measures fail</li>
+    <li><a href="docker-compose-guide.html">Docker Compose for Self-Hosted Services</a> — Run isolated containers with proper security configurations</li>
+    </ul>
+
+    <div class="article-nav">
+    <a href="../index.html">← Back to Home</a>
+    </div>
+  </article>
+
+  <div class="author-bio">
   <div class="author-bio-content">
     <p><strong>About the Author</strong></p>
     <p>Frankie is a self-hosting enthusiast and DevOps practitioner with over 8 years of experience deploying and maintaining production Linux servers, Docker environments, and homelab infrastructure. He writes practical, hands-on guides to help others take control of their own infrastructure.</p>
@@ -453,31 +454,30 @@
 </div>
 
 <footer class="site-footer">
-430|430|    <div class="container">
-431|431|      <div class="footer-links">
-432|432|        <a href="/selfhost-guide/">Home</a>
-433|433|        <span>·</span>
-434|434|        <a href="/selfhost-guide/about.html">About</a>
-435|435|        <span>·</span>
-436|436|        <a href="/selfhost-guide/categories.html">Categories</a>
-437|437|        <span>·</span>
-438|438|        <a href="/selfhost-guide/privacy.html">Privacy Policy</a>
-439|439|        <span>·</span>
-440|440|        <a href="/selfhost-guide/terms.html">Terms of Use</a>
-441|441|      </div>
-442|442|      <p class="footer-copy">© 2026 Self-Host Guide</p>
-443|443|    </div>
-444|444|  </footer>
-445|445|<script>
-446|446|(function(){
-447|447|  var key = 'pv_' + window.location.pathname.replace(/\//g,'_').replace(/\.html$/,'');
-448|448|  var count = localStorage.getItem(key) || 0;
-449|449|  count = parseInt(count) + 1;
-450|450|  localStorage.setItem(key, count);
-451|451|  var el = document.getElementById('busuanzi_value_page_pv');
-452|452|  if (el) el.textContent = count;
-453|453|})();
-454|454|</script>
-455|455|</body>
-456|456|</html>
-457|457|
+    <div class="container">
+    <div class="footer-links">
+    <a href="/selfhost-guide/">Home</a>
+    <span>·</span>
+    <a href="/selfhost-guide/about.html">About</a>
+    <span>·</span>
+    <a href="/selfhost-guide/categories.html">Categories</a>
+    <span>·</span>
+    <a href="/selfhost-guide/privacy.html">Privacy Policy</a>
+    <span>·</span>
+    <a href="/selfhost-guide/terms.html">Terms of Use</a>
+      </div>
+    <p class="footer-copy">© 2026 Self-Host Guide</p>
+    </div>
+  </footer>
+<script>
+(function(){
+  var key = 'pv_' + window.location.pathname.replace(/\//g,'_').replace(/\.html$/,'');
+  var count = localStorage.getItem(key) | 0;
+  count = parseInt(count) + 1;
+  localStorage.setItem(key, count);
+  var el = document.getElementById('busuanzi_value_page_pv');
+  if (el) el.textContent = count;
+})();
+</script>
+</body>
+</html>

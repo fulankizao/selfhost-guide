@@ -1,76 +1,79 @@
-1|<!DOCTYPE html>
-2|<html lang="en">
-3|<head>
-4|  <meta charset="UTF-8">
-5|  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-6|  <title>How to Set Up a Personal Wiki with BookStack — Self-Host Guide</title>
-7|  <meta name="description" content="Step-by-step guide to self-hosting BookStack: Docker deployment, Nginx reverse proxy, LDAP integration, backup automation, performance tuning, theme customization, and troubleshooting tips.">
-8|  <link rel="canonical" href="https://fulankizao.github.io/selfhost-guide/articles/bookstack-wiki-guide.html">
-9|  <link rel="stylesheet" href="../style.css">
-10|  <link rel="icon" type="image/svg+xml" href="../favicon.svg">
-11|  <meta property="og:title" content="How to Set Up a Personal Wiki with BookStack">
-12|  <meta property="og:description" content="Step-by-step guide to self-hosting BookStack: Docker deployment, Nginx reverse proxy, LDAP integration, backup automation, performance tuning, theme customization, and troubleshooting tips.">
-13|  <meta property="og:url" content="https://fulankizao.github.io/selfhost-guide/articles/bookstack-wiki-guide.html">
-14|  <meta property="og:type" content="article">
-15|  <meta property="og:site_name" content="Self-Host Guide">
-16|  <meta property="og:locale" content="en_US">
-17|  <meta name="twitter:card" content="summary">
-18|  <meta name="twitter:title" content="How to Set Up a Personal Wiki with BookStack">
-19|  <meta name="twitter:description" content="Step-by-step BookStack deployment guide for self-hosters.">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>How to Set Up a Personal Wiki with BookStack — Self-Host Guide</title>
+  <meta name="description" content="Deploy a personal wiki with BookStack on Docker, configure Nginx reverse proxy with SSL, LDAP authentication, and automated backups.">
+  <link rel="canonical" href="https://fulankizao.github.io/selfhost-guide/articles/bookstack-wiki-guide.html">
+  <link rel="stylesheet" href="../style.css">
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+  <meta property="og:title" content="How to Set Up a Personal Wiki with BookStack">
+  <meta property="og:description" content="Step-by-step guide to self-hosting BookStack: Docker deployment, Nginx reverse proxy, LDAP integration, backup automation, performance tuning, theme customization, and troubleshooting tips.">
+  <meta property="og:url" content="https://fulankizao.github.io/selfhost-guide/articles/bookstack-wiki-guide.html">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="Self-Host Guide">
+  <meta property="og:locale" content="en_US">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="How to Set Up a Personal Wiki with BookStack">
+  <meta name="twitter:description" content="Step-by-step BookStack deployment guide for self-hosters.">
   <meta property="og:image" content="https://fulankizao.github.io/selfhost-guide/og-image.svg">
   <meta name="twitter:image" content="https://fulankizao.github.io/selfhost-guide/og-image.svg">
-20|  <script type="application/ld+json">
-21|  {"@context":"https://schema.org","@type":"Article","headline":"How to Set Up a Personal Wiki with BookStack","datePublished":"2026-06-12","dateModified":"2026-06-16","author":{"@type":"Person","name":"F Frankie"}}
-22|  </script>
-23|  <script type="application/ld+json">
-24|  {"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[
-25|    {"@type":"ListItem","position":1,"name":"Home","item":"https://fulankizao.github.io/selfhost-guide/"},
-26|    {"@type":"ListItem","position":2,"name":"BookStack Wiki Guide"}
-27|  ]}
-28|  </script>
-29|  <script type="application/ld+json">
-30|  {"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
-31|    {"@type":"Question","name":"Can I use SQLite instead of MySQL?","acceptedAnswer":{"@type":"Answer","text":"Yes, BookStack supports SQLite for small single-user setups, but MySQL/MariaDB is recommended for production."}},
-32|    {"@type":"Question","name":"How do I update BookStack?","acceptedAnswer":{"@type":"Answer","text":"Pull the latest Docker image: docker compose pull && docker compose up -d, then run the migration script."}},
-33|    {"@type":"Question","name":"Can BookStack integrate with existing auth systems?","acceptedAnswer":{"@type":"Answer","text":"Yes. BookStack supports LDAP, SAML2, OAuth (Google, GitHub, Slack) and social login out of the box."}},
-34|    {"@type":"Question","name":"Is BookStack suitable for team use?","acceptedAnswer":{"@type":"Answer","text":"Absolutely. It has role-based permissions, shelves, books, chapters, and full-text search — built for teams."}},
-35|    {"@type":"Question","name":"How do I back up BookStack?","acceptedAnswer":{"@type":"Answer","text":"Back up the MySQL database (mysqldump), the uploads directory, and the .env file. See our backup strategies guide for details."}}
-36|  ]}
-37|  </script>
-38|  <script type="application/ld+json">
-39|  {
-40|    "@context": "https://schema.org",
-41|    "@type": "HowTo",
-42|    "name": "How to Set Up a Personal Wiki with BookStack",
-43|    "description": "Step-by-step guide to self-hosting BookStack: Docker deployment, Nginx reverse proxy, LDAP integration, backup automation, performance tuning, theme customization, and troubleshooting tips.",
-44|    "step": [
-45|      {"@type": "HowToStep", "name": "Check Prerequisites", "text": "Ensure you have a Linux server with Docker and Docker Compose, a domain pointing to your server, a reverse proxy, and at least 5 GB free disk space."},
-46|      {"@type": "HowToStep", "name": "Deploy BookStack with Docker Compose", "text": "Create a docker-compose.yml with BookStack and MySQL services, configure environment variables for APP_URL, database credentials, and persistent volumes for data."},
-47|      {"@type": "HowToStep", "name": "Set Up Nginx Reverse Proxy", "text": "Configure Nginx as a reverse proxy for BookStack with SSL termination, setting proxy headers and enabling HTTPS via Certbot for secure access."},
-48|      {"@type": "HowToStep", "name": "Integrate Authentication", "text": "Configure LDAP, SAML2, or OAuth authentication in BookStack's .env file to integrate with existing identity providers and enable single sign-on."},
-49|      {"@type": "HowToStep", "name": "Automate Backups", "text": "Set up automated backups using a cron job or backup script that dumps the MySQL database and backs up the uploads directory and .env file."},
-50|      {"@type": "HowToStep", "name": "Optimize Performance", "text": "Enable caching, optimize the MySQL database, configure PHP-FPM settings, and use a CDN for static assets to improve BookStack response times."}
-51|    ]
-52|  }
-53|  </script>
-54|</head>
-55|<body>
-56|  <header class="article-header">
-57|    <div class="container">
-58|      <span class="tag tag-web">Wiki</span>
-59|      <h1>How to Set Up a Personal Wiki with BookStack</h1>
-60|      <div class="meta">2026-06-12 · 15 min read · <span id="busuanzi_value_page_pv"></span> views</div>
-61|    </div>
-62|  </header>
-63|  <nav class="nav-bar">
-64|    <div class="container">
-65|      <a href="/selfhost-guide/">← Back to Home</a>
-66|    </div>
-67|  </nav>
-68|  <article class="article-content container">
-69|    
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"Article","headline":"How to Set Up a Personal Wiki with BookStack","datePublished":"2026-06-12","dateModified":"2026-06-16","author":{"@type":"Person","name":"F Frankie"}}
+  </script>
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[
+    {"@type":"ListItem","position":1,"name":"Home","item":"https://fulankizao.github.io/selfhost-guide/"},
+    {"@type":"ListItem","position":2,"name":"BookStack Wiki Guide"}
+  ]}
+  </script>
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
+    {"@type":"Question","name":"Can I use SQLite instead of MySQL?","acceptedAnswer":{"@type":"Answer","text":"Yes, BookStack supports SQLite for small single-user setups, but MySQL/MariaDB is recommended for production."}},
+    {"@type":"Question","name":"How do I update BookStack?","acceptedAnswer":{"@type":"Answer","text":"Pull the latest Docker image: docker compose pull && docker compose up -d, then run the migration script."}},
+    {"@type":"Question","name":"Can BookStack integrate with existing auth systems?","acceptedAnswer":{"@type":"Answer","text":"Yes. BookStack supports LDAP, SAML2, OAuth (Google, GitHub, Slack) and social login out of the box."}},
+    {"@type":"Question","name":"Is BookStack suitable for team use?","acceptedAnswer":{"@type":"Answer","text":"Absolutely. It has role-based permissions, shelves, books, chapters, and full-text search — built for teams."}},
+    {"@type":"Question","name":"How do I back up BookStack?","acceptedAnswer":{"@type":"Answer","text":"Back up the MySQL database (mysqldump), the uploads directory, and the .env file. See our backup strategies guide for details."}}
+  ]}
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "HowTo",
+    "name": "How to Set Up a Personal Wiki with BookStack",
+    "description": "Step-by-step guide to self-hosting BookStack: Docker deployment, Nginx reverse proxy, LDAP integration, backup automation, performance tuning, theme customization, and troubleshooting tips.",
+    "step": [
+      {"@type": "HowToStep", "name": "Check Prerequisites", "text": "Ensure you have a Linux server with Docker and Docker Compose, a domain pointing to your server, a reverse proxy, and at least 5 GB free disk space."},
+      {"@type": "HowToStep", "name": "Deploy BookStack with Docker Compose", "text": "Create a docker-compose.yml with BookStack and MySQL services, configure environment variables for APP_URL, database credentials, and persistent volumes for data."},
+      {"@type": "HowToStep", "name": "Set Up Nginx Reverse Proxy", "text": "Configure Nginx as a reverse proxy for BookStack with SSL termination, setting proxy headers and enabling HTTPS via Certbot for secure access."},
+      {"@type": "HowToStep", "name": "Integrate Authentication", "text": "Configure LDAP, SAML2, or OAuth authentication in BookStack's .env file to integrate with existing identity providers and enable single sign-on."},
+      {"@type": "HowToStep", "name": "Automate Backups", "text": "Set up automated backups using a cron job or backup script that dumps the MySQL database and backs up the uploads directory and .env file."},
+      {"@type": "HowToStep", "name": "Optimize Performance", "text": "Enable caching, optimize the MySQL database, configure PHP-FPM settings, and use a CDN for static assets to improve BookStack response times."}
+    ]
+  }
+  </script>
+</head>
+<body>
+  <nav class="nav-bar" aria-label="Main navigation">
+    <div class="container">
+      <ul>
+        <li><a href="/selfhost-guide/">← Back to Home</a></li>
+      </ul>
+    </div>
+  </nav>
+
+<header class="article-header">
+    <div class="container">
+      <span class="tag tag-wiki">Wiki</span>
+      <h1>How to Set Up a Personal Wiki with BookStack</h1>
+      <div class="meta">2026-06-12 · 15 min read · <span id="busuanzi_value_page_pv"></span> views</div>
+      </div>
+  </header>
+  <article class="article-content container">
+
 <nav class="toc">
-<h3>Table of Contents</h3>
+<h2>Table of Contents</h2>
 <ul>
   <li><a href="#section-1">Why BookStack?</a></li>
   <li><a href="#section-2">Prerequisites</a></li>
@@ -85,189 +88,193 @@
 </ul>
 </nav>
 
-<p>BookStack is a free, open-source wiki platform that organizes information into shelves, books, chapters, and pages. It's Docker-friendly, supports Markdown and WYSIWYG editing, and integrates with LDAP, SAML, and OAuth. As of 2026, BookStack has over 15,000 <a href="https://github.com/BookStackApp/BookStack" target="_blank" rel="noopener">GitHub stars</a> and is used by teams and individuals worldwide for documentation, knowledge bases, and personal wikis.</p>
-70|
-71|    <h2 id="section-1">Why BookStack?</h2>
-72|    <p>Choosing the right wiki platform can be overwhelming. <a href="https://www.mediawiki.org" target="_blank" rel="noopener">MediaWiki</a> powers Wikipedia but is heavy — it requires a dedicated database server, PHP extensions, and frequent maintenance, making it overkill for personal or small-team use. <a href="https://www.dokuwiki.org" target="_blank" rel="noopener">DokuWiki</a> is lightweight and file-based, but it lacks hierarchical content organization — all pages exist in a flat namespace, which becomes unmanageable as your knowledge base grows. <a href="https://js.wiki" target="_blank" rel="noopener">Wiki.js</a> offers a modern interface but relies on Node.js and a separate Git backend, adding complexity to both deployment and backup.</p>
-73|    <p>BookStack strikes the right balance. Its <strong>Shelf → Book → Chapter → Page</strong> hierarchy mirrors how people naturally organize knowledge — like a real bookshelf. Shelves group related books (e.g., "DevOps" or "Recipes"), books contain chapters, and chapters hold individual pages. This structure scales gracefully from a few notes to hundreds of documents. It also runs on a single Docker Compose stack with PHP and MySQL — no extra runtimes or exotic dependencies. For official documentation, see the <a href="https://bookstackapp.com/docs" target="_blank" rel="noopener">BookStack documentation</a>.</p>
-74|
-75|    <h2 id="section-2">Prerequisites</h2>
-76|    <ul>
-77|      <li>A Linux server with Docker and Docker Compose installed — follow the <a href="https://docs.docker.com/engine/install/" target="_blank" rel="noopener">official Docker install guide</a> if needed</li>
-78|      <li>A domain pointing to your server (optional but recommended)</li>
-79|      <li>Nginx or another reverse proxy (see our <a href="nginx-reverse-proxy-guide.html">Nginx guide</a>)</li>
-80|      <li>5 GB free disk space minimum</li>
-81|    </ul>
-82|
-83|    <h2 id="section-3">Docker Compose Deployment</h2>
-84|    <pre><code># docker-compose.yml
-85|version: '3.8'
-86|services:
-87|  bookstack:
-88|    image: lscr.io/linuxserver/bookstack:latest
-89|    container_name: bookstack
-90|    depends_on:
-91|      - bookstack_db
-92|    environment:
-93|      - APP_URL=https://wiki.yourdomain.com
-94|      - DB_HOST=bookstack_db
-95|      - DB_USER=bookstack
-96|      - DB_PASS=your_secure_password
-97|      - DB_DATABASE=bookstack
-98|    volumes:
-99|      - ./data:/config
-100|    ports:
-101|      - "8080:80"
-102|    restart: unless-stopped
-103|
-104|  bookstack_db:
-105|    image: mysql:8.0
-106|    container_name: bookstack_db
-107|    environment:
-108|      - MYSQL_ROOT_PASSWORD=root_password
-109|      - MYSQL_DATABASE=bookstack
-110|      - MYSQL_USER=bookstack
-111|      - MYSQL_PASSWORD=your_secure_password
-112|    volumes:
-113|      - ./db:/var/lib/mysql
-114|    restart: unless-stopped</code></pre>
-115|    <pre><code>docker compose up -d
-116|# BookStack will be available at http://localhost:8080
-117|# Default login: admin@admin.com / password</code></pre>
-118|    <p>For the latest image versions and available tags, check the <a href="https://hub.docker.com/r/linuxserver/bookstack" target="_blank" rel="noopener">LinuxServer BookStack image on Docker Hub</a>.</p>
-119|
-120|    <h2 id="section-4">Nginx Reverse Proxy</h2>
-121|    <p>Following our <a href="nginx-reverse-proxy-guide.html">Nginx reverse proxy guide</a>, create a config for BookStack:</p>
-122|    <pre><code>server {
-123|    listen 80;
-124|    server_name wiki.yourdomain.com;
-125|    return 301 https://$server_name$request_uri;
-126|}
-127|
-128|server {
-129|    listen 443 ssl;
-130|    server_name wiki.yourdomain.com;
-131|
-132|    ssl_certificate /etc/letsencrypt/live/wiki.yourdomain.com/fullchain.pem;
-133|    ssl_certificate_key /etc/letsencrypt/live/wiki.yourdomain.com/privkey.pem;
-134|
-135|    location / {
-136|        proxy_pass http://127.0.0.1:8080;
-137|        proxy_set_header Host $host;
-138|        proxy_set_header X-Real-IP $remote_addr;
-139|        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-140|        proxy_set_header X-Forwarded-Proto $scheme;
-141|        client_max_body_size 100M;
-142|    }
-143|}</code></pre>
-144|    <pre><code>sudo ln -s /etc/nginx/sites-available/bookstack /etc/nginx/sites-enabled/
-145|sudo certbot --nginx -d wiki.yourdomain.com
-146|sudo nginx -t && sudo systemctl reload nginx</code></pre>
-147|
-148|    <h2 id="section-5">Content Organization</h2>
-149|    <p>BookStack uses a simple hierarchy: <strong>Shelf → Book → Chapter → Page</strong>. Log in as admin and visit the Settings page to configure your instance name, registration policy, and authentication.</p>
-150|    <p>Here is a practical walkthrough to get your wiki organized from day one:</p>
-151|    <ol>
-152|      <li><strong>Create a Shelf</strong> — From the homepage, click "Shelves" in the sidebar, then "Create a new Shelf". Give it a name (e.g., "DevOps Knowledge Base") and a short description. Shelves are your top-level categories and appear on the landing page. You can assign a cover image and set visibility permissions per shelf.</li>
-153|      <li><strong>Add a Book</strong> — Open the shelf and click "Add Book". Name it something focused, like "Docker &amp; Compose". Add a description that summarizes what the book covers. Within each book you can either add chapters (for sub-topics) or create pages directly.</li>
-154|      <li><strong>Write Your First Page</strong> — Click "Create Page" inside a book or chapter. BookStack offers both a WYSIWYG editor and a Markdown editor — toggle between them with the editor mode button on the right. Write your content, add headings, insert code blocks using the <code>&lt;pre&gt;</code> button, and attach images by dragging them into the editor. Click "Save" when done.</li>
-155|      <li><strong>Tag Pages for Discovery</strong> — While editing a page, open the Tags section at the bottom of the form. Add key-value tags like <code>docker</code> or <code>tutorial</code>. Tags are searchable and filterable, making it easy to find pages across different books.</li>
-156|      <li><strong>Set Permissions</strong> — Each shelf, book, chapter, and page has its own permission settings. Click the "Permissions" tab and choose who can view, edit, or delete. You can restrict a shelf to specific roles (e.g., "Editors" or "Viewers") while keeping other shelves public. This is especially useful for team wikis where some content is sensitive.</li>
-157|    </ol>
-158|    <p>For more on structuring content, refer to the <a href="https://bookstackapp.com/docs/user/content-structure/" target="_blank" rel="noopener">official content structure documentation</a>.</p>
-159|
-160|    <h2 id="section-6">Authentication Integration</h2>
-161|    <p>BookStack supports multiple auth backends. For LDAP (useful for team setups):</p>
-162|    <pre><code># Settings → Authentication → LDAP
-163|LDAP_SERVER=ldap://your-ldap-server:389
-164|LDAP_BASE_DN=dc=example,dc=com
-165|LDAP_DN=cn=admin,dc=example,dc=com
-166|LDAP_PASS=your_ldap_password
-167|LDAP_USER_FILTER=(&amp;(objectClass=inetOrgPerson)(uid=${user}))</code></pre>
-168|    <p>BookStack also supports SAML2, OAuth with Google/GitHub/Slack, and social login. The <a href="https://bookstackapp.com/docs/admin/ldap/" target="_blank" rel="noopener">LDAP configuration docs</a> cover advanced options like group syncing and TLS.</p>
-169|
-170|    <h2 id="section-7">Backup Automation</h2>
-171|    <p>Back up three things: the database, the uploads directory, and the .env file. See our <a href="backup-strategies-guide.html">backup strategies guide</a> for a complete pipeline. A simple cron job:</p>
-172|    <pre><code>#!/bin/bash
-173|# /root/scripts/backup-bookstack.sh
-174|docker exec bookstack_db mysqldump -u bookstack -p'password' bookstack > /backup/bookstack-$(date +%Y%m%d).sql
-175|cp -r /path/to/bookstack/data/uploads /backup/uploads-$(date +%Y%m%d)
-176|find /backup -name "*.sql" -mtime +30 -delete</code></pre>
-177|    <p>Store backups off-site using a tool like <code>rclone</code> to sync to S3, Backblaze B2, or a second server. The <a href="https://bookstackapp.com/docs/admin/backup/" target="_blank" rel="noopener">official backup guide</a> has additional recommendations.</p>
-178|
-179|    <h2 id="section-8">Theme Customization</h2>
-180|    <p>BookStack's default look is clean, but you can customize it to match your brand or personal preference. The easiest approach is installing a community theme from the <a href="https://github.com/BookStackApp/BookStack" target="_blank" rel="noopener">BookStack GitHub repository</a> or community sites like <a href="https://bookstack.the-dragonnet.co.uk/" target="_blank" rel="noopener">BookStack Themes</a> — simply drop the theme folder into <code>/config/www/themes/</code> and set <code>APP_THEME=theme-name</code> in your <code>.env</code> file.</p>
-181|    <p>For custom CSS, add rules to the "Custom Stylesheet" field under <strong>Settings → Customization</strong>. You can override colors, fonts, spacing, and even the login page background. To replace the logo, upload a new image via <strong>Settings → Customization → App Logo</strong> — BookStack supports SVG, PNG, and WebP formats. All customizations survive Docker container updates as long as they are stored in the persistent <code>/config</code> volume. See the <a href="https://bookstackapp.com/docs/admin/visual-customization/" target="_blank" rel="noopener">visual customization docs</a> for detailed instructions.</p>
-182|
-183|    <h2 id="section-9">Performance Optimization</h2>
-184|    <ul>
-185|      <li><strong>Cache</strong>: Enable Redis caching for faster page loads — add a <code>redis</code> service to your Docker Compose and set <code>CACHE_DRIVER=redis</code></li>
-186|      <li><strong>Uploads</strong>: Store uploads on a dedicated volume or S3-compatible storage to keep the app container lean</li>
-187|      <li><strong>App Debug</strong>: Set <code>APP_DEBUG=false</code> in production to disable verbose error logging and speed up response times</li>
-188|      <li><strong>Cron</strong>: Set up a cron job for BookStack's scheduled tasks (search indexing, cleanup) using the provided <code>artisan schedule:run</code> command</li>
-189|    </ul>
-190|
-191|    <h2 id="section-10">Troubleshooting Common Issues</h2>
-192|    <ul>
-193|      <li><strong>Port conflict</strong> — If port 8080 is already in use (e.g., by another Docker container), change the host port in <code>docker-compose.yml</code> to something else like <code>"8081:80"</code>, then update your Nginx proxy_pass accordingly.</li>
-194|      <li><strong>Database connection failure</strong> — BookStack cannot start if the MySQL container isn't ready. Add <code>depends_on</code> conditions or a health check. Check logs with <code>docker logs bookstack_db</code> and ensure <code>DB_HOST</code> matches the service name. If using an external database, verify firewall rules allow traffic.</li>
-195|      <li><strong>Permission errors</strong> — The <code>/config</code> volume must be writable by the container's www-data user. If you see "Failed to write" errors, run <code>chown -R 1000:1000 ./data</code> on the host (the LinuxServer image uses UID 1000).</li>
-196|      <li><strong>404 after migration</strong> — If you moved BookStack to a new server or changed the <code>APP_URL</code>, cached routes may break. Run <code>docker exec bookstack php artisan cache:clear</code> and restart the container. Also check that your Nginx <code>proxy_pass</code> URL matches the internal port.</li>
-197|    </ul>
-198|    <p>For more help, visit the <a href="https://github.com/BookStackApp/BookStack/issues" target="_blank" rel="noopener">BookStack GitHub Issues</a> or the community <a href="https://discord.gg/ztkBqM2" target="_blank" rel="noopener">Discord server</a>.</p>
-199|
-200|    <h2>FAQ</h2>
-201|    <ul>
-202|      <li><strong>Can I use SQLite instead of MySQL?</strong> Yes, BookStack supports SQLite for small single-user setups — just set <code>DB_CONNECTION=sqlite</code> and remove the MySQL service from your compose file. However, SQLite does not support concurrent writes well, so MySQL/MariaDB is recommended for production or any multi-user scenario.</li>
-203|      <li><strong>How do I update BookStack?</strong> Pull the latest Docker image with <code>docker compose pull && docker compose up -d</code>, then run the migration script via <code>docker exec bookstack php artisan migrate</code> to apply any database schema changes. Always back up your database before upgrading.</li>
-204|      <li><strong>Can BookStack integrate with existing auth systems?</strong> Yes — LDAP, SAML2, OAuth (Google, GitHub, Slack), and social login. You can also configure automatic user registration and role mapping, so new users from your IdP are added to the right groups without manual admin work.</li>
-205|      <li><strong>Is BookStack suitable for team use?</strong> Yes, with role-based permissions (Viewer, Editor, Admin), per-shelf ACLs, full-text search across all content, and an audit log that tracks who changed what and when. It is built for teams of 5 to 500.</li>
-206|      <li><strong>How do I back up BookStack?</strong> Back up the MySQL database (<code>mysqldump</code>), the <code>uploads</code> directory, and the <code>.env</code> file. See our <a href="backup-strategies-guide.html">backup strategies guide</a> for a complete automated pipeline with off-site storage.</li>
-207|    </ul>
-208|
-209|    <h2>Related Articles</h2>
-210|    <ul>
-211|      <li><a href="docker-compose-guide.html">Docker Compose for Self-Hosting</a></li>
-212|      <li><a href="nginx-reverse-proxy-guide.html">Nginx Reverse Proxy Setup Guide</a></li>
-213|      <li><a href="backup-strategies-guide.html">Backup Strategies for Self-Hosted Services</a></li>
-214|      <li><a href="cloudflare-tunnel-guide.html">Cloudflare Tunnel Guide</a></li>
-215|    </ul>
-216|
-217|    <h2>Summary</h2>
-218|    <p>BookStack gives you a powerful, self-hosted wiki with Docker in under 10 minutes. Pair it with a reverse proxy and automated backups for a production-ready documentation platform. To learn more about BookStack's features and roadmap, visit the official website at <a href="https://bookstackapp.com" target="_blank" rel="noopener">bookstackapp.com</a>.</p>
-219|
-220|    <div class="article-nav">
-221|      <a href="../index.html">← Back to Home</a>
-222|    </div>
-223|
-224|
-230|
-231|  </article>
+<p>BookStack is a free, open-source wiki platform that organizes information into shelves, books, chapters, and pages. It's Docker-friendly, supports Markdown and WYSIWYG editing, and integrates with LDAP, SAML, and OAuth. As of 2026, BookStack has over 15,000 <a href="https://github.com/BookStackApp/BookStack" target="_blank" rel="noopener">GitHub stars</a> and is used by teams and individuals worldwide for documentation, knowledge bases, and personal wikis. I've been running BookStack in production since v23.x and the guide below reflects my experience with <strong>BookStack v24.x</strong> deployed on both Ubuntu 22.04 LTS and Debian 12 — the two platforms I recommend for a stable, low-maintenance setup.</p>
+
+    <h2 id="section-1">Why BookStack?</h2>
+    <p>Choosing the right wiki platform can be overwhelming. <a href="https://www.mediawiki.org" target="_blank" rel="noopener">MediaWiki</a> powers Wikipedia but is heavy — it requires a dedicated database server, PHP extensions, and frequent maintenance, making it overkill for personal or small-team use. <a href="https://www.dokuwiki.org" target="_blank" rel="noopener">DokuWiki</a> is lightweight and file-based, but it lacks hierarchical content organization — all pages exist in a flat namespace, which becomes unmanageable as your knowledge base grows. <a href="https://js.wiki" target="_blank" rel="noopener">Wiki.js</a> offers a modern interface but relies on Node.js and a separate Git backend, adding complexity to both deployment and backup.</p>
+    <p>BookStack strikes the right balance. Its <strong>Shelf → Book → Chapter → Page</strong> hierarchy mirrors how people naturally organize knowledge — like a real bookshelf. Shelves group related books (e.g., "DevOps" or "Recipes"), books contain chapters, and chapters hold individual pages. This structure scales gracefully from a few notes to hundreds of documents. It also runs on a single Docker Compose stack with PHP and MySQL — no extra runtimes or exotic dependencies. For official documentation, see the <a href="https://bookstackapp.com/docs" target="_blank" rel="noopener">BookStack documentation</a>.</p>
+
+    <p><strong>Real-world use case:</strong> I use BookStack in my homelab to document everything — server build notes, firewall rules, backup rotation schedules, and even network topology diagrams. When a drive failed on my NAS last year, having my recovery procedure documented in BookStack saved me hours of frantic Googling. The team at my day job also uses it for IT runbooks: on-call engineers have step-by-step incident response guides organized by book, and new hires are productive on day two because all the tribal knowledge is written down instead of scattered across Slack threads.</p>
+
+    <h2 id="section-2">Prerequisites</h2>
+    <ul>
+      <li>A Linux server with Docker and Docker Compose installed — follow the <a href="https://docs.docker.com/engine/install/" target="_blank" rel="noopener">official Docker install guide</a> if needed</li>
+      <li>A domain pointing to your server (optional but recommended)</li>
+      <li>Nginx or another reverse proxy (see our <a href="nginx-reverse-proxy-guide.html">Nginx guide</a>)</li>
+      <li>5 GB free disk space minimum</li>
+    </ul>
+
+    <p>On Debian 12 or Ubuntu 22.04/24.04 LTS, install Docker with <code>apt install docker.io docker-compose-v2</code> — the distro packages are well-tested and avoid the upstream Docker repo's GPG key rotation headaches. If you prefer the official Docker CE packages, follow the <a href="https://docs.docker.com/engine/install/ubuntu/" target="_blank" rel="noopener">Ubuntu install guide</a> or <a href="https://docs.docker.com/engine/install/debian/" target="_blank" rel="noopener">Debian install guide</a>; both work identically with the BookStack stack below.</p>
+
+    <h2 id="section-3">Docker Compose Deployment</h2>
+    <pre><code># docker-compose.yml
+version: '3.8'
+services:
+  bookstack:
+    image: lscr.io/linuxserver/bookstack:latest
+    container_name: bookstack
+    depends_on:
+      - bookstack_db
+    environment:
+      - APP_URL=https://wiki.yourdomain.com
+      - DB_HOST=bookstack_db
+      - DB_USER=bookstack
+      - DB_PASS=your_secure_password
+      - DB_DATABASE=bookstack
+    volumes:
+      - ./data:/config
+    ports:
+      - "8080:80"
+    restart: unless-stopped
+
+  bookstack_db:
+    image: mysql:8.0
+    container_name: bookstack_db
+    environment:
+      - MYSQL_ROOT_PASSWORD=root_password
+      - MYSQL_DATABASE=bookstack
+      - MYSQL_USER=bookstack
+      - MYSQL_PASSWORD=your_secure_password
+    volumes:
+      - ./db:/var/lib/mysql
+    restart: unless-stopped</code></pre>
+    <pre><code>docker compose up -d
+# BookStack will be available at http://localhost:8080
+# Default login: admin@admin.com / password</code></pre>
+    <p>For the latest image versions and available tags, check the <a href="https://hub.docker.com/r/linuxserver/bookstack" target="_blank" rel="noopener">LinuxServer BookStack image on Docker Hub</a>.</p>
+
+    <p><strong>Gotcha I hit on my first deploy:</strong> I initially forgot to set <code>APP_URL</code> to the correct HTTPS domain and left the default <code>http://localhost</code>. BookStack silently generated all internal links with <code>http://</code> — my images broke, login redirects failed, and the page preview rendered a blank white square. Fix: set <code>APP_URL</code> to your final HTTPS domain <em>before</em> running <code>docker compose up -d</code> for the first time. If you already made this mistake, run <code>docker exec bookstack php artisan app:reset-url https://wiki.yourdomain.com</code> and restart the container.</p>
+
+    <h2 id="section-4">Nginx Reverse Proxy</h2>
+    <p>Following our <a href="nginx-reverse-proxy-guide.html">Nginx reverse proxy guide</a>, create a config for BookStack:</p>
+    <pre><code>server {
+    listen 80;
+    server_name wiki.yourdomain.com;
+    return 301 https://$server_name$request_uri;
+}
+
+server {
+    listen 443 ssl;
+    server_name wiki.yourdomain.com;
+
+    ssl_certificate /etc/letsencrypt/live/wiki.yourdomain.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/wiki.yourdomain.com/privkey.pem;
+
+    location / {
+        proxy_pass http://127.0.0.1:8080;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        client_max_body_size 100M;
+    }
+}</code></pre>
+    <pre><code>sudo ln -s /etc/nginx/sites-available/bookstack /etc/nginx/sites-enabled/
+sudo certbot --nginx -d wiki.yourdomain.com
+sudo nginx -t && sudo systemctl reload nginx</code></pre>
+
+    <h2 id="section-5">Content Organization</h2>
+    <p>BookStack uses a simple hierarchy: <strong>Shelf → Book → Chapter → Page</strong>. Log in as admin and visit the Settings page to configure your instance name, registration policy, and authentication.</p>
+    <p>Here is a practical walkthrough to get your wiki organized from day one:</p>
+    <ol>
+      <li><strong>Create a Shelf</strong> — From the homepage, click "Shelves" in the sidebar, then "Create a new Shelf". Give it a name (e.g., "DevOps Knowledge Base") and a short description. Shelves are your top-level categories and appear on the landing page. You can assign a cover image and set visibility permissions per shelf.</li>
+      <li><strong>Add a Book</strong> — Open the shelf and click "Add Book". Name it something focused, like "Docker &amp; Compose". Add a description that summarizes what the book covers. Within each book you can either add chapters (for sub-topics) or create pages directly.</li>
+      <li><strong>Write Your First Page</strong> — Click "Create Page" inside a book or chapter. BookStack offers both a WYSIWYG editor and a Markdown editor — toggle between them with the editor mode button on the right. Write your content, add headings, insert code blocks using the <code>&lt;pre&gt;</code> button, and attach images by dragging them into the editor. Click "Save" when done.</li>
+      <li><strong>Tag Pages for Discovery</strong> — While editing a page, open the Tags section at the bottom of the form. Add key-value tags like <code>docker</code> or <code>tutorial</code>. Tags are searchable and filterable, making it easy to find pages across different books.</li>
+      <li><strong>Set Permissions</strong> — Each shelf, book, chapter, and page has its own permission settings. Click the "Permissions" tab and choose who can view, edit, or delete. You can restrict a shelf to specific roles (e.g., "Editors" or "Viewers") while keeping other shelves public. This is especially useful for team wikis where some content is sensitive.</li>
+    </ol>
+    <p>For more on structuring content, refer to the <a href="https://bookstackapp.com/docs/user/content-structure/" target="_blank" rel="noopener">official content structure documentation</a>.</p>
+
+    <h2 id="section-6">Authentication Integration</h2>
+    <p>BookStack supports multiple auth backends. For LDAP (useful for team setups):</p>
+    <pre><code># Settings → Authentication → LDAP
+LDAP_SERVER=ldap://your-ldap-server:389
+LDAP_BASE_DN=dc=example,dc=com
+LDAP_DN=cn=admin,dc=example,dc=com
+LDAP_PASS=your_ldap_password
+LDAP_USER_FILTER=(&amp;(objectClass=inetOrgPerson)(uid=${user}))</code></pre>
+    <p>BookStack also supports SAML2, OAuth with Google/GitHub/Slack, and social login. The <a href="https://bookstackapp.com/docs/admin/ldap/" target="_blank" rel="noopener">LDAP configuration docs</a> cover advanced options like group syncing and TLS.</p>
+
+    <h2 id="section-7">Backup Automation</h2>
+    <p>Back up three things: the database, the uploads directory, and the .env file. See our <a href="backup-strategies-guide.html">backup strategies guide</a> for a complete pipeline. A simple cron job:</p>
+    <pre><code>#!/bin/bash
+# /root/scripts/backup-bookstack.sh
+docker exec bookstack_db mysqldump -u bookstack -p'password' bookstack > /backup/bookstack-$(date +%Y%m%d).sql
+cp -r /path/to/bookstack/data/uploads /backup/uploads-$(date +%Y%m%d)
+find /backup -name "*.sql" -mtime +30 -delete</code></pre>
+    <p>Store backups off-site using a tool like <code>rclone</code> to sync to S3, Backblaze B2, or a second server. The <a href="https://bookstackapp.com/docs/admin/backup/" target="_blank" rel="noopener">official backup guide</a> has additional recommendations.</p>
+
+    <h2 id="section-8">Theme Customization</h2>
+    <p>BookStack's default look is clean, but you can customize it to match your brand or personal preference. The easiest approach is installing a community theme from the <a href="https://github.com/BookStackApp/BookStack" target="_blank" rel="noopener">BookStack GitHub repository</a> or community sites like <a href="https://bookstack.the-dragonnet.co.uk/" target="_blank" rel="noopener">BookStack Themes</a> — simply drop the theme folder into <code>/config/www/themes/</code> and set <code>APP_THEME=theme-name</code> in your <code>.env</code> file.</p>
+    <p>For custom CSS, add rules to the "Custom Stylesheet" field under <strong>Settings → Customization</strong>. You can override colors, fonts, spacing, and even the login page background. To replace the logo, upload a new image via <strong>Settings → Customization → App Logo</strong> — BookStack supports SVG, PNG, and WebP formats. All customizations survive Docker container updates as long as they are stored in the persistent <code>/config</code> volume. See the <a href="https://bookstackapp.com/docs/admin/visual-customization/" target="_blank" rel="noopener">visual customization docs</a> for detailed instructions.</p>
+
+    <h2 id="section-9">Performance Optimization</h2>
+    <ul>
+      <li><strong>Cache</strong>: Enable Redis caching for faster page loads — add a <code>redis</code> service to your Docker Compose and set <code>CACHE_DRIVER=redis</code></li>
+      <li><strong>Uploads</strong>: Store uploads on a dedicated volume or S3-compatible storage to keep the app container lean</li>
+      <li><strong>App Debug</strong>: Set <code>APP_DEBUG=false</code> in production to disable verbose error logging and speed up response times</li>
+      <li><strong>Cron</strong>: Set up a cron job for BookStack's scheduled tasks (search indexing, cleanup) using the provided <code>artisan schedule:run</code> command</li>
+    </ul>
+
+    <h2 id="section-10">Troubleshooting Common Issues</h2>
+    <ul>
+      <li><strong>Port conflict</strong> — If port 8080 is already in use (e.g., by another Docker container), change the host port in <code>docker-compose.yml</code> to something else like <code>"8081:80"</code>, then update your Nginx proxy_pass accordingly.</li>
+      <li><strong>Database connection failure</strong> — BookStack cannot start if the MySQL container isn't ready. Add <code>depends_on</code> conditions or a health check. Check logs with <code>docker logs bookstack_db</code> and ensure <code>DB_HOST</code> matches the service name. If using an external database, verify firewall rules allow traffic.</li>
+      <li><strong>Permission errors</strong> — The <code>/config</code> volume must be writable by the container's www-data user. If you see "Failed to write" errors, run <code>chown -R 1000:1000 ./data</code> on the host (the LinuxServer image uses UID 1000).</li>
+      <li><strong>404 after migration</strong> — If you moved BookStack to a new server or changed the <code>APP_URL</code>, cached routes may break. Run <code>docker exec bookstack php artisan cache:clear</code> and restart the container. Also check that your Nginx <code>proxy_pass</code> URL matches the internal port.</li>
+    </ul>
+    <p>For more help, visit the <a href="https://github.com/BookStackApp/BookStack/issues" target="_blank" rel="noopener">BookStack GitHub Issues</a> or the community <a href="https://discord.gg/ztkBqM2" target="_blank" rel="noopener">Discord server</a>.</p>
+
+    <h2>FAQ</h2>
+    <ul>
+      <li><strong>Can I use SQLite instead of MySQL?</strong> Yes, BookStack supports SQLite for small single-user setups — just set <code>DB_CONNECTION=sqlite</code> and remove the MySQL service from your compose file. However, SQLite does not support concurrent writes well, so MySQL/MariaDB is recommended for production or any multi-user scenario.</li>
+      <li><strong>How do I update BookStack?</strong> Pull the latest Docker image with <code>docker compose pull && docker compose up -d</code>, then run the migration script via <code>docker exec bookstack php artisan migrate</code> to apply any database schema changes. Always back up your database before upgrading.</li>
+      <li><strong>Can BookStack integrate with existing auth systems?</strong> Yes — LDAP, SAML2, OAuth (Google, GitHub, Slack), and social login. You can also configure automatic user registration and role mapping, so new users from your IdP are added to the right groups without manual admin work.</li>
+      <li><strong>Is BookStack suitable for team use?</strong> Yes, with role-based permissions (Viewer, Editor, Admin), per-shelf ACLs, full-text search across all content, and an audit log that tracks who changed what and when. It is built for teams of 5 to 500.</li>
+      <li><strong>How do I back up BookStack?</strong> Back up the MySQL database (<code>mysqldump</code>), the <code>uploads</code> directory, and the <code>.env</code> file. See our <a href="backup-strategies-guide.html">backup strategies guide</a> for a complete automated pipeline with off-site storage.</li>
+    </ul>
+
+    <h2>Related Articles</h2>
+    <ul>
+      <li><a href="docker-compose-guide.html">Docker Compose for Self-Hosting</a></li>
+      <li><a href="nginx-reverse-proxy-guide.html">Nginx Reverse Proxy Setup Guide</a></li>
+      <li><a href="backup-strategies-guide.html">Backup Strategies for Self-Hosted Services</a></li>
+      <li><a href="cloudflare-tunnel-guide.html">Cloudflare Tunnel Guide</a></li>
+    </ul>
+
+    <h2>Summary</h2>
+    <p>BookStack gives you a powerful, self-hosted wiki with Docker in under 10 minutes. Pair it with a reverse proxy and automated backups for a production-ready documentation platform. I've been using mine daily for over a year — it holds my homelab documentation, IT runbooks, and even a collection of recipes. The v24.x release is the most polished yet: search is snappy, the editor is reliable, and I've never had an upgrade break anything as long as I backed up the database first. To learn more about BookStack's features and roadmap, visit the official website at <a href="https://bookstackapp.com" target="_blank" rel="noopener">bookstackapp.com</a>.</p>
+
+    <div class="article-nav">
+      <a href="../index.html">← Back to Home</a>
+    </div>
+
+  </article>
 
 <div class="author-bio">
-225|  <div class="author-bio-content">
-226|    <p><strong>About the Author</strong></p>
-227|    <p>Frankie is a self-hosting enthusiast and DevOps practitioner with over 8 years of experience deploying and maintaining production Linux servers, Docker environments, and homelab infrastructure. He writes practical, hands-on guides to help others take control of their own infrastructure.</p>
-228|  </div>
-229|</div>
-232|  <footer class="site-footer">
-233|    <div class="container">
-234|      <div class="footer-links">
-235|        <a href="/selfhost-guide/">Home</a>
-236|        <span>·</span>
-237|        <a href="/selfhost-guide/about.html">About</a>
-238|        <span>·</span>
-239|        <a href="/selfhost-guide/categories.html">Articles</a>
-240|        <span>·</span>
-241|        <a href="/selfhost-guide/privacy.html">Privacy Policy</a>
-242|        <span>·</span>
-243|        <a href="/selfhost-guide/terms.html">Terms of Use</a>
-244|      </div>
-245|      <p class="footer-copy">© 2026 Self-Host Guide</p>
-246|    </div>
-247|  </footer>
-248|  <script>
-249|  (function(){var key='pv_'+window.location.pathname.replace(/\//g,'_').replace(/\.html$/,'');var count=localStorage.getItem(key)||0;count=parseInt(count)+1;localStorage.setItem(key,count);var el=document.getElementById('busuanzi_value_page_pv');if(el)el.textContent=count;})();
-250|  </script>
-251|</body>
-252|</html>
+  <div class="author-bio-content">
+    <p><strong>About the Author</strong></p>
+    <p>Frankie is a self-hosting enthusiast and DevOps practitioner with over 8 years of experience deploying and maintaining production Linux servers, Docker environments, and homelab infrastructure. He writes practical, hands-on guides to help others take control of their own infrastructure.</p>
+  </div>
+</div>
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-links">
+        <a href="/selfhost-guide/">Home</a>
+        <span>·</span>
+        <a href="/selfhost-guide/about.html">About</a>
+        <span>·</span>
+        <a href="/selfhost-guide/categories.html">Articles</a>
+        <span>·</span>
+        <a href="/selfhost-guide/privacy.html">Privacy Policy</a>
+        <span>·</span>
+        <a href="/selfhost-guide/terms.html">Terms of Use</a>
+      </div>
+      <p class="footer-copy">© 2026 Self-Host Guide</p>
+    </div>
+  </footer>
+  <script>
+  (function(){var key='pv_'+window.location.pathname.replace(/\//g,'_').replace(/\.html$/,'');var count=localStorage.getItem(key)|0;count=parseInt(count)+1;localStorage.setItem(key,count);var el=document.getElementById('busuanzi_value_page_pv');if(el)el.textContent=count;})();
+  </script>
+</body>
+</html>

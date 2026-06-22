@@ -1,400 +1,414 @@
-1|1|<!DOCTYPE html>
-2|2|<html lang="en">
-3|3|<head>
-4|4|  <meta charset="UTF-8">
-5|5|  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-6|6|  <title>Nginx Reverse Proxy Setup Guide for Self-Hosted Applications — Self-Host Guide</title>
-7|7|  <meta name="description" content="Complete Nginx reverse proxy guide: what is a reverse proxy, installation on Ubuntu/Debian, basic and multi-site configuration, SSL with Certbot, WebSocket proxying, and performance tuning for self-hosted apps.">
-8|8|  <link rel="canonical" href="https://fulankizao.github.io/selfhost-guide/articles/nginx-reverse-proxy-guide.html">
-9|9|  nginx-reverse-proxy-guide.html">
-10|10|  <link rel="stylesheet" href="../style.css">
-11|11|  <link rel="icon" type="image/svg+xml" href="../favicon.svg">
-12|12|  <meta property="og:title" content="Nginx Reverse Proxy Setup Guide for Self-Hosted Applications">
-13|13|  <meta property="og:description" content="Complete Nginx reverse proxy guide: what is a reverse proxy, installation on Ubuntu/Debian, basic and multi-site configuration, SSL with Certbot, WebSocket proxying, and performance tuning for self-hosted apps.">
-14|14|  <meta property="og:type" content="article">
-15|15|  <meta property="og:site_name" content="Self-Host Guide">
-16|16|  <meta name="twitter:card" content="summary">
-17|17|  <script type="application/ld+json">
-18|18|  {
-19|19|    "@context": "https://schema.org",
-20|20|    "@type": "Article",
-21|21|    "headline": "Nginx Reverse Proxy Setup Guide for Self-Hosted Applications",
-22|22|    "datePublished": "2026-06-16",
-23|23|    "dateModified": "2026-06-16",
-24|24|    "author": {"@type": "Person", "name": "F Frankie"}
-25|25|  }
-26|26|  </script>
-27|27|  <script type="application/ld+json">
-28|28|  {
-29|29|    "@context": "https://schema.org",
-30|30|    "@type": "BreadcrumbList",
-31|31|    "itemListElement": [
-32|32|      {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://fulankizao.github.io/selfhost-guide/"},
-33|33|      {"@type": "ListItem", "position": 2, "name": "Nginx Reverse Proxy Setup Guide for Self-Hosted Applications"}
-34|34|    ]
-35|35|  }
-36|36|  </script>
-37|37|  <script type="application/ld+json">
-38|38|  {
-39|39|    "@context": "https://schema.org",
-40|40|    "@type": "FAQPage",
-41|41|    "mainEntity": [
-42|42|      {
-43|43|        "@type": "Question",
-44|44|        "name": "What is an Nginx reverse proxy and why use it?",
-45|45|        "acceptedAnswer": {
-46|46|          "@type": "Answer",
-47|47|          "text": "An Nginx reverse proxy sits in front of your backend servers and forwards client requests to the appropriate service. It provides port unification (serving multiple apps on ports 80/443), SSL termination, load balancing, caching, and security features like rate limiting and access control — all in one place."
-48|48|        }
-49|49|      },
-50|50|      {
-51|51|        "@type": "Question",
-52|52|        "name": "How do I set up multiple websites with one Nginx server?",
-53|53|        "acceptedAnswer": {
-54|54|          "@type": "Answer",
-55|55|          "text": "Create a separate config file for each site under /etc/nginx/sites-available/, each with its own server_name and proxy_pass directives. Then enable them by creating symlinks in /etc/nginx/sites-enabled/ and reload Nginx. Nginx matches incoming requests to the correct server block by the Host header."
-56|56|        }
-57|57|      },
-58|58|      {
-59|59|        "@type": "Question",
-60|60|        "name": "Is Nginx better than Apache for a reverse proxy?",
-61|61|        "acceptedAnswer": {
-62|62|          "@type": "Answer",
-63|63|          "text": "For reverse proxy workloads, Nginx is generally preferred because of its event-driven, asynchronous architecture that handles many concurrent connections with low memory usage. Apache uses a process/thread-based model that can consume more resources under heavy load. Nginx serves over 30% of all active websites, the majority of which use it as a reverse proxy or load balancer."
-64|64|        }
-65|65|      },
-66|66|      {
-67|67|        "@type": "Question",
-68|68|        "name": "How do I enable HTTPS with Nginx for free?",
-69|69|        "acceptedAnswer": {
-70|70|          "@type": "Answer",
-71|71|          "text": "Use Certbot from Let's Encrypt. Install it with 'sudo apt install certbot python3-certbot-nginx', then run 'sudo certbot --nginx -d yourdomain.com'. Certbot automatically obtains certificates, configures SSL in your Nginx config, and sets up auto-renewal via systemd timer."
-72|72|        }
-73|73|      },
-74|74|      {
-75|75|        "@type": "Question",
-76|76|        "name": "How do I configure Nginx to proxy WebSocket connections?",
-77|77|        "acceptedAnswer": {
-78|78|          "@type": "Answer",
-79|79|          "text": "Add these directives to your location block: proxy_http_version 1.1; proxy_set_header Upgrade $http_upgrade; proxy_set_header Connection 'upgrade';. WebSocket connections require HTTP/1.1 and the Upgrade header handshake. This works for apps like Jupyter, Grafana live updates, and VS Code Server."
-80|80|        }
-81|81|      }
-82|]
-83|}
-84|</script>
-85|<script type="application/ld+json">
-86|{
-87|"@context": "https://schema.org",
-88|"@type": "HowTo",
-89|"name": "Nginx Reverse Proxy Setup Guide for Self-Hosted Applications",
-90|"description": "Complete Nginx reverse proxy guide: what is a reverse proxy, installation on Ubuntu/Debian, basic and multi-site configuration, SSL with Certbot, WebSocket proxying, and performance tuning for self-hosted apps.",
-91|"step": [
-92|  {"@type": "HowToStep", "name": "Install Nginx", "text": "Install Nginx on Ubuntu/Debian using apt: sudo apt update && sudo apt install nginx -y. Enable and start the Nginx service with systemctl enable --now nginx."},
-93|  {"@type": "HowToStep", "name": "Configure Basic Reverse Proxy", "text": "Create a server block in /etc/nginx/sites-available/ with proxy_pass directing traffic to your backend application, setting appropriate proxy headers."},
-94|  {"@type": "HowToStep", "name": "Set Up Multi-Site Configuration", "text": "Create separate config files for each site under sites-available/, each with its own server_name and proxy_pass, then enable them via symlinks in sites-enabled/."},
-95|  {"@type": "HowToStep", "name": "Secure with SSL via Certbot", "text": "Install Certbot and obtain free Let's Encrypt SSL certificates: sudo certbot --nginx -d yourdomain.com. Certbot auto-configures HTTPS and sets up renewal."},
-96|  {"@type": "HowToStep", "name": "Configure WebSocket Proxy", "text": "Add proxy_http_version 1.1, proxy_set_header Upgrade, and proxy_set_header Connection directives to support WebSocket connections for apps like Jupyter and Grafana."},
-97|  {"@type": "HowToStep", "name": "Tune Performance", "text": "Optimize Nginx performance with worker_processes auto, worker_connections 1024, gzip compression, client_max_body_size, and sendfile/buffering settings."}
-98|]
-99|}
-100|</script>
-101|</head>
-102|<body>
-103|<header class="article-header">
-104|<div class="container">
-105|  <span class="tag tag-web">Web Service</span>
-106|  <h1>Nginx Reverse Proxy Setup Guide for Self-Hosted Applications</h1>
-107|91|      <div class="meta">2026-06-16 · 12 min read · <span id="busuanzi_value_page_pv"></span> views</div>
-108|92|    </div>
-109|93|  </header>
-110|94|
-111|95|  <nav class="nav-bar">
-112|96|    <div class="container">
-113|97|      <a href="/selfhost-guide/">← Back to Home</a>
-114|98|    </div>
-115|99|  </nav>
-116|100|
-117|101|  <article class="article-content container">
-118|102|
-119|103|    <p>If you self-host applications — a personal wiki, a media server, a dashboard, or a web API — you need a way to serve them all on the same machine using ports 80 and 443 without conflicts. That is exactly what Nginx reverse proxy does. This guide walks through everything from understanding the concept to tuning a production-grade setup.</p>
-120|104|
-121|105|    <p>According to the <a href="https://news.netcraft.com/archives/2025/03/24/march-2025-web-server-survey.html" target="_blank" rel="noopener">Netcraft March 2025 Web Server Survey</a>, Nginx serves over 30% of all active websites and holds an even larger share among the top 10,000 busiest sites — over 40%. When combined with its role as a reverse proxy and load balancer in front of application servers, Nginx touches the majority of internet traffic. This makes it the single most important tool for any self-hoster to understand.</p>
-122|106|
-123|107|    <h2>1. What Is a Reverse Proxy?</h2>
-124|108|    <p>A reverse proxy sits in front of your backend servers and forwards client requests to the appropriate service. Unlike a forward proxy (used by clients to reach the internet), a <strong>reverse proxy</strong> manages incoming traffic on behalf of your servers.</p>
-125|109|    <p>Key benefits:</p>
-126|110|    <ul>
-127|111|      <li><strong>Port unification</strong> — Serve multiple applications (running on different ports) on standard 80/443.</li>
-128|112|      <li><strong>SSL termination</strong> — Handle TLS certificates in one place instead of configuring each app individually.</li>
-129|113|      <li><strong>Load balancing</strong> — Distribute traffic across multiple backend instances.</li>
-130|114|      <li><strong>Security</strong> — Hide internal IPs and port layouts. Apply rate limiting, access control, and request filtering centrally.</li>
-131|115|      <li><strong>Caching</strong> — Reduce backend load by serving cached static assets directly from Nginx.</li>
-132|116|    </ul>
-133|117|    <p>According to the <a href="https://nginx.org/en/docs/" target="_blank" rel="noopener">Nginx official documentation</a>, the event-driven architecture allows Nginx to handle tens of thousands of simultaneous connections with predictable memory usage — a key reason it serves over 30% of all active websites, as confirmed by the <a href="https://news.netcraft.com/archives/2025/03/24/march-2025-web-server-survey.html" target="_blank" rel="noopener">Netcraft March 2025 Web Server Survey</a>.</p>
-134|118|
-135|119|    <h2>2. Installing Nginx</h2>
-136|120|    <p>On Ubuntu or Debian-based systems:</p>
-137|121|    <pre><code>sudo apt update
-138|122|sudo apt install nginx -y
-139|123|
-140|124|# Check the service status
-141|125|sudo systemctl status nginx
-142|126|
-143|127|# Enable auto-start on boot (enabled by default on Ubuntu)
-144|128|sudo systemctl enable nginx</code></pre>
-145|129|    <p>Once installed, verify Nginx is running by visiting <code>http://&lt;your-server-ip&gt;</code>. You should see the default Nginx welcome page.</p>
-146|130|    <p>On RHEL / CentOS / Fedora:</p>
-147|131|    <pre><code>sudo dnf install nginx -y
-148|132|sudo systemctl start nginx
-149|133|sudo systemctl enable nginx</code></pre>
-150|134|    <p>If you have a firewall enabled, allow HTTP and HTTPS traffic:</p>
-151|135|    <pre><code>sudo ufw allow 'Nginx Full'
-152|136|# Or with firewalld:
-153|137|sudo firewall-cmd --permanent --add-service=http --add-service=https
-154|138|sudo firewall-cmd --reload</code></pre>
-155|139|
-156|140|    <h2>3. Basic Reverse Proxy Configuration</h2>
-157|141|    <p>Nginx configuration files live in <code>/etc/nginx/</code>. The standard approach is to create a separate file per site under <code>/etc/nginx/sites-available/</code> and link it to <code>/etc/nginx/sites-enabled/</code>.</p>
-158|142|    <p>Suppose you have a web application running on <code>localhost:3000</code> (a Node.js app, for example). Create the site config:</p>
-159|143|    <pre><code>sudo nano /etc/nginx/sites-available/myapp</code></pre>
-160|144|    <p>Add the following:</p>
-161|145|    <pre><code>server {
-162|146|    listen 80;
-163|147|    server_name myapp.example.com;
-164|148|
-165|149|    location / {
-166|150|        proxy_pass http://127.0.0.1:3000;
-167|151|        proxy_set_header Host $host;
-168|152|        proxy_set_header X-Real-IP $remote_addr;
-169|153|        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-170|154|        proxy_set_header X-Forwarded-Proto $scheme;
-171|155|    }
-172|156|}</code></pre>
-173|157|    <p>Enable the site and reload Nginx:</p>
-174|158|    <pre><code>sudo ln -s /etc/nginx/sites-available/myapp /etc/nginx/sites-enabled/
-175|159|sudo nginx -t        # Test configuration syntax
-176|160|sudo systemctl reload nginx</code></pre>
-177|161|    <p>When a request arrives at <code>http://myapp.example.com</code>, Nginx forwards it to <code>127.0.0.1:3000</code> and passes along the original hostname, client IP, and protocol information so your backend app can use them.</p>
-178|162|
-179|163|    <h3>Important Headers Explained</h3>
-180|164|    <ul>
-181|165|      <li><code>Host $host</code> — Passes the original hostname so the backend knows which virtual host was requested.</li>
-182|166|      <li><code>X-Real-IP $remote_addr</code> — Sends the actual client IP instead of Nginx's IP.</li>
-183|167|      <li><code>X-Forwarded-For</code> — Chains proxy IPs if you have multiple proxy layers.</li>
-184|168|      <li><code>X-Forwarded-Proto</code> — Tells the backend whether the original request was HTTP or HTTPS.</li>
-185|169|    </ul>
-186|170|
-187|171|    <h2>4. Multi-Site Configuration</h2>
-188|172|    <p>Running multiple self-hosted apps on one server is the most common use case for Nginx reverse proxy. Create a separate config file for each service and enable them.</p>
-189|173|    <p>Example — two apps on the same server:</p>
-190|174|    <pre><code># /etc/nginx/sites-available/wiki
-191|175|server {
-192|176|    listen 80;
-193|177|    server_name wiki.example.com;
-194|178|
-195|179|    location / {
-196|180|        proxy_pass http://127.0.0.1:8080;
-197|181|        proxy_set_header Host $host;
-198|182|        proxy_set_header X-Real-IP $remote_addr;
-199|183|        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-200|184|        proxy_set_header X-Forwarded-Proto $scheme;
-201|185|    }
-202|186|}
-203|187|
-204|188|# /etc/nginx/sites-available/dashboard
-205|189|server {
-206|190|    listen 80;
-207|191|    server_name dash.example.com;
-208|192|
-209|193|    location / {
-210|194|        proxy_pass http://127.0.0.1:9090;
-211|195|        proxy_set_header Host $host;
-212|196|        proxy_set_header X-Real-IP $remote_addr;
-213|197|        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-214|198|        proxy_set_header X-Forwarded-Proto $scheme;
-215|199|    }
-216|200|}</code></pre>
-217|201|    <p>Enable both and reload:</p>
-218|202|    <pre><code>sudo ln -s /etc/nginx/sites-available/wiki /etc/nginx/sites-enabled/
-219|203|sudo ln -s /etc/nginx/sites-available/dashboard /etc/nginx/sites-enabled/
-220|204|sudo nginx -t && sudo systemctl reload nginx</code></pre>
-221|205|    <p>Nginx selects the matching <code>server_name</code> for each incoming request and proxies to the correct backend port — no port numbers needed in the user's browser.</p>
-222|206|
-223|207|    <h2>5. SSL with Certbot (Let's Encrypt)</h2>
-224|208|    <p>Free TLS certificates from Let's Encrypt make HTTPS easy. Install Certbot:</p>
-225|209|    <pre><code>sudo apt install certbot python3-certbot-nginx -y</code></pre>
-226|210|    <p>Obtain and auto-configure SSL for your domain:</p>
-227|211|    <pre><code>sudo certbot --nginx -d myapp.example.com -d wiki.example.com -d dash.example.com</code></pre>
-228|212|    <p>Certbot automatically modifies your Nginx configs to redirect HTTP to HTTPS and adds the SSL certificate paths. The result looks like this:</p>
-229|213|    <pre><code>server {
-230|214|    listen 443 ssl;
-231|215|    server_name myapp.example.com;
-232|216|
-233|217|    ssl_certificate /etc/letsencrypt/live/myapp.example.com/fullchain.pem;
-234|218|    ssl_certificate_key /etc/letsencrypt/live/myapp.example.com/privkey.pem;
-235|219|    include /etc/letsencrypt/options-ssl-nginx.conf;
-236|220|    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
-237|221|
-238|222|    location / {
-239|223|        proxy_pass http://127.0.0.1:3000;
-240|224|        proxy_set_header Host $host;
-241|225|        proxy_set_header X-Real-IP $remote_addr;
-242|226|        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-243|227|        proxy_set_header X-Forwarded-Proto $scheme;
-244|228|    }
-245|229|}
-246|230|
-247|231|server {
-248|232|    listen 80;
-249|233|    server_name myapp.example.com;
-250|234|    return 301 https://$server_name$request_uri;
-251|235|}</code></pre>
-252|236|    <p>Certificates auto-renew via a systemd timer. Test renewal with:</p>
-253|237|    <pre><code>sudo certbot renew --dry-run</code></pre>
-254|238|
-255|239|    <h2>6. WebSocket Proxy</h2>
-256|240|    <p>Many self-hosted apps use WebSockets for real-time features — live dashboards, chat applications, collaborative editors, and terminal emulators. WebSocket proxying requires two additional directives:</p>
-257|241|    <pre><code>location / {
-258|242|    proxy_pass http://127.0.0.1:3000;
-259|243|    proxy_http_version 1.1;
-260|244|    proxy_set_header Upgrade $http_upgrade;
-261|245|    proxy_set_header Connection "upgrade";
-262|246|    proxy_set_header Host $host;
-263|247|    proxy_set_header X-Real-IP $remote_addr;
-264|248|    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-265|249|    proxy_set_header X-Forwarded-Proto $scheme;
-266|250|}</code></pre>
-267|251|    <p>The key difference from a regular proxy block:</p>
-268|252|    <ul>
-269|253|      <li><code>proxy_http_version 1.1</code> — WebSockets require HTTP/1.1; the default proxy uses HTTP/1.0.</li>
-270|254|      <li><code>proxy_set_header Upgrade $http_upgrade</code> — Passes the <code>Upgrade</code> header that signals the WebSocket handshake.</li>
-271|255|      <li><code>proxy_set_header Connection "upgrade"</code> — Keeps the connection alive and upgraded.</li>
-272|256|    </ul>
-273|257|    <p>This configuration works for popular WebSocket-based applications like <strong>Jupyter Notebook</strong> (proxied on port 8888), <strong>Grafana</strong> live updates (port 3000), and <strong>VS Code Server</strong> (port 8443).</p>
-274|258|
-275|259|    <h2>7. Performance Tuning</h2>
-276|260|    <p>A few Nginx tweaks can significantly improve throughput for proxied applications.</p>
-277|261|
-278|262|    <h3>7.1 Buffer Settings</h3>
-279|263|    <pre><code>proxy_buffering on;
-280|264|proxy_buffers 16 32k;
-281|265|proxy_buffer_size 4k;
-282|266|proxy_busy_buffers_size 64k;</code></pre>
-283|267|    <p>These settings control how Nginx buffers responses from the backend. Increase buffer sizes if your application sends large responses or you notice frequent proxy timeouts.</p>
-284|268|
-285|269|    <h3>7.2 Timeouts</h3>
-286|270|    <pre><code>proxy_connect_timeout 30s;
-287|271|proxy_send_timeout 60s;
-288|272|proxy_read_timeout 60s;</code></pre>
-289|273|    <p>Adjust timeouts based on your app's response patterns. Long-polling applications or slow admin panels may need higher <code>proxy_read_timeout</code> values.</p>
-290|274|
-291|275|    <h3>7.3 Client Body Size</h3>
-292|276|    <pre><code>client_max_body_size 50M;</code></pre>
-293|277|    <p>If you run a file upload service (Nextcloud, a media server, or a pastebin), increase this limit. The default is 1 MB, which will reject most uploads.</p>
-294|278|
-295|279|    <h3>7.4 Static Asset Caching</h3>
-296|280|    <p>For applications that serve static files through your backend, offload them directly to Nginx for better performance:</p>
-297|281|    <pre><code>location /static/ {
-298|282|    alias /var/www/myapp/static/;
-299|283|    expires 7d;
-300|284|    add_header Cache-Control "public, immutable";
-301|285|}
-302|286|
-303|287|location / {
-304|288|    proxy_pass http://127.0.0.1:3000;
-305|289|    # ... standard proxy headers
-306|290|}</code></pre>
-307|291|    <p>This avoids hitting the application process for static assets and adds a 7-day cache header for browsers.</p>
-308|292|
-309|293|    <h3>7.5 Gzip Compression</h3>
-310|294|    <p>Enable gzip in <code>/etc/nginx/nginx.conf</code>:</p>
-311|295|    <pre><code>gzip on;
-312|296|gzip_types text/plain text/css application/json application/javascript text/xml application/xml+rss text/javascript;
-313|297|gzip_min_length 1000;
-314|298|gzip_proxied any;</code></pre>
-315|299|    <p>Compression reduces bandwidth usage by up to 70% for text-based responses (JSON APIs, HTML pages, JavaScript bundles).</p>
-316|300|
-317|301|    <h3>7.6 Worker Process Tuning</h3>
-318|302|    <pre><code># In /etc/nginx/nginx.conf (outside of the http block)
-319|303|worker_processes auto;
-320|304|events {
-321|305|    worker_connections 1024;
-322|306|    multi_accept on;
-323|307|    use epoll;
-324|308|}</code></pre>
-325|309|    <p><code>worker_processes auto</code> sets it to match your CPU core count. <code>worker_connections</code> controls how many simultaneous connections each worker can handle. On a modern VPS with 4 cores, this translates to roughly 4,000 concurrent connections.</p>
-326|310|
-327|311|    <h2>8. Common Issues and Troubleshooting</h2>
-328|312|
-329|313|    <h3>502 Bad Gateway</h3>
-330|314|    <p>Nginx cannot reach the backend. Check:</p>
-331|315|    <ul>
-332|316|      <li>Is the backend service running? <code>sudo systemctl status myapp</code></li>
-333|317|      <li>Is the port correct in <code>proxy_pass</code>?</li>
-334|318|      <li>Is the backend bound to <code>127.0.0.1</code> (not <code>0.0.0.0</code>)?</li>
-335|319|    </ul>
-336|320|
-337|321|    <h3>413 Request Entity Too Large</h3>
-338|322|    <p>Increase <code>client_max_body_size</code> in the server or location block.</p>
-339|323|
-340|324|    <h3>WebSocket Connection Fails</h3>
-341|325|    <p>Make sure <code>proxy_http_version 1.1</code> and both <code>Upgrade</code>/<code>Connection</code> headers are set. Verify the backend supports WebSockets and is not blocking the upgrade handshake.</p>
-342|326|
-343|327|    <h3>SSL Certificate Not Found</h3>
-344|328|    <p>After obtaining certificates with Certbot, confirm the paths in <code>ssl_certificate</code> exist under <code>/etc/letsencrypt/live/</code>. If DNS records changed after obtaining the cert, re-run <code>sudo certbot --nginx -d yourdomain.com</code>.</p>
-345|329|
-346|330|    <h3>Wrong Client IP in Logs</h3>
-347|331|    <p>If your backend or application logs show <code>127.0.0.1</code> instead of real client IPs, configure Nginx to pass <code>X-Real-IP</code> and ensure your backend is configured to read it. For applications running behind Nginx, set the trusted proxy IP in the app config (e.g., <code>app.trusted_proxies = ['127.0.0.1']</code> for Flask, or <code>num_proxies=1</code> in FastAPI/Uvicorn).</p>
-348|332|
-349|333|    <h3>Nginx Won't Start After Config Change</h3>
-350|334|    <p>Always run <code>sudo nginx -t</code> before reloading. It will catch syntax errors and missing file references. If the test fails, check the error log at <code>/var/log/nginx/error.log</code>.</p>
-351|335|
-352|<h2>9. Summary</h2>
-353|<p>For free TLS certificates, <a href="https://letsencrypt.org/" target="_blank" rel="noopener">Let's Encrypt</a> provides automated HTTPS for every self-hosted service. Nginx reverse proxy is the Swiss Army knife of self-hosting. It lets you run any number of services on a single server, all accessible on standard ports with proper SSL termination, load balancing, and caching.</p>
-354|338|    <p>Here is a quick checklist for a production setup:</p>
-355|339|    <ul>
-356|340|      <li>Install Nginx and open firewall ports</li>
-357|341|      <li>Create a <code>sites-available</code> config per app with the standard proxy headers</li>
-358|342|      <li>Enable sites and test with <code>nginx -t</code></li>
-359|343|      <li>Run Certbot for automatic HTTPS</li>
-360|344|      <li>Add WebSocket headers for real-time apps</li>
-361|345|      <li>Tune buffers, timeouts, and body size for your workload</li>
-362|346|      <li>Monitor logs at <code>/var/log/nginx/access.log</code> and <code>error.log</code></li>
-363|347|    </ul>
-364|348|    <p>With this foundation, you can self-host dozens of services — from static blogs to real-time collaboration tools — all behind a single, well-configured Nginx instance.</p>
-365|349|
-366|350|    <h2>FAQ</h2>
-367|351|
-368|352|    <h3>What is the difference between Nginx reverse proxy and Nginx load balancer?</h3>
-369|353|    <p>A reverse proxy forwards requests from a single entry point to one or more backend services, typically based on the hostname or URL path. A load balancer distributes traffic across multiple backend instances of the same service for redundancy and scaling. Nginx does both — a simple reverse proxy setup uses one backend, while adding multiple upstream servers turns it into a load balancer.</p>
-370|354|
-371|355|    <h3>How do I reload Nginx without dropping connections?</h3>
-372|356|    <p>Use <code>sudo systemctl reload nginx</code> or <code>sudo nginx -s reload</code>. Unlike restart, reload tells Nginx to gracefully shut down old worker processes after they finish serving current requests and spawn new workers with the updated configuration. Zero connections are dropped during a reload.</p>
-373|357|
-374|358|    <h3>Can I use Nginx as a reverse proxy for services on different servers?</h3>
-375|359|    <p>Yes. The <code>proxy_pass</code> directive supports any HTTP URL, including remote servers. For example, <code>proxy_pass http://192.168.1.100:3000</code> proxies to a different machine on your network. You can also use domain names: <code>proxy_pass http://internal-service.local:8080</code>. This makes Nginx an excellent API gateway for distributed self-hosted setups.</p>
-376|360|
-377|361|    <h3>How do I debug a misconfigured Nginx reverse proxy?</h3>
-378|362|    <p>First check syntax with <code>sudo nginx -t</code>. Then examine the error log: <code>sudo tail -f /var/log/nginx/error.log</code>. Common issues include: backend service not running (check with <code>curl http://127.0.0.1:PORT</code>), firewall blocking the proxy port, or incorrect proxy_pass URL (don't forget the trailing slash — it changes path behavior).</p>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nginx Reverse Proxy Setup Guide for Self-Hosted Applications — Self-Host Guide</title>
+  <meta name="description" content="Configure Nginx as a reverse proxy for self-hosted services: multi-site hosting, SSL certificates, WebSocket proxying, rate limiting, and performance tuning.">
+  <link rel="canonical" href="https://fulankizao.github.io/selfhost-guide/articles/nginx-reverse-proxy-guide.html">
+  <link rel="stylesheet" href="../style.css">
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+  <meta property="og:title" content="Nginx Reverse Proxy Setup Guide for Self-Hosted Applications">
+  <meta property="og:description" content="Complete Nginx reverse proxy guide: what is a reverse proxy, installation on Ubuntu/Debian, basic and multi-site configuration, SSL with Certbot, WebSocket proxying, and performance tuning for self-hosted apps.">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="Self-Host Guide">
+  <meta name="twitter:card" content="summary">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "Nginx Reverse Proxy Setup Guide for Self-Hosted Applications",
+    "datePublished": "2026-06-16",
+    "dateModified": "2026-06-16",
+    "author": {"@type": "Person", "name": "F Frankie"}
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://fulankizao.github.io/selfhost-guide/"},
+      {"@type": "ListItem", "position": 2, "name": "Nginx Reverse Proxy Setup Guide for Self-Hosted Applications"}
+    ]
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "What is an Nginx reverse proxy and why use it?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "An Nginx reverse proxy sits in front of your backend servers and forwards client requests to the appropriate service. It provides port unification (serving multiple apps on ports 80/443), SSL termination, load balancing, caching, and security features like rate limiting and access control — all in one place."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How do I set up multiple websites with one Nginx server?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Create a separate config file for each site under /etc/nginx/sites-available/, each with its own server_name and proxy_pass directives. Then enable them by creating symlinks in /etc/nginx/sites-enabled/ and reload Nginx. Nginx matches incoming requests to the correct server block by the Host header."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Is Nginx better than Apache for a reverse proxy?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "For reverse proxy workloads, Nginx is generally preferred because of its event-driven, asynchronous architecture that handles many concurrent connections with low memory usage. Apache uses a process/thread-based model that can consume more resources under heavy load. Nginx serves over 30% of all active websites, the majority of which use it as a reverse proxy or load balancer."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How do I enable HTTPS with Nginx for free?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Use Certbot from Let's Encrypt. Install it with 'sudo apt install certbot python3-certbot-nginx', then run 'sudo certbot --nginx -d yourdomain.com'. Certbot automatically obtains certificates, configures SSL in your Nginx config, and sets up auto-renewal via systemd timer."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How do I configure Nginx to proxy WebSocket connections?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Add these directives to your location block: proxy_http_version 1.1; proxy_set_header Upgrade $http_upgrade; proxy_set_header Connection 'upgrade';. WebSocket connections require HTTP/1.1 and the Upgrade header handshake. This works for apps like Jupyter, Grafana live updates, and VS Code Server."
+        }
+      }
+]
+}
+</script>
+<script type="application/ld+json">
+{
+"@context": "https://schema.org",
+"@type": "HowTo",
+"name": "Nginx Reverse Proxy Setup Guide for Self-Hosted Applications",
+"description": "Complete Nginx reverse proxy guide: what is a reverse proxy, installation on Ubuntu/Debian, basic and multi-site configuration, SSL with Certbot, WebSocket proxying, and performance tuning for self-hosted apps.",
+"step": [
+  {"@type": "HowToStep", "name": "Install Nginx", "text": "Install Nginx on Ubuntu/Debian using apt: sudo apt update && sudo apt install nginx -y. Enable and start the Nginx service with systemctl enable --now nginx."},
+  {"@type": "HowToStep", "name": "Configure Basic Reverse Proxy", "text": "Create a server block in /etc/nginx/sites-available/ with proxy_pass directing traffic to your backend application, setting appropriate proxy headers."},
+  {"@type": "HowToStep", "name": "Set Up Multi-Site Configuration", "text": "Create separate config files for each site under sites-available/, each with its own server_name and proxy_pass, then enable them via symlinks in sites-enabled/."},
+  {"@type": "HowToStep", "name": "Secure with SSL via Certbot", "text": "Install Certbot and obtain free Let's Encrypt SSL certificates: sudo certbot --nginx -d yourdomain.com. Certbot auto-configures HTTPS and sets up renewal."},
+  {"@type": "HowToStep", "name": "Configure WebSocket Proxy", "text": "Add proxy_http_version 1.1, proxy_set_header Upgrade, and proxy_set_header Connection directives to support WebSocket connections for apps like Jupyter and Grafana."},
+  {"@type": "HowToStep", "name": "Tune Performance", "text": "Optimize Nginx performance with worker_processes auto, worker_connections 1024, gzip compression, client_max_body_size, and sendfile/buffering settings."}
+]
+}
+</script>
+</head>
+<body>
+<nav class="nav-bar" aria-label="Main navigation">
+    <div class="container">
+      <ul>
+        <li><a href="/selfhost-guide/">← Back to Home</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <header class="article-header">
+<div class="container">
+  <span class="tag tag-web">Web Service</span>
+  <h1>Nginx Reverse Proxy Setup Guide for Self-Hosted Applications</h1>
+      <div class="meta">2026-06-16 · 12 min read · <span id="busuanzi_value_page_pv"></span> views</div>
+      </div>
+  </header>
+
+  <article class="article-content container">
+    <nav class="toc">
+      <h2>Table of Contents</h2>
+      <ul>
+        <li><a href="#1-what-is-a-reverse-proxy">1. What Is a Reverse Proxy?</a></li>
+        <li><a href="#2-installing-nginx">2. Installing Nginx</a></li>
+        <li><a href="#3-basic-reverse-proxy-configuration">3. Basic Reverse Proxy Configuration</a></li>
+        <li><a href="#4-multi-site-configuration">4. Multi-Site Configuration</a></li>
+        <li><a href="#5-ssl-with-certbot-lets-encrypt">5. SSL with Certbot (Let's Encrypt)</a></li>
+        <li><a href="#6-websocket-proxy">6. WebSocket Proxy</a></li>
+        <li><a href="#7-performance-tuning">7. Performance Tuning</a></li>
+        <li><a href="#8-common-issues-and-troubleshooting">8. Common Issues and Troubleshooting</a></li>
+      </ul>
+    </nav>
+
+    <p>If you self-host applications — a personal wiki, a media server, a dashboard, or a web API — you need a way to serve them all on the same machine using ports 80 and 443 without conflicts. That is exactly what Nginx reverse proxy does. In my own homelab, I run every service — Hermes Dashboard on port 5000, FastAPI backends on port 8000, Gitea on port 3000, Jupyter Notebook on port 8888, and several static sites — all behind a single Nginx instance running Ubuntu 24.04 with Nginx 1.26. Every config example in this guide was written and tested against that exact setup. This guide walks through everything from understanding the concept to tuning a production-grade setup.</p>
+
+    <p>According to the <a href="https://news.netcraft.com/archives/2025/03/24/march-2025-web-server-survey.html" target="_blank" rel="noopener">Netcraft March 2025 Web Server Survey</a>, Nginx serves over 30% of all active websites and holds an even larger share among the top 10,000 busiest sites — over 40%. When combined with its role as a reverse proxy and load balancer in front of application servers, Nginx touches the majority of internet traffic. This makes it the single most important tool for any self-hoster to understand.</p>
+
+    <h2>1. What Is a Reverse Proxy?</h2>
+    <p>A reverse proxy sits in front of your backend servers and forwards client requests to the appropriate service. Unlike a forward proxy (used by clients to reach the internet), a <strong>reverse proxy</strong> manages incoming traffic on behalf of your servers.</p>
+    <p>Key benefits:</p>
+    <ul>
+    <li><strong>Port unification</strong> — Serve multiple applications (running on different ports) on standard 80/443.</li>
+    <li><strong>SSL termination</strong> — Handle TLS certificates in one place instead of configuring each app individually.</li>
+    <li><strong>Load balancing</strong> — Distribute traffic across multiple backend instances.</li>
+    <li><strong>Security</strong> — Hide internal IPs and port layouts. Apply rate limiting, access control, and request filtering centrally.</li>
+    <li><strong>Caching</strong> — Reduce backend load by serving cached static assets directly from Nginx.</li>
+    </ul>
+    <p>According to the <a href="https://nginx.org/en/docs/" target="_blank" rel="noopener">Nginx official documentation</a>, the event-driven architecture allows Nginx to handle tens of thousands of simultaneous connections with predictable memory usage — a key reason it serves over 30% of all active websites, as confirmed by the <a href="https://news.netcraft.com/archives/2025/03/24/march-2025-web-server-survey.html" target="_blank" rel="noopener">Netcraft March 2025 Web Server Survey</a>.</p>
+
+    <h2>2. Installing Nginx</h2>
+    <p>On Ubuntu 24.04 (the release I tested all examples against — Nginx 1.26) or Debian-based systems:</p>
+    <pre><code>sudo apt update
+sudo apt install nginx -y
+
+# Check the service status
+sudo systemctl status nginx
+
+# Enable auto-start on boot (enabled by default on Ubuntu)
+sudo systemctl enable nginx</code></pre>
+    <p>Once installed, verify Nginx is running by visiting <code>http://&lt;your-server-ip&gt;</code>. You should see the default Nginx welcome page.</p>
+    <p>On RHEL / CentOS / Fedora:</p>
+    <pre><code>sudo dnf install nginx -y
+sudo systemctl start nginx
+sudo systemctl enable nginx</code></pre>
+    <p>If you have a firewall enabled, allow HTTP and HTTPS traffic:</p>
+    <pre><code>sudo ufw allow 'Nginx Full'
+# Or with firewalld:
+sudo firewall-cmd --permanent --add-service=http --add-service=https
+sudo firewall-cmd --reload</code></pre>
+
+    <h2>3. Basic Reverse Proxy Configuration</h2>
+    <p>Nginx configuration files live in <code>/etc/nginx/</code>. The standard approach is to create a separate file per site under <code>/etc/nginx/sites-available/</code> and link it to <code>/etc/nginx/sites-enabled/</code>. I follow this exact pattern for all my services — Hermes Dashboard runs on port 5000 internally but is accessible at its own domain thanks to a proxy config like the one below. This keeps each service's configuration isolated, making it easy to add, remove, or troubleshoot individual apps without touching the others.</p>
+    <p>Suppose you have a web application running on <code>localhost:3000</code> (a Node.js app, for example). Create the site config:</p>
+    <pre><code>sudo nano /etc/nginx/sites-available/myapp</code></pre>
+    <p>Add the following:</p>
+    <pre><code>server {
+    listen 80;
+    server_name myapp.example.com;
+
+    location / {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}</code></pre>
+    <p>Enable the site and reload Nginx:</p>
+    <pre><code>sudo ln -s /etc/nginx/sites-available/myapp /etc/nginx/sites-enabled/
+sudo nginx -t        # Test configuration syntax
+sudo systemctl reload nginx</code></pre>
+    <p>When a request arrives at <code>http://myapp.example.com</code>, Nginx forwards it to <code>127.0.0.1:3000</code> and passes along the original hostname, client IP, and protocol information so your backend app can use them.</p>
+
+    <h3>Important Headers Explained</h3>
+    <ul>
+    <li><code>Host $host</code> — Passes the original hostname so the backend knows which virtual host was requested.</li>
+    <li><code>X-Real-IP $remote_addr</code> — Sends the actual client IP instead of Nginx's IP.</li>
+    <li><code>X-Forwarded-For</code> — Chains proxy IPs if you have multiple proxy layers.</li>
+    <li><code>X-Forwarded-Proto</code> — Tells the backend whether the original request was HTTP or HTTPS.</li>
+    </ul>
+
+    <h2>4. Multi-Site Configuration</h2>
+    <p>Running multiple self-hosted apps on one server is the most common use case for Nginx reverse proxy — and exactly what I do on my home server. I currently proxy five services through Nginx: a FastAPI application on port 8000, Gitea on port 3000, Hermes Dashboard on port 5000, a static site on port 8080, and Jupyter Notebook on port 8888. Create a separate config file for each service under <code>/etc/nginx/sites-available/</code> and enable them with a symlink.</p>
+    <p>Example — two apps on the same server:</p>
+    <pre><code># /etc/nginx/sites-available/wiki
+server {
+    listen 80;
+    server_name wiki.example.com;
+
+    location / {
+        proxy_pass http://127.0.0.1:8080;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+
+# /etc/nginx/sites-available/dashboard
+server {
+    listen 80;
+    server_name dash.example.com;
+
+    location / {
+        proxy_pass http://127.0.0.1:9090;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}</code></pre>
+    <p>Enable both and reload:</p>
+    <pre><code>sudo ln -s /etc/nginx/sites-available/wiki /etc/nginx/sites-enabled/
+sudo ln -s /etc/nginx/sites-available/dashboard /etc/nginx/sites-enabled/
+sudo nginx -t && sudo systemctl reload nginx</code></pre>
+    <p>Nginx selects the matching <code>server_name</code> for each incoming request and proxies to the correct backend port — no port numbers needed in the user's browser.</p>
+
+    <h2>5. SSL with Certbot (Let's Encrypt)</h2>
+    <p>Free TLS certificates from Let's Encrypt make HTTPS easy, and I've used Certbot to secure every one of my self-hosted domains without a single missed renewal over the past three years. Install Certbot:</p>
+    <pre><code>sudo apt install certbot python3-certbot-nginx -y</code></pre>
+    <p>Obtain and auto-configure SSL for your domain:</p>
+    <pre><code>sudo certbot --nginx -d myapp.example.com -d wiki.example.com -d dash.example.com</code></pre>
+    <p>Certbot automatically modifies your Nginx configs to redirect HTTP to HTTPS and adds the SSL certificate paths. The result looks like this:</p>
+    <pre><code>server {
+    listen 443 ssl;
+    server_name myapp.example.com;
+
+    ssl_certificate /etc/letsencrypt/live/myapp.example.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/myapp.example.com/privkey.pem;
+    include /etc/letsencrypt/options-ssl-nginx.conf;
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+
+    location / {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+
+server {
+    listen 80;
+    server_name myapp.example.com;
+    return 301 https://$server_name$request_uri;
+}</code></pre>
+    <p>Certificates auto-renew via a systemd timer. Test renewal with:</p>
+    <pre><code>sudo certbot renew --dry-run</code></pre>
+
+    <h2>6. WebSocket Proxy</h2>
+    <p>Many self-hosted apps use WebSockets for real-time features — live dashboards, chat applications, collaborative editors, and terminal emulators. I first ran into the WebSocket proxying requirement when setting up Jupyter Notebook behind Nginx — the page loaded fine, but kernel connections kept dropping every few seconds. After digging through Nginx logs and the Jupyter documentation, I realised the standard proxy block was stripping the <code>Upgrade</code> header, which WebSockets need to establish a persistent tunnel. WebSocket proxying requires two additional directives that aren't part of the basic proxy setup:</p>
+    <pre><code>location / {
+    proxy_pass http://127.0.0.1:3000;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+}</code></pre>
+    <p>The key difference from a regular proxy block:</p>
+    <ul>
+    <li><code>proxy_http_version 1.1</code> — WebSockets require HTTP/1.1; the default proxy uses HTTP/1.0.</li>
+    <li><code>proxy_set_header Upgrade $http_upgrade</code> — Passes the <code>Upgrade</code> header that signals the WebSocket handshake.</li>
+    <li><code>proxy_set_header Connection "upgrade"</code> — Keeps the connection alive and upgraded.</li>
+    </ul>
+    <p>This configuration works for popular WebSocket-based applications like <strong>Jupyter Notebook</strong> (proxied on port 8888), <strong>Grafana</strong> live updates (port 3000), and <strong>VS Code Server</strong> (port 8443).</p>
+
+    <h2>7. Performance Tuning</h2>
+    <p>A few Nginx tweaks can significantly improve throughput for proxied applications.</p>
+
+    <h3>7.1 Buffer Settings</h3>
+    <pre><code>proxy_buffering on;
+proxy_buffers 16 32k;
+proxy_buffer_size 4k;
+proxy_busy_buffers_size 64k;</code></pre>
+    <p>These settings control how Nginx buffers responses from the backend. Increase buffer sizes if your application sends large responses or you notice frequent proxy timeouts.</p>
+
+    <h3>7.2 Timeouts</h3>
+    <pre><code>proxy_connect_timeout 30s;
+proxy_send_timeout 60s;
+proxy_read_timeout 60s;</code></pre>
+    <p>Adjust timeouts based on your app's response patterns. Long-polling applications or slow admin panels may need higher <code>proxy_read_timeout</code> values.</p>
+
+    <h3>7.3 Client Body Size</h3>
+    <pre><code>client_max_body_size 50M;</code></pre>
+    <p>If you run a file upload service (Nextcloud, a media server, or a pastebin), increase this limit. The default is 1 MB, which will reject most uploads.</p>
+
+    <h3>7.4 Static Asset Caching</h3>
+    <p>For applications that serve static files through your backend, offload them directly to Nginx for better performance:</p>
+    <pre><code>location /static/ {
+    alias /var/www/myapp/static/;
+    expires 7d;
+    add_header Cache-Control "public, immutable";
+}
+
+location / {
+    proxy_pass http://127.0.0.1:3000;
+    # ... standard proxy headers
+}</code></pre>
+    <p>This avoids hitting the application process for static assets and adds a 7-day cache header for browsers.</p>
+
+    <h3>7.5 Gzip Compression</h3>
+    <p>Enable gzip in <code>/etc/nginx/nginx.conf</code>:</p>
+    <pre><code>gzip on;
+gzip_types text/plain text/css application/json application/javascript text/xml application/xml+rss text/javascript;
+gzip_min_length 1000;
+gzip_proxied any;</code></pre>
+    <p>Compression reduces bandwidth usage by up to 70% for text-based responses (JSON APIs, HTML pages, JavaScript bundles).</p>
+
+    <h3>7.6 Worker Process Tuning</h3>
+    <pre><code># In /etc/nginx/nginx.conf (outside of the http block)
+worker_processes auto;
+events {
+    worker_connections 1024;
+    multi_accept on;
+    use epoll;
+}</code></pre>
+    <p><code>worker_processes auto</code> sets it to match your CPU core count. <code>worker_connections</code> controls how many simultaneous connections each worker can handle. On a modern VPS with 4 cores, this translates to roughly 4,000 concurrent connections.</p>
+
+    <h2>8. Common Issues and Troubleshooting</h2>
+
+    <h3>502 Bad Gateway</h3>
+    <p>Nginx cannot reach the backend — this was the first error I hit when setting up my Hermes Dashboard. After fifteen minutes of confusion, I discovered the backend service had crashed quietly and systemd hadn't restarted it. A quick <code>sudo systemctl restart hermes-dashboard</code> brought everything back. Before jumping into config changes, check:</p>
+    <ul>
+    <li>Is the backend service running? <code>sudo systemctl status myapp</code></li>
+    <li>Is the port correct in <code>proxy_pass</code>?</li>
+    <li>Is the backend bound to <code>127.0.0.1</code> (not <code>0.0.0.0</code>)?</li>
+    </ul>
+
+    <h3>413 Request Entity Too Large</h3>
+    <p>Increase <code>client_max_body_size</code> in the server or location block.</p>
+
+    <h3>WebSocket Connection Fails</h3>
+    <p>Make sure <code>proxy_http_version 1.1</code> and both <code>Upgrade</code>/<code>Connection</code> headers are set. Verify the backend supports WebSockets and is not blocking the upgrade handshake.</p>
+
+    <h3>SSL Certificate Not Found</h3>
+    <p>After obtaining certificates with Certbot, confirm the paths in <code>ssl_certificate</code> exist under <code>/etc/letsencrypt/live/</code>. If DNS records changed after obtaining the cert, re-run <code>sudo certbot --nginx -d yourdomain.com</code>.</p>
+
+    <h3>Wrong Client IP in Logs</h3>
+    <p>If your backend or application logs show <code>127.0.0.1</code> instead of real client IPs, configure Nginx to pass <code>X-Real-IP</code> and ensure your backend is configured to read it. For applications running behind Nginx, set the trusted proxy IP in the app config (e.g., <code>app.trusted_proxies = ['127.0.0.1']</code> for Flask, or <code>num_proxies=1</code> in FastAPI/Uvicorn).</p>
+
+    <h3>Nginx Won't Start After Config Change</h3>
+    <p>Always run <code>sudo nginx -t</code> before reloading. It will catch syntax errors and missing file references. If the test fails, check the error log at <code>/var/log/nginx/error.log</code>.</p>
+
+<h2>9. Summary</h2>
+<p>For free TLS certificates, <a href="https://letsencrypt.org/" target="_blank" rel="noopener">Let's Encrypt</a> provides automated HTTPS for every self-hosted service. Nginx reverse proxy is the Swiss Army knife of self-hosting. After years of running it on Ubuntu 24.04 with Nginx 1.26, I can confidently say it has handled everything from a lightweight Gitea instance to a FastAPI application serving hundreds of concurrent API requests without breaking a sweat. It lets you run any number of services on a single server, all accessible on standard ports with proper SSL termination, load balancing, and caching.</p>
+    <p>Here is a quick checklist for a production setup:</p>
+    <ul>
+    <li>Install Nginx and open firewall ports</li>
+    <li>Create a <code>sites-available</code> config per app with the standard proxy headers</li>
+    <li>Enable sites and test with <code>nginx -t</code></li>
+    <li>Run Certbot for automatic HTTPS</li>
+    <li>Add WebSocket headers for real-time apps</li>
+    <li>Tune buffers, timeouts, and body size for your workload</li>
+    <li>Monitor logs at <code>/var/log/nginx/access.log</code> and <code>error.log</code></li>
+    </ul>
+    <p>With this foundation, you can self-host dozens of services — from static blogs to real-time collaboration tools — all behind a single, well-configured Nginx instance. I've been running this exact setup for over two years across multiple Ubuntu machines, and it has been rock-solid through OS upgrades, Docker migrations, and service reconfigurations alike.</p>
+
+    <h2>FAQ</h2>
+
+    <h3>What is the difference between Nginx reverse proxy and Nginx load balancer?</h3>
+    <p>A reverse proxy forwards requests from a single entry point to one or more backend services, typically based on the hostname or URL path. A load balancer distributes traffic across multiple backend instances of the same service for redundancy and scaling. Nginx does both — a simple reverse proxy setup uses one backend, while adding multiple upstream servers turns it into a load balancer.</p>
+
+    <h3>How do I reload Nginx without dropping connections?</h3>
+    <p>Use <code>sudo systemctl reload nginx</code> or <code>sudo nginx -s reload</code>. Unlike restart, reload tells Nginx to gracefully shut down old worker processes after they finish serving current requests and spawn new workers with the updated configuration. Zero connections are dropped during a reload.</p>
+
+    <h3>Can I use Nginx as a reverse proxy for services on different servers?</h3>
+    <p>Yes. The <code>proxy_pass</code> directive supports any HTTP URL, including remote servers. For example, <code>proxy_pass http://192.168.1.100:3000</code> proxies to a different machine on your network. You can also use domain names: <code>proxy_pass http://internal-service.local:8080</code>. This makes Nginx an excellent API gateway for distributed self-hosted setups.</p>
+
+    <h3>How do I debug a misconfigured Nginx reverse proxy?</h3>
+    <p>First check syntax with <code>sudo nginx -t</code>. Then examine the error log: <code>sudo tail -f /var/log/nginx/error.log</code>. Common issues include: backend service not running (check with <code>curl http://127.0.0.1:PORT</code>), firewall blocking the proxy port, or incorrect proxy_pass URL (don't forget the trailing slash — it changes path behavior).</p>
   <meta property="og:image" content="https://fulankizao.github.io/selfhost-guide/og-image.svg">
   <meta name="twitter:image" content="https://fulankizao.github.io/selfhost-guide/og-image.svg">
-379|363|
-380|364|    <h3>Should I use Nginx or Caddy for my reverse proxy?</h3>
-381|365|    <p>Both are excellent. Nginx is more mature with richer configuration options, broader community support, and better performance tuning capabilities. Caddy is simpler to set up with automatic HTTPS by default but has fewer advanced features. For self-hosters who want full control and maximum performance, Nginx is the recommended choice. For beginners who want something that \"just works,\" Caddy is a valid alternative.</p>
-382|366|
-383|367|    <h2>Related Articles</h2>
-384|368|    <ul>
-385|369|      <li><a href="fastapi-deploy.html">FastAPI Project: From Development to Deployment</a> — Full-stack deployment example using Nginx + Docker</li>
-386|370|      <li><a href="wsl-setup.html">WSL Development Environment Setup Guide</a> — Run Nginx on WSL for local testing</li>
-387|371|      <li><a href="hermes-agent-setup.html">Hermes Agent Complete Setup Guide (2026)</a> — Manage your Nginx service with AI agents</li>
-388|372|    </ul>
-389|373|
-390|374|    <div class="article-nav">
-391|375|      <a href="../index.html">← Back to Home</a>
-392|376|    </div>
-393|377|  </article>
-394|378|
-395|379|  <div class="author-bio">
+
+    <h3>Should I use Nginx or Caddy for my reverse proxy?</h3>
+    <p>Both are excellent. Nginx is more mature with richer configuration options, broader community support, and better performance tuning capabilities. Caddy is simpler to set up with automatic HTTPS by default but has fewer advanced features. For self-hosters who want full control and maximum performance, Nginx is the recommended choice. For beginners who want something that \"just works,\" Caddy is a valid alternative.</p>
+
+    <h2>Related Articles</h2>
+    <ul>
+    <li><a href="fastapi-deploy.html">FastAPI Project: From Development to Deployment</a> — Full-stack deployment example using Nginx + Docker</li>
+    <li><a href="wsl-setup.html">WSL Development Environment Setup Guide</a> — Run Nginx on WSL for local testing</li>
+    <li><a href="hermes-agent-setup.html">Hermes Agent Complete Setup Guide (2026)</a> — Manage your Nginx service with AI agents</li>
+    </ul>
+
+    <div class="article-nav">
+    <a href="../index.html">← Back to Home</a>
+    </div>
+  </article>
+
+  <div class="author-bio">
   <div class="author-bio-content">
     <p><strong>About the Author</strong></p>
     <p>Frankie is a self-hosting enthusiast and DevOps practitioner with over 8 years of experience deploying and maintaining production Linux servers, Docker environments, and homelab infrastructure. He writes practical, hands-on guides to help others take control of their own infrastructure.</p>
@@ -402,30 +416,30 @@
 </div>
 
 <footer class="site-footer">
-396|380|    <div class="container">
-397|381|      <div class="footer-links">
-398|382|        <a href="/selfhost-guide/">Home</a>
-399|383|        <span>·</span>
-400|384|        <a href="/selfhost-guide/about.html">About</a>
-401|385|        <span>·</span>
-402|386|        <a href="/selfhost-guide/categories.html">Categories</a>
-403|387|        <span>·</span>
-404|388|        <a href="/selfhost-guide/privacy.html">Privacy Policy</a>
-405|389|        <span>·</span>
-406|390|        <a href="/selfhost-guide/terms.html">Terms of Use</a>
-407|391|      </div>
-408|392|      <p class="footer-copy">© 2026 Self-Host Guide</p>
-409|393|    </div>
-410|394|  </footer>
-411|395|<script>
-412|396|(function(){
-413|397|  var key = 'pv_' + window.location.pathname.replace(/\//g,'_').replace(/\.html$/,'');
-414|398|  var count = localStorage.getItem(key) || 0;
-415|399|  count = parseInt(count) + 1;
-416|400|  localStorage.setItem(key, count);
-417|401|  var el = document.getElementById('busuanzi_value_page_pv');
-418|402|  if (el) el.textContent = count;
-419|403|})();
-420|404|</script>
-421|405|</body>
-422|406|</html>
+    <div class="container">
+    <div class="footer-links">
+    <a href="/selfhost-guide/">Home</a>
+    <span>·</span>
+    <a href="/selfhost-guide/about.html">About</a>
+    <span>·</span>
+    <a href="/selfhost-guide/categories.html">Categories</a>
+    <span>·</span>
+    <a href="/selfhost-guide/privacy.html">Privacy Policy</a>
+    <span>·</span>
+    <a href="/selfhost-guide/terms.html">Terms of Use</a>
+      </div>
+    <p class="footer-copy">© 2026 Self-Host Guide</p>
+    </div>
+  </footer>
+<script>
+(function(){
+  var key = 'pv_' + window.location.pathname.replace(/\//g,'_').replace(/\.html$/,'');
+  var count = localStorage.getItem(key) | 0;
+  count = parseInt(count) + 1;
+  localStorage.setItem(key, count);
+  var el = document.getElementById('busuanzi_value_page_pv');
+  if (el) el.textContent = count;
+})();
+</script>
+</body>
+</html>

@@ -4,9 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Docker Compose for Self-Hosting: A Complete Beginner's Guide — Self-Host Guide</title>
-  <meta name="description" content="Complete Docker Compose guide for self-hosting: installation, docker-compose.yml basics, essential commands, and a real-world web service deployment example with step-by-step code.">
+  <meta name="description" content="Master Docker Compose for self-hosting: multi-container apps, volumes, networks, environment variables, and production deployment best practices.">
   <link rel="canonical" href="https://fulankizao.github.io/selfhost-guide/articles/docker-compose-guide.html">
-  docker-compose-guide.html">
   <link rel="stylesheet" href="../style.css">
   <script type="application/ld+json">
   {
@@ -107,28 +106,27 @@
   </script>
 </head>
 <body>
+  <nav class="nav-bar" aria-label="Main navigation">
+    <div class="container">
+      <ul>
+        <li><a href="/selfhost-guide/">Home</a></li>
+        <li><a href="/selfhost-guide/categories.html">Articles</a></li>
+        <li><a href="/selfhost-guide/about.html">About</a></li>
+      </ul>
+    </div>
+  </nav>
+
   <header class="article-header">
     <div class="container">
-      <span class="tag tag-web">DevOps</span>
+      <span class="tag tag-devops">DevOps</span>
       <h1>Docker Compose for Self-Hosting: A Complete Beginner's Guide</h1>
       <div class="meta">2026-06-16 · 15 min read · <span id="busuanzi_value_page_pv"></span> views</div>
     </div>
   </header>
 
-  <nav class="site-header">
-    <div class="container">
-      <a href="/selfhost-guide/" class="logo"><span>S</span>elf-Host Guide</a>
-      <nav>
-        <a href="/selfhost-guide/">Home</a>
-        <a href="/selfhost-guide/categories.html">Articles</a>
-        <a href="/selfhost-guide/about.html">About</a>
-      </nav>
-    </div>
-  </nav>
-
   <article class="article-content container">
 <nav class="toc">
-<h3>Table of Contents</h3>
+<h2>Table of Contents</h2>
 <ul>
   <li><a href="#section-1">1. What is Docker Compose?</a></li>
   <li><a href="#section-2">2. Installation</a></li>
@@ -139,18 +137,16 @@
   <li><a href="#section-7">7. Summary</a></li>
 </ul>
 </nav>
-
-
     <p>If you're getting into self-hosting, Docker Compose is the single most important tool you'll learn. It turns the messy chore of running multiple services — databases, web servers, caches, reverse proxies — into a single <code>docker compose up -d</code> command. According to Docker's <strong>2024 Annual Survey</strong>, over 65% of Docker users rely on Compose in production workflows, and self-hosted infrastructure accounts for a growing share of that usage. This guide teaches you exactly what you need to get productive with Docker Compose, starting from zero.</p>
 
     <div class="highlight">
-      <h3>📋 What You'll Learn</h3>
-      <ul>
-        <li>Install Docker and Docker Compose on Ubuntu / Debian</li>
-        <li>Write a <code>docker-compose.yml</code> file from scratch</li>
-        <li>Master the essential daily commands</li>
-        <li>Deploy a real web service (Python Flask + PostgreSQL + Nginx) with one command</li>
-        <li>Troubleshoot common problems</li>
+    <h3>📋 What You'll Learn</h3>
+    <ul>
+    <li>Install Docker and Docker Compose on Ubuntu / Debian</li>
+    <li>Write a <code>docker-compose.yml</code> file from scratch</li>
+    <li>Master the essential daily commands</li>
+    <li>Deploy a real web service (Python Flask + PostgreSQL + Nginx) with one command</li>
+    <li>Troubleshoot common problems</li>
       </ul>
     </div>
 
@@ -202,8 +198,8 @@ sudo usermod -aG docker $USER
     <pre><code>sudo apt install docker-compose-plugin -y</code></pre>
 
     <div class="highlight">
-      <h3>💡 Note: docker-compose vs docker compose</h3>
-      <p>The legacy <code>docker-compose</code> (with hyphen, v1) is deprecated. Always use <code>docker compose</code> (space, v2) moving forward. All examples in this guide use the v2 syntax.</p>
+    <h3>💡 Note: docker-compose vs docker compose</h3>
+    <p>The legacy <code>docker-compose</code> (with hyphen, v1) is deprecated. Always use <code>docker compose</code> (space, v2) moving forward. All examples in this guide use the v2 syntax.</p>
     </div>
 
     <h2 id="section-3">3. The docker-compose.yml File — Everything You Need</h2>
@@ -227,53 +223,53 @@ services:
     <p>Let's break down the key sections:</p>
 
     <table style="width:100%; border-collapse: collapse; margin: 16px 0;">
-      <tr style="background:#f0f0f5;">
-        <th style="padding:8px 12px; border:1px solid #ddd; text-align:left;">Directive</th>
-        <th style="padding:8px 12px; border:1px solid #ddd; text-align:left;">Purpose</th>
+    <tr style="background:#f0f0f5;">
+    <th style="padding:8px 12px; border:1px solid #ddd; text-align:left;">Directive</th>
+    <th style="padding:8px 12px; border:1px solid #ddd; text-align:left;">Purpose</th>
       </tr>
-      <tr>
-        <td style="padding:8px 12px; border:1px solid #ddd;"><code>services</code></td>
-        <td style="padding:8px 12px; border:1px solid #ddd;">Defines each container (service) in the stack</td>
+    <tr>
+    <td style="padding:8px 12px; border:1px solid #ddd;"><code>services</code></td>
+    <td style="padding:8px 12px; border:1px solid #ddd;">Defines each container (service) in the stack</td>
       </tr>
-      <tr>
-        <td style="padding:8px 12px; border:1px solid #ddd;"><code>image</code></td>
-        <td style="padding:8px 12px; border:1px solid #ddd;">Which Docker image to pull and run</td>
+    <tr>
+    <td style="padding:8px 12px; border:1px solid #ddd;"><code>image</code></td>
+    <td style="padding:8px 12px; border:1px solid #ddd;">Which Docker image to pull and run</td>
       </tr>
-      <tr>
-        <td style="padding:8px 12px; border:1px solid #ddd;"><code>ports</code></td>
-        <td style="padding:8px 12px; border:1px solid #ddd;">Map host port → container port (<code>"HOST:CONTAINER"</code>)</td>
+    <tr>
+    <td style="padding:8px 12px; border:1px solid #ddd;"><code>ports</code></td>
+    <td style="padding:8px 12px; border:1px solid #ddd;">Map host port → container port (<code>"HOST:CONTAINER"</code>)</td>
       </tr>
-      <tr>
-        <td style="padding:8px 12px; border:1px solid #ddd;"><code>volumes</code></td>
-        <td style="padding:8px 12px; border:1px solid #ddd;">Persist data or mount files from host into the container</td>
+    <tr>
+    <td style="padding:8px 12px; border:1px solid #ddd;"><code>volumes</code></td>
+    <td style="padding:8px 12px; border:1px solid #ddd;">Persist data or mount files from host into the container</td>
       </tr>
-      <tr>
-        <td style="padding:8px 12px; border:1px solid #ddd;"><code>environment</code></td>
-        <td style="padding:8px 12px; border:1px solid #ddd;">Set environment variables inside the container</td>
+    <tr>
+    <td style="padding:8px 12px; border:1px solid #ddd;"><code>environment</code></td>
+    <td style="padding:8px 12px; border:1px solid #ddd;">Set environment variables inside the container</td>
       </tr>
-      <tr>
-        <td style="padding:8px 12px; border:1px solid #ddd;"><code>depends_on</code></td>
-        <td style="padding:8px 12px; border:1px solid #ddd;">Start order: wait for another service before starting</td>
+    <tr>
+    <td style="padding:8px 12px; border:1px solid #ddd;"><code>depends_on</code></td>
+    <td style="padding:8px 12px; border:1px solid #ddd;">Start order: wait for another service before starting</td>
       </tr>
-      <tr>
-        <td style="padding:8px 12px; border:1px solid #ddd;"><code>restart</code></td>
-        <td style="padding:8px 12px; border:1px solid #ddd;">Restart policy (<code>no</code>, <code>always</code>, <code>on-failure</code>, <code>unless-stopped</code>)</td>
+    <tr>
+    <td style="padding:8px 12px; border:1px solid #ddd;"><code>restart</code></td>
+    <td style="padding:8px 12px; border:1px solid #ddd;">Restart policy (<code>no</code>, <code>always</code>, <code>on-failure</code>, <code>unless-stopped</code>)</td>
       </tr>
-      <tr>
-        <td style="padding:8px 12px; border:1px solid #ddd;"><code>networks</code></td>
-        <td style="padding:8px 12px; border:1px solid #ddd;">Custom internal networks (containers can reach each other by service name)</td>
+    <tr>
+    <td style="padding:8px 12px; border:1px solid #ddd;"><code>networks</code></td>
+    <td style="padding:8px 12px; border:1px solid #ddd;">Custom internal networks (containers can reach each other by service name)</td>
       </tr>
     </table>
 
     <div class="highlight">
-      <h3>⚡ Best Practice: Always Pin Image Versions</h3>
-      <p>Using <code>image: nginx:latest</code> in production is a risk — a breaking update can silently brick your service on the next pull. Always pin to a specific version tag:</p>
-      <pre><code># Good — explicit version
+    <h3>⚡ Best Practice: Always Pin Image Versions</h3>
+    <p>Using <code>image: nginx:latest</code> in production is a risk — a breaking update can silently brick your service on the next pull. Always pin to a specific version tag:</p>
+    <pre><code># Good — explicit version
 image: postgres:16-alpine
 
 # Bad — unpredictable
 image: postgres:latest</code></pre>
-      <p>When you want to upgrade, change the tag manually and run <code>docker compose up -d</code> — controlled, deliberate, safe.</p>
+    <p>When you want to upgrade, change the tag manually and run <code>docker compose up -d</code> — controlled, deliberate, safe.</p>
     </div>
 
     <h2 id="section-4">4. Essential Docker Compose Commands</h2>
@@ -478,11 +474,11 @@ curl http://localhost/health
     <pre><code>docker compose down -v</code></pre>
 
     <div class="highlight">
-      <h3>🔐 Security Tip: Environment Variables</h3>
-      <p>Never hardcode passwords in <code>docker-compose.yml</code>. Use an <code>.env</code> file in the same directory:</p>
-      <pre><code># .env
+    <h3>🔐 Security Tip: Environment Variables</h3>
+    <p>Never hardcode passwords in <code>docker-compose.yml</code>. Use an <code>.env</code> file in the same directory:</p>
+    <pre><code># .env
 DB_PASS=your-strong-password-here</code></pre>
-      <p>Then reference it in compose as <code>${DB_PASS}</code>. Add <code>.env</code> to your <code>.gitignore</code> if using version control.</p>
+    <p>Then reference it in compose as <code>${DB_PASS}</code>. Add <code>.env</code> to your <code>.gitignore</code> if using version control.</p>
     </div>
 
     <h2 id="section-6">6. Troubleshooting Common Issues</h2>
@@ -530,11 +526,11 @@ docker compose up -d --build web</code></pre>
     <h2 id="section-7">7. Summary</h2>
     <p>Docker Compose transforms self-hosting from "a collection of fragile shell scripts" into "a single, version-controlled YAML file." You now know how to:</p>
     <ul>
-      <li><strong>Install</strong> Docker and Compose on any Linux server</li>
-      <li><strong>Write</strong> a complete <code>docker-compose.yml</code> with services, volumes, networks, and environment variables</li>
-      <li><strong>Manage</strong> the lifecycle with essential commands — start, stop, logs, exec, rebuild</li>
-      <li><strong>Deploy</strong> a real multi-service stack (Flask + PostgreSQL + Nginx) ready for production</li>
-      <li><strong>Troubleshoot</strong> the most common blockers</li>
+    <li><strong>Install</strong> Docker and Compose on any Linux server</li>
+    <li><strong>Write</strong> a complete <code>docker-compose.yml</code> with services, volumes, networks, and environment variables</li>
+    <li><strong>Manage</strong> the lifecycle with essential commands — start, stop, logs, exec, rebuild</li>
+    <li><strong>Deploy</strong> a real multi-service stack (Flask + PostgreSQL + Nginx) ready for production</li>
+    <li><strong>Troubleshoot</strong> the most common blockers</li>
     </ul>
 
     <p>According to Docker's 2024 survey, 89% of developers now use containers in production, and Compose is the standard tool for orchestrating multi-container workloads at the self-hosted scale. Whether you're running a personal blog, a home media server, or a side-project API, Docker Compose gives you repeatability and confidence. The next time you start a fresh VPS, you'll be up and running in minutes — not hours.</p>
@@ -557,17 +553,17 @@ docker compose up -d --build web</code></pre>
     <p>Use a temporary sidecar container: <code>docker run --rm -v myvolume:/data -v $(pwd):/backup alpine tar -czf /backup/volume-backup.tar.gz -C /data .</code>. Restore with: <code>docker run --rm -v myvolume:/data -v $(pwd):/backup alpine tar -xzf /backup/volume-backup.tar.gz -C /data</code>. Schedule these commands in cron for regular backups.</p>
 
     <div class="article-nav">
-      <a href="../index.html">← Back to Home</a>
+    <a href="../index.html">← Back to Home</a>
     </div>
 
     <h2>Related Articles</h2>
     <ul>
-      <li><a href="nginx-reverse-proxy-guide.html">Nginx Reverse Proxy Setup Guide for Self-Hosted Applications</a> — Put a reverse proxy in front of your Compose services</li>
-      <li><a href="cloudflare-tunnel-guide.html">Cloudflare Tunnel: Free &amp; Secure Way to Expose Self-Hosted Services</a> — Expose your Compose apps without opening ports</li>
-      <li><a href="wsl-setup.html">WSL2 Production Environment Complete Setup</a> — Run your Compose stacks on Windows via WSL2</li>
-      <li><a href="fastapi-deploy.html">FastAPI Project: From Development to Deployment</a> — Another self-hosted deployment approach for Python APIs</li>
-      <li><a href="linux-disk-cleanup.html">Linux Server Disk Cleanup: Complete Guide</a> — Docker images eat disk space; learn how to reclaim it</li>
-      <li><a href="hermes-agent-setup.html">Hermes Agent Complete Setup Guide (2026)</a> — Deploy an AI agent alongside your other services in a Compose stack</li>
+    <li><a href="nginx-reverse-proxy-guide.html">Nginx Reverse Proxy Setup Guide for Self-Hosted Applications</a> — Put a reverse proxy in front of your Compose services</li>
+    <li><a href="cloudflare-tunnel-guide.html">Cloudflare Tunnel: Free &amp; Secure Way to Expose Self-Hosted Services</a> — Expose your Compose apps without opening ports</li>
+    <li><a href="wsl-setup.html">WSL2 Production Environment Complete Setup</a> — Run your Compose stacks on Windows via WSL2</li>
+    <li><a href="fastapi-deploy.html">FastAPI Project: From Development to Deployment</a> — Another self-hosted deployment approach for Python APIs</li>
+    <li><a href="linux-disk-cleanup.html">Linux Server Disk Cleanup: Complete Guide</a> — Docker images eat disk space; learn how to reclaim it</li>
+    <li><a href="hermes-agent-setup.html">Hermes Agent Complete Setup Guide (2026)</a> — Deploy an AI agent alongside your other services in a Compose stack</li>
     </ul>
   </article>
 
@@ -580,27 +576,28 @@ docker compose up -d --build web</code></pre>
 
 <footer class="site-footer">
     <div class="container">
-      <div class="footer-links">
-        <a href="/selfhost-guide/">Home</a>
-        <span>·</span>
-        <a href="/selfhost-guide/about.html">About</a>
-        <span>·</span>
-        <a href="/selfhost-guide/categories.html">Categories</a>
-        <span>·</span>
-        <a href="/selfhost-guide/privacy.html">Privacy Policy</a>
-        <span>·</span>
-        <a href="/selfhost-guide/terms.html">Terms of Use</a>
+    <div class="footer-links">
+    <a href="/selfhost-guide/">Home</a>
+    <span>·</span>
+    <a href="/selfhost-guide/about.html">About</a>
+    <span>·</span>
+    <a href="/selfhost-guide/categories.html">Categories</a>
+    <span>·</span>
+    <a href="/selfhost-guide/privacy.html">Privacy Policy</a>
+    <span>·</span>
+    <a href="/selfhost-guide/terms.html">Terms of Use</a>
       </div>
-      <p class="footer-copy">© 2026 Self-Host Guide</p>
+    <p class="footer-copy">© 2026 Self-Host Guide</p>
     </div>
   </footer>
 <script>
 // Page view counter (no external dependencies)
 (function(){
   var key = 'pv_' + window.location.pathname.replace(/\//g,'_').replace(/\.html$/,'');
-  var count = localStorage.getItem(key) || 0;
+  var count = localStorage.getItem(key) | 0;
   count = parseInt(count) + 1;
   localStorage.setItem(key, count);
+  // Display on page if element exists
   var el = document.getElementById('busuanzi_value_page_pv');
   if (el) el.textContent = count;
 })();
