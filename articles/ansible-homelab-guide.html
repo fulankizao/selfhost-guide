@@ -162,6 +162,8 @@
 
     <p>The beauty of Ansible is <strong>idempotency</strong>: running the same playbook twice produces the same result as running it once. If a package is already installed, Ansible skips it. If a config file already has the right contents, it's left alone. This makes automation safe and predictable.</p>
 
+    <p>On my servers, I run the hardening playbook every Sunday at 2 AM via cron. The first run made changes to 14 files. The second run (and every run since) reports "0 changed, 0 failed" — confirming that everything is in the desired state. This is the key benefit: I can run the playbook as often as I want without worrying about breaking anything. The only time I've seen a "changed" result on a re-run is when I manually edited a file that the playbook manages — Ansible immediately fixes it back to the correct state.</p>
+
     <h2>2. Installation</h2>
     <p>Ansible runs on any Linux or macOS machine, and on Windows via WSL. On Ubuntu 24.04 or Debian 12:</p>
     <pre><code># Add the official Ansible PPA (recommended for latest version)

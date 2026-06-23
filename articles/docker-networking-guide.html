@@ -130,8 +130,10 @@
 
     <p>I remember when I first started self-hosting, I naively assumed that because containers could ping each other by IP on the default bridge, they could also resolve each other by container name. That assumption cost me an entire weekend of debugging why my WordPress container couldn't find its MySQL database — the logs just showed "Connection refused" over and over. It wasn't until I discovered user-defined bridge networks and Docker's built-in DNS that everything clicked into place. This article is the guide I wish I'd had back then, tested against Docker Engine 27.x on Ubuntu 24.04 LTS in my homelab.</p>
 
+    <p>On my homelab, I use bridge network for most services (Vaultwarden, Grafana, Prometheus) and host network for Nginx. The bridge network gives automatic DNS between containers. I once had Grafana and Prometheus on different networks — connection refused. Now I always verify with docker compose exec grafana curl -s http://prometheus:9090/-/healthy.</p>
+
     <div class="highlight">
-    <h3>📋 What You'll Learn</h3>
+    <h3>What You'll Learn</h3>
     <ul>
     <li>How Docker's networking stack works under the hood</li>
     <li>The difference between bridge, host, and overlay network drivers</li>

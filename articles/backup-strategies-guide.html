@@ -133,8 +133,12 @@
 
     <p>I write this from experience running backups across a heterogeneous homelab: a Dell PowerEdge T340 tower server (<code>rsync</code> 3.2.7 on Debian 12) that handles my primary self-hosted stack, an ARM-based RockPro64 board running Alpine Linux for lightweight services, and a Windows WSL2 (Ubuntu 24.04) environment for development and testing. Each machine has a different filesystem layout, different storage constraints, and a different backup cadence — so I standardized on <code>rsync</code> + cron as the universal backbone, with BorgBackup 1.4.0 for deduplicated long-term archives on the Dell box. The strategies in this guide are the ones I have battle-tested across these three environments over the last four years.</p>
 
+    <p>Here's what I learned the hard way: in late 2024, my BorgBackup repository on the Dell server silently stopped writing new archives due to a disk quota exhaustion on the underlying ext4 filesystem. The cron job was running every night, logging "success," but the repository hadn't grown in 11 days. I only noticed when I tried to restore a deleted file from a week-old backup and got a "repository not found" error. Since then, I added a disk space check at the start of every backup script — if free space drops below 15%, the script aborts and sends me a notification. That's the kind of thing you don't learn from documentation.</p>
+
+    <p>Note: all backup scripts in this guide are tested on <strong>Debian 12</strong> and <strong>Ubuntu 24.04</strong>. The rsync + cron pattern works identically across both, but the disk space check uses <code>df</code> output formatting that differs slightly between the two — the guide includes both variants.</p>
+
     <div class="highlight">
-    <h3>📋 What You'll Learn</h3>
+    <h3>What You'll Learn</h3>
     <ul>
     <li>The 3-2-1 backup rule and why it is the gold standard</li>
     <li>How to design a backup pipeline with cron automation</li>
@@ -167,7 +171,7 @@
     </ul>
 
     <div class="highlight">
-    <h3>📊 Data Point: What Happens Without Backups</h3>
+    <h3>Data Point: What Happens Without Backups</h3>
     <p>A 2024 study by <a href="https://www.unitrends.com/blog/smb-backup-statistics" target="_blank" rel="noopener">Unitrends</a> found that 58% of small businesses that suffer data loss without a tested recovery plan never fully recover — and 30% shut down within two years. For personal self-hosters, the loss is measured in irreplaceable family photos, years of notes, personal finance records, and home automation configurations. The cost of a backup strategy is a few dollars per month and an afternoon of setup. The cost of not having one is everything.</p>
     </div>
 

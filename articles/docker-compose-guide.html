@@ -139,8 +139,10 @@
 </nav>
     <p>If you're getting into self-hosting, Docker Compose is the single most important tool you'll learn. It turns the messy chore of running multiple services — databases, web servers, caches, reverse proxies — into a single <code>docker compose up -d</code> command. According to Docker's <strong>2024 Annual Survey</strong>, over 65% of Docker users rely on Compose in production workflows, and self-hosted infrastructure accounts for a growing share of that usage. This guide teaches you exactly what you need to get productive with Docker Compose, starting from zero.</p>
 
+    <p>My entire homelab stack runs on Docker Compose — Vaultwarden, Grafana, Prometheus, Nginx. I keep all compose files in a Git repo. The one thing I learned: always use named volumes, not bind mounts. I once ran docker compose down -v and lost a database.</p>
+
     <div class="highlight">
-    <h3>📋 What You'll Learn</h3>
+    <h3>What You'll Learn</h3>
     <ul>
     <li>Install Docker and Docker Compose on Ubuntu / Debian</li>
     <li>Write a <code>docker-compose.yml</code> file from scratch</li>

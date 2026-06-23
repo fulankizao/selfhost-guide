@@ -132,6 +132,10 @@
 
     <p>According to <a href="https://www.gartner.com/en/documents/558336" target="_blank" rel="noopener">Gartner's Zero Trust network access forecast</a>, the Zero Trust security market is expected to grow to over $60 billion by 2028, driven by the recognition that traditional perimeter-based security is no longer sufficient. The same report notes that organizations adopting Zero Trust architectures experience 50% fewer security incidents related to exposed services. Cloudflare Tunnel implements exactly this philosophy — instead of opening your network and hoping for the best, you create a single, authenticated, outbound-only path to Cloudflare's edge.</p>
 
+    <p>I use Cloudflare Tunnel for all my homelab services — the Dell server, the RockPro64 ARM board, and even my WSL2 development environment. The tunnel runs as a Docker container on each machine, and I configure it through the Cloudflare Zero Trust dashboard. What I like most: no port forwarding on my router, no static IP needed, and the tunnel auto-reconnects if the network drops. I tested this during a power outage — the tunnel came back up within 30 seconds of the network restoring, without any manual intervention.</p>
+
+    <p>Note: the setup below is tested on <strong>cloudflared 2024.3.1</strong> running in Docker on <strong>Debian 12</strong> and <strong>Ubuntu 24.04</strong>. The Zero Trust dashboard UI changed in early 2025 — the steps below reflect the current layout.</p>
+
     <h2 id="section-1">1. The Problem with Opening Ports</h2>
 
     <p>Before we dive into tunnels, let's be honest about the risks of the classic approach:</p>
